@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="test/test.csproj" Id="6b77715f-f2ef-4328-915c-7c8992237425" />
+  <Project Path="TripCompass.API/TripCompass.API.csproj" />
+  <Project Path="TripCompass.Application/TripCompass.Application.csproj" />
+  <Project Path="TripCompass.Domain/TripCompass.Domain.csproj" />
+  <Project Path="TripCompass.Infrastructure/TripCompass.Infrastructure.csproj" />
+  <Project Path="TripCompass.WebUI/TripCompass.WebUI.csproj" />
+</Solution>

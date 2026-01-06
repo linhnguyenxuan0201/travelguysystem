@@ -1,0 +1,56 @@
+﻿@model TripCompass.WebUI.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Sign up";
+    Layout = "_AuthLayout";
+}
+
+
+<div class="auth-container">
+
+    <!-- LEFT -->
+    <div class="auth-left">
+        <img src="~/images/logo.png" class="auth-logo" />
+        <h2>TRIPCOMPASS</h2>
+        <p>DISCOVER MORE. PLAN LESS.</p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="auth-right">
+        <h1>Sign up</h1>
+
+        <form asp-action="Register" method="post" class="auth-form">
+
+            <label>Your full name</label>
+            <input asp-for="FullName" placeholder="Your full name" />
+            <span asp-validation-for="FullName" class="error"></span>
+
+            <label>Enter your email</label>
+            <input asp-for="Email" placeholder="Email" />
+            <span asp-validation-for="Email" class="error"></span>
+
+            <label>Choose your password</label>
+            <input asp-for="Password" type="password" placeholder="Password" />
+            <span asp-validation-for="Password" class="error"></span>
+
+            <button type="submit" class="btn-primary">Sign up</button>
+
+            <div class="divider">
+                <span>or</span>
+            </div>
+
+            <a asp-action="GoogleLogin" class="btn-google">
+                <i class="fa-brands fa-google"></i>
+                Sign up with Google
+            </a>
+
+            <a asp-action="Login" class="btn-link">
+                Log in
+            </a>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

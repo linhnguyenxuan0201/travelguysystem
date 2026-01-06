@@ -1,0 +1,12 @@
+E:\TripCompass\TripCompass.Domain\bin\Release\net10.0\TripCompass.Domain.deps.json
+E:\TripCompass\TripCompass.Domain\bin\Release\net10.0\TripCompass.Domain.dll
+E:\TripCompass\TripCompass.Domain\bin\Release\net10.0\TripCompass.Domain.pdb
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.csproj.AssemblyReference.cache
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.GeneratedMSBuildEditorConfig.editorconfig
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.AssemblyInfoInputs.cache
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.AssemblyInfo.cs
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.csproj.CoreCompileInputs.cache
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.dll
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\refint\TripCompass.Domain.dll
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\TripCompass.Domain.pdb
+E:\TripCompass\TripCompass.Domain\obj\Release\net10.0\ref\TripCompass.Domain.dll

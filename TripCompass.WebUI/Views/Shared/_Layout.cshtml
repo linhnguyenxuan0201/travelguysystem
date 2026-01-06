@@ -1,0 +1,211 @@
+﻿@using TripCompass.Application.Auth
+@using TripCompass.Application.DTOs
+@using TripCompass.WebUI.ViewModels
+@using System.Security.Claims
+@inject UserContextService UserContext
+
+@{
+    UserDropdownViewModel? userDropdown = null;
+
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        // ✅ LẤY EMAIL TỪ CLAIM (ĐÚNG)
+        var email = User.FindFirstValue(ClaimTypes.Email);
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            // 👉 Application trả DTO
+            UserDropdownDto? dto = await UserContext.GetDropdownAsync(email);
+
+            // 👉 MAP DTO → VIEWMODEL (BẮT BUỘC)
+            if (dto != null)
+            {
+                userDropdown = new UserDropdownViewModel
+                {
+                    UserName = dto.UserName,
+                    AvatarUrl = dto.AvatarUrl,
+                    ReputationLevel = dto.ReputationLevel,
+                    ReputationScore = dto.ReputationScore,
+                    WalletBalance = dto.WalletBalance
+                };
+            }
+        }
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - TripCompass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/profile.css" />
+
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header class="header">
+        <div class="container header-inner">
+
+            <!-- LOGO -->
+            <div class="logo">
+                <img src="~/images/logo.png" alt="TripCompass Logo" />
+                <span>TripCompass</span>
+            </div>
+
+            <!-- NAV -->
+            <nav class="nav">
+                <a asp-controller="Home" asp-action="Index">Explore</a>
+                <a href="#">Reviews</a>
+                <a href="#">Trips</a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="user-dropdown">
+                        <a href="#" class="user-toggle">
+                            <img src="@(userDropdown?.AvatarUrl ?? "/images/avatar-default.png")"
+                                 class="avatar" />
+                            <strong>@User.Identity!.Name</strong>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </a>
+
+                        <ul class="user-menu">
+
+                            <!-- USER INFO -->
+                            <li class="user-info">
+                                <img src="@(userDropdown?.AvatarUrl ?? "/images/avatar-default.png")"
+                                     class="avatar-lg" />
+                                <div>
+                                    <strong>@User.Identity!.Name</strong>
+
+                                    @if (userDropdown != null)
+                                    {
+                                        <div class="rep">
+                                            ⭐ Reputation Lv. @userDropdown.ReputationLevel
+                                        </div>
+                                        <div class="coin">
+                                            🪙 @userDropdown.WalletBalance.ToString("N0") Coins
+                                        </div>
+                                    }
+                                </div>
+                            </li>
+
+                            <li class="divider"></li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="Profile">
+                                    <i class="fa-regular fa-user"></i> View Profile
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="ChangePassword">
+                                    <i class="fa-solid fa-lock"></i> Change Password
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Review" asp-action="MyReviews">
+                                    <i class="fa-solid fa-star"></i> Your Reviews
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li>
+                                    <a asp-controller="Admin" asp-action="Dashboard">
+                                        <i class="fa-solid fa-shield-halved"></i> Admin
+                                    </a>
+                                </li>
+                            }
+
+                            <li class="divider"></li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="Logout" class="logout">
+                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a asp-controller="Account"
+                       asp-action="Login"
+                       class="login-btn">
+                        Log in
+                    </a>
+                }
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- ================= MAIN ================= -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+        <div class="container footer-grid">
+
+            <div class="footer-logo">
+                <img src="~/images/logo.png" />
+                <p>DISCOVER MORE. PLAN LESS.</p>
+            </div>
+
+            <div class="footer-social">
+                <h4>TripCompass Social</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-contact">
+                <h4>Contact</h4>
+                <p>tripcompassvn@gmail.com</p>
+                <p>Hotline 1900 0014</p>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- JS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggle = document.querySelector(".user-toggle");
+            const menu = document.querySelector(".user-menu");
+
+            if (!toggle || !menu) return;
+
+            toggle.addEventListener("click", function (e) {
+                e.preventDefault();
+                menu.classList.toggle("show");
+            });
+
+            document.addEventListener("click", function (e) {
+                if (!e.target.closest(".user-dropdown")) {
+                    menu.classList.remove("show");
+                }
+            });
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

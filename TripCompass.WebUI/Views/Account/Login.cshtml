@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Log in";
+}
+
+<section class="login-page">
+    <div class="login-container">
+
+        <!-- LEFT -->
+        <div class="login-left">
+            <img src="~/images/logo.png" class="login-logo" />
+            <h2>TRIPCOMPASS</h2>
+            <p class="login-slogan">DISCOVER MORE. PLAN LESS.</p>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="login-right">
+            <h1>Log in</h1>
+
+            <form asp-controller="Account"
+                  asp-action="Login"
+                  method="post"
+                  class="login-form">
+
+                <label>Email</label>
+                <input type="email"
+                       name="email"
+                       placeholder="Enter your email"
+                       required />
+
+                <label>Password</label>
+                <input type="password"
+                       name="password"
+                       placeholder="Enter your password"
+                       required />
+
+                <div class="forgot">
+                    <a asp-controller="Account"
+                       asp-action="ForgotPassword"
+                       class="forgot-link">
+                        Forgot password?
+                    </a>
+
+                </div>
+
+                @if (ViewBag.Error != null)
+                {
+                    <p class="error-text">@ViewBag.Error</p>
+                }
+
+                <div class="login-actions">
+                    <a asp-controller="Account"
+                       asp-action="Register"
+                       class="btn-outline">
+                        Sign up
+                    </a>
+
+                    <button type="submit" class="btn-primary">
+                        Log in
+                    </button>
+                </div>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <!-- GOOGLE LOGIN -->
+                <a asp-controller="Account"
+                   asp-action="GoogleLogin"
+                   class="btn-google">
+                    <i class="fab fa-google"></i>
+                    Continue with Google
+                </a>
+            </form>
+        </div>
+
+    </div>
+</section>

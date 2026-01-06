@@ -1,0 +1,159 @@
+﻿body {
+    font-family: 'Inter', sans-serif;
+    background: #f7f9fc;
+    margin: 0;
+}
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+}
+
+/* LEFT */
+.auth-left {
+    flex: 1;
+    background: #f3f6fb;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-logo {
+    width: 140px;
+}
+
+.auth-left h2 {
+    margin-top: 20px;
+    font-weight: 700;
+}
+
+.auth-left p {
+    color: #666;
+}
+
+/* RIGHT */
+.auth-right {
+    flex: 1;
+    padding: 60px;
+}
+
+    .auth-right h1 {
+        margin-bottom: 30px;
+    }
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+}
+
+    .auth-form label {
+        margin: 12px 0 6px;
+        font-weight: 600;
+    }
+
+    .auth-form input {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+
+.btn-primary {
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 8px;
+    background: #000;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.divider {
+    text-align: center;
+    margin: 20px 0;
+    color: #999;
+}
+
+.btn-google {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #ccc;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #000;
+}
+
+.btn-link {
+    margin-top: 12px;
+    text-align: center;
+    color: #2d8cf0;
+    text-decoration: none;
+}
+
+.error {
+    color: red;
+    font-size: 13px;
+}
+.otp-box-input {
+    width: 100%;
+    height: 50px;
+    font-size: 20px;
+    text-align: center;
+    background-image: repeating-linear-gradient( to right, transparent, transparent 38px, #ccc 38px, #ccc 40px );
+    background-size: calc(100% / 6) 100%;
+    background-position: center;
+    letter-spacing: 0;
+    font-weight: 600;
+    border-radius: 10px;
+    border: 1.5px solid #ccc;
+}
+/* ===== OTP INPUT STYLE (6 BOXES) ===== */
+.otp-input {
+    width: 100%;
+    max-width: 280px;
+    height: 48px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 32px; /* khoảng cách giữa số */
+
+    padding-left: 32px; /* cân chữ vào ô */
+
+    border-radius: 10px;
+    border: 1.5px solid #d1d5db;
+    outline: none;
+    /* vẽ 6 ô */
+    background-image: linear-gradient(to right, #d1d5db 1px, transparent 1px);
+    background-size: calc(100% / 6) 100%;
+    background-repeat: repeat-x;
+}
+
+    /* focus */
+    .otp-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+/* mobile nhỏ */
+@media (max-width: 480px) {
+    .otp-input {
+        letter-spacing: 24px;
+        padding-left: 24px;
+        font-size: 18px;
+    }
+}

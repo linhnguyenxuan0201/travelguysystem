@@ -1,0 +1,427 @@
+﻿<!-- LEAFLET MAP -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+@model TripCompass.WebUI.ViewModels.ReviewFormViewModel
+@{
+    ViewData["Title"] = "Viết đánh giá";
+    Layout = "_Layout";
+}
+
+<style>
+    .review-create-page {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .reward-banner {
+        background: linear-gradient(90deg,#f59e0b,#fbbf24);
+        border-radius: 14px;
+        padding: 20px 28px;
+        color: white;
+        margin-bottom: 32px;
+    }
+
+    .review-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        padding: 24px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    input, textarea, select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+    }
+
+    textarea {
+        min-height: 120px;
+    }
+
+    .location-input {
+        position: relative;
+    }
+
+        .location-input i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .location-input input {
+            padding-left: 38px;
+        }
+
+    .location-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-top: 6px;
+        max-height: 260px;
+        overflow-y: auto;
+        z-index: 999;
+        display: none;
+    }
+
+        .location-dropdown div {
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+            .location-dropdown div:hover {
+                background: #f3f4f6;
+            }
+
+    #map {
+        margin-top: 14px;
+        height: 260px;
+        border-radius: 14px;
+        border: 1px solid #e5e7eb;
+        display: none;
+    }
+
+    .rating span {
+        font-size: 28px;
+        cursor: pointer;
+        color: #e5e7eb;
+    }
+
+        .rating span.active {
+            color: #facc15;
+        }
+
+    .upload-box {
+        border: 2px dashed #d1d5db;
+        border-radius: 14px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    .upload-preview {
+        margin-top: 12px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .preview-item {
+        position: relative;
+    }
+
+        .preview-item img {
+            width: 90px;
+            height: 90px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+        }
+
+        .preview-item button {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: none;
+            background: #ef4444;
+            color: white;
+            cursor: pointer;
+        }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        width: 100%;
+    }
+</style>
+
+<div class="review-create-page">
+    <div class="reward-banner">
+        <h3>🪙 Viết đánh giá để nhận thêm coin!</h3>
+        <p>Nhận 50–200 coin cho mỗi đánh giá chất lượng</p>
+    </div>
+
+    <div class="review-grid">
+        <div class="card">
+            <div class="card-title">✍️ Viết đánh giá địa điểm</div>
+
+            <form asp-action="@(Model.PostId > 0 ? "Edit" : "Create")"
+                  method="post"
+                  enctype="multipart/form-data"
+                  id="reviewForm">
+
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="PostId" />
+
+                <div class="form-group">
+                    <label>Tên địa điểm *</label>
+                    <input asp-for="Title" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Địa chỉ *</label>
+                    <div class="location-input">
+                        <i>📍</i>
+                        <input asp-for="Location" id="locationInput" autocomplete="off" required />
+                        <div id="locationDropdown" class="location-dropdown"></div>
+                    </div>
+                </div>
+
+                <input type="hidden"
+                       id="locationSelected"
+                       value="@(Model.PostId > 0 ? "true" : "false")" />
+
+                <div id="map"></div>
+
+                <div class="form-group">
+                    <label>Đánh giá *</label>
+                    <div class="rating" id="ratingStars">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span data-value="@i">★</span>
+                        }
+                        <span id="ratingText">0/5</span>
+                    </div>
+                    <input type="hidden" asp-for="Rating" id="ratingInput" />
+                </div>
+
+                <div class="form-group">
+                    <label>Chia sẻ trải nghiệm *</label>
+                    <textarea asp-for="Content" required></textarea>
+                </div>
+                @if (Model.PostId > 0 && Model.ExistingImages.Any())
+                {
+                    <div class="form-group">
+                        <label>Ảnh hiện tại</label>
+                        <div class="upload-preview">
+                            @foreach (var img in Model.ExistingImages)
+                            {
+                                <div class="preview-item">
+                                    <img src="@img.ImageUrl" />
+                                    <input type="checkbox"
+                                           name="DeletedImageIds"
+                                           value="@img.PostImageId" />
+                                    <small>Xoá</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <div class="form-group">
+                    <label>Ảnh (tối đa 5)</label>
+                    <div class="upload-box" id="uploadBox">Click để chọn ảnh</div>
+                    <input type="file"
+                           id="imageInput"
+                           asp-for="Images"
+                           accept="image/*"
+                           multiple
+                           hidden />
+
+                    <div class="upload-preview" id="preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Danh mục *</label>
+                    <select asp-for="SelectedCategoryId" required>
+                        <option value="">-- Chọn --</option>
+                        @foreach (var c in Model.AllCategories)
+                        {
+                            <option value="@c.CategoryId">@c.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <button class="btn-primary">Đăng đánh giá 🚀</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =====================================================
+       COMMON VARIABLES
+    ===================================================== */
+    const form = document.getElementById("reviewForm");
+    const isEdit = document.querySelector('input[name="PostId"]')?.value > 0;
+
+    /* =====================================================
+       LOCATION (OSM)
+    ===================================================== */
+    const input = document.getElementById("locationInput");
+    const dropdown = document.getElementById("locationDropdown");
+    const locationSelected = document.getElementById("locationSelected");
+    let map, marker;
+
+    input.addEventListener("input", async () => {
+        locationSelected.value = "false";
+        const q = input.value.trim();
+        if (q.length < 2) {
+            dropdown.style.display = "none";
+            return;
+        }
+
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&countrycodes=vn`
+        );
+        const data = await res.json();
+
+        dropdown.innerHTML = "";
+        data.forEach(p => {
+            const div = document.createElement("div");
+            div.textContent = p.display_name;
+            div.onclick = () => selectPlace(p);
+            dropdown.appendChild(div);
+        });
+        dropdown.style.display = "block";
+    });
+
+    function selectPlace(p) {
+        input.value = p.display_name;
+        locationSelected.value = "true";
+        dropdown.style.display = "none";
+
+        const lat = p.lat, lon = p.lon;
+        if (!map) {
+            map = L.map("map").setView([lat, lon], 16);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+        } else {
+            map.setView([lat, lon], 16);
+        }
+
+        if (marker) marker.remove();
+        marker = L.marker([lat, lon]).addTo(map);
+        document.getElementById("map").style.display = "block";
+    }
+
+    /* =====================================================
+       RATING
+    ===================================================== */
+    const stars = document.querySelectorAll("#ratingStars span[data-value]");
+    const ratingInput = document.getElementById("ratingInput");
+    const ratingText = document.getElementById("ratingText");
+
+    stars.forEach(star => {
+        star.addEventListener("click", () => {
+            const v = parseInt(star.dataset.value);
+            ratingInput.value = v;
+            ratingText.innerText = `${v}/5`;
+
+            stars.forEach(s =>
+                s.classList.toggle("active", parseInt(s.dataset.value) <= v)
+            );
+        });
+    });
+
+    // Init rating when EDIT
+    if (isEdit && ratingInput.value > 0) {
+        const v = parseInt(ratingInput.value);
+        ratingText.innerText = `${v}/5`;
+        stars.forEach(s =>
+            s.classList.toggle("active", parseInt(s.dataset.value) <= v)
+        );
+    }
+
+    /* =====================================================
+       IMAGE UPLOAD (MAX 5)
+    ===================================================== */
+    const uploadBox = document.getElementById("uploadBox");
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+
+    let files = [];
+
+    uploadBox.addEventListener("click", () => imageInput.click());
+
+    imageInput.addEventListener("change", () => {
+        const selected = Array.from(imageInput.files);
+
+        for (const f of selected) {
+            if (files.length >= 5) break;
+            files.push(f);
+        }
+
+        imageInput.value = "";
+        renderPreview();
+    });
+
+    function renderPreview() {
+        preview.innerHTML = "";
+
+        files.forEach((file, index) => {
+            const div = document.createElement("div");
+            div.className = "preview-item";
+
+            const img = document.createElement("img");
+            img.src = URL.createObjectURL(file);
+
+            const btn = document.createElement("button");
+            btn.innerText = "×";
+            btn.type = "button";
+            btn.onclick = () => {
+                files.splice(index, 1);
+                renderPreview();
+            };
+
+            div.appendChild(img);
+            div.appendChild(btn);
+            preview.appendChild(div);
+        });
+    }
+
+    /* =====================================================
+       FORM SUBMIT
+    ===================================================== */
+    form.addEventListener("submit", e => {
+
+        // Validate ONLY when CREATE
+        if (!isEdit) {
+            if (ratingInput.value < 1 || locationSelected.value !== "true") {
+                e.preventDefault();
+                alert("⚠️ Vui lòng nhập đủ thông tin");
+                return;
+            }
+        }
+
+        // Attach images before submit
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        imageInput.files = dt.files;
+    });
+</script>

@@ -1,0 +1,129 @@
+﻿.profile-wrapper {
+    background: #f5f7fb;
+    padding: 40px;
+    font-family: Inter, sans-serif;
+}
+
+.profile-header-page h1 {
+    font-size: 28px;
+    margin-bottom: 4px;
+}
+
+.profile-header-page p {
+    color: #6b7280;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+}
+
+.user-summary {
+    display: flex;
+    gap: 20px;
+}
+
+.avatar-lg {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.change-avatar {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #2563eb;
+    cursor: pointer;
+}
+
+.user-info h2 {
+    margin: 0;
+}
+
+.email {
+    color: #6b7280;
+}
+
+.joined {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.basic-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+    .basic-info label {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+}
+
+    .badge.success {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .badge.primary {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.stat-card {
+    border-radius: 14px;
+    padding: 24px;
+}
+
+    .stat-card.coin {
+        background: #fff7e6;
+    }
+
+    .stat-card.trust {
+        background: #eef7ff;
+    }
+
+.profile-side .card {
+    margin-bottom: 20px;
+}
+
+.plan-box {
+    background: #eaf2ff;
+    padding: 16px;
+    border-radius: 10px;
+    margin-top: 12px;
+}
+
+.btn-upgrade {
+    width: 100%;
+    padding: 12px;
+    background: #2563eb;
+    color: white;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}

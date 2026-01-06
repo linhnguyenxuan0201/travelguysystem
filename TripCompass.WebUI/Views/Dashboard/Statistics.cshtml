@@ -1,0 +1,209 @@
+﻿@{
+    ViewData["Title"] = "Statistics";
+    Layout = "_DashboardLayout";
+}
+
+<style>
+    /* ===== STATISTICS PAGE ===== */
+    .stats-page {
+        padding: 32px;
+    }
+
+    .stats-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+
+    .stats-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 22px;
+        font-weight: 600;
+        color: #111827;
+    }
+
+    .stats-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .stats-actions label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .stats-actions select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            font-size: 14px;
+        }
+
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #16a34a;
+        background: #ecfdf5;
+        color: #166534;
+        font-weight: 500;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn-export:hover {
+            background: #16a34a;
+            color: #fff;
+        }
+
+    /* ===== CHART CARD ===== */
+    .chart-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .chart-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #374151;
+    }
+</style>
+
+<div class="stats-page">
+
+    <!-- HEADER -->
+    <div class="stats-header">
+        <div class="stats-title">
+            📊 Statistics
+        </div>
+
+        <div class="stats-actions">
+            <label>📅 Year</label>
+            <select id="yearSelect"></select>
+
+            <button id="exportExcel" class="btn-export">
+                ⬇ Export Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="chart-card">
+        <div class="chart-title">
+            Monthly Reviews / Views / Likes
+        </div>
+
+        <canvas id="activityChart" height="120"></canvas>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById('activityChart');
+    let chart;
+
+    function loadChart(year) {
+        fetch(`/Dashboard/MonthlyStats?year=${year}`)
+            .then(res => res.json())
+            .then(data => {
+
+                const labels = data.map(x => `Month ${x.month}`);
+                const reviews = data.map(x => x.reviewCount);
+                const views = data.map(x => x.viewCount);
+                const likes = data.map(x => x.likeCount);
+
+                if (chart) chart.destroy();
+
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Reviews',
+                                data: reviews,
+                                borderColor: '#4F46E5',
+                                backgroundColor: 'rgba(79,70,229,0.15)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Views',
+                                data: views,
+                                borderColor: '#10B981',
+                                backgroundColor: 'rgba(16,185,129,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Likes',
+                                data: likes,
+                                borderColor: '#F59E0B',
+                                backgroundColor: 'rgba(245,158,11,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    }
+
+    /* ===== INIT YEAR SELECT ===== */
+    const yearSelect = document.getElementById("yearSelect");
+    const currentYear = new Date().getFullYear();
+
+    for (let y = currentYear; y >= currentYear - 5; y--) {
+        yearSelect.add(new Option(y, y));
+    }
+
+    yearSelect.value = currentYear;
+    loadChart(currentYear);
+
+    yearSelect.addEventListener("change", e => {
+        loadChart(e.target.value);
+    });
+
+    /* ===== EXPORT EXCEL ===== */
+    document.getElementById("exportExcel").addEventListener("click", () => {
+        const year = yearSelect.value;
+        window.location.href = `/Dashboard/ExportStatisticsExcel?year=${year}`;
+    });
+</script>

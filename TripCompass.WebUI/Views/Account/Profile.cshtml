@@ -1,0 +1,145 @@
+﻿@using TripCompass.WebUI.ViewModels
+@model ProfileViewModel
+
+<section class="profile-wrapper">
+
+    <!-- PAGE HEADER -->
+    <div class="profile-page-header">
+        <h1>User Profile</h1>
+        <p>Manage your account information and services</p>
+    </div>
+
+    <div class="profile-layout">
+
+        <!-- ================= LEFT COLUMN ================= -->
+        <div class="profile-left">
+
+            <!-- PROFILE CARD -->
+            <div class="card profile-main">
+
+                <div class="profile-top">
+                    <img src="@Model.AvatarUrl"
+                         alt="User Avatar"
+                         class="avatar-lg" />
+
+                    <div class="profile-basic">
+                        <h2>@Model.UserName</h2>
+                        <span class="email">@Model.Email</span>
+                        <small class="joined">
+                            Joined @Model.JoinedAt.ToString("MMMM yyyy")
+                        </small>
+                    </div>
+                </div>
+
+                <!-- AVATAR UPLOAD -->
+                <form asp-action="UploadAvatar"
+                      asp-controller="Account"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="avatar-upload">
+                    <label class="change-avatar">
+                        Change avatar
+                        <input type="file"
+                               name="avatar"
+                               hidden
+                               onchange="this.form.submit()" />
+                    </label>
+                </form>
+
+                <hr />
+
+                <!-- BASIC INFO -->
+                <h4 class="section-title">Basic Information</h4>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span>Full Name</span>
+                        <strong>@Model.UserName</strong>
+                    </div>
+
+                    <div class="info-item">
+                        <span>Email</span>
+                        <strong>@Model.Email</strong>
+                    </div>
+
+                    <div class="info-item">
+                        <span>Status</span>
+                        <span class="badge badge-active">Active</span>
+                    </div>
+
+                    <div class="info-item">
+                        <span>Account Type</span>
+                        <span class="badge badge-free">Free</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+                <div class="stat-card coin">
+                    <h3>@Model.WalletBalance.ToString("N0")</h3>
+                    <p>Available Coins</p>
+                </div>
+
+                <div class="stat-card trust">
+                    <h3>@Model.ReputationScore%</h3>
+                    <p>Trust Score</p>
+                    <div class="stars">
+                        ★★★★☆
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= RIGHT COLUMN ================= -->
+        <div class="profile-right">
+
+            <!-- CURRENT PLAN -->
+            <div class="card plan-card">
+                <h4>Current Plan</h4>
+
+                <div class="plan-box">
+                    <strong>Free</strong>
+                    <span>Basic access</span>
+                </div>
+
+                <ul class="plan-features">
+                    <li>✔ Standard access</li>
+                    <li>✔ Community support</li>
+                    <li>✔ Basic features</li>
+                </ul>
+            </div>
+
+            <!-- UPGRADE -->
+            <div class="card upgrade-card">
+                <h4>Upgrade to Next Plan?</h4>
+                <p>Unlock more advanced features</p>
+
+                <div class="upgrade-box">
+                    <span>Enterprise</span>
+                    <strong>+50%</strong>
+                </div>
+
+                <button class="btn-upgrade">
+                    Upgrade Now →
+                </button>
+            </div>
+
+            <!-- QUICK ACTIONS -->
+            <div class="card quick-actions">
+                <h4>Quick Actions</h4>
+
+                <a asp-action="ChangePassword"
+                   asp-controller="Account">
+                    Change Password
+                </a>
+
+                <a href="#">
+                    Transaction History
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>

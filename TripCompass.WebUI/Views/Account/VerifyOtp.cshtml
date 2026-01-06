@@ -1,0 +1,64 @@
+﻿@model TripCompass.WebUI.ViewModels.VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Verify OTP";
+    Layout = "_AuthLayout";
+}
+
+<div class="auth-container">
+
+    <!-- LEFT -->
+    <div class="auth-left">
+        <img src="~/images/logo.png" class="auth-logo" alt="TripCompass Logo" />
+        <h2>TRIPCOMPASS</h2>
+        <p>DISCOVER MORE. PLAN LESS.</p>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="auth-right">
+        <h1>Verify OTP</h1>
+
+        <p class="otp-desc">
+            We’ve sent a 6-digit verification code to<br />
+            <strong>@Model.Email</strong>
+        </p>
+
+        <form asp-action="VerifyOtp"
+              method="post"
+              class="auth-form"
+              autocomplete="off">
+
+            <!-- giữ email -->
+            <input type="hidden" asp-for="Email" />
+
+            <div class="form-group">
+                <label for="OtpCode">Enter OTP</label>
+                <input asp-for="OtpCode"
+                       class="otp-input"
+                       placeholder=""
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code" />
+
+
+                <span asp-validation-for="OtpCode" class="error"></span>
+            </div>
+
+            <button type="submit" class="btn-primary">
+                Verify & Create Account
+            </button>
+
+            <div class="divider">
+                <span>Didn’t receive the code?</span>
+            </div>
+
+            <a asp-action="ResendOtp"
+               asp-route-email="@Model.Email"
+               class="btn-link">
+                Resend OTP
+            </a>
+
+        </form>
+    </div>
+
+</div>
