@@ -1,0 +1,120 @@
+@{
+    ViewData["Title"] = "Trust & Safety";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-portal.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="portal-container">
+    
+    <div class="portal-header">
+        <h2>🛡️ An toàn - Chất lượng</h2>
+        <p>Kiểm duyệt, báo cáo và bảo mật hệ thống</p>
+    </div>
+
+    <div class="portal-sections">
+        
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon safety">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Báo cáo vi phạm</h3>
+                    <p>Reports Management</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-exclamation-circle"></i> Báo cáo chờ xử lý</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-check"></i> Đã xử lý</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-ban"></i> Bị từ chối</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon safety">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Kiểm duyệt nội dung</h3>
+                    <p>Content Moderation</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-file-alt"></i> Bài viết cần kiểm duyệt</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-comment"></i> Bình luận cần kiểm duyệt</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-image"></i> Hình ảnh cần kiểm duyệt</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon safety">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Nhật ký kiểm tra</h3>
+                    <p>Audit Logs</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-history"></i> Lịch sử thao tác Admin</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-user-shield"></i> Hoạt động nghi ngờ</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon safety">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Cài đặt bảo mật</h3>
+                    <p>Security Settings</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-key"></i> Chính sách mật khẩu</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-shield-alt"></i> Whitelist/Blacklist</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <a href="/Admin/Portal" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Quay lại Portal
+    </a>
+
+</div>

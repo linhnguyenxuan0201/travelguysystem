@@ -63,11 +63,35 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // 👉 Application services (không thuộc Infrastructure)
 builder.Services.AddScoped<LoginService>();
 
+// ✅ MEDIATR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Dashboard.GetDashboardStats.GetDashboardStatsHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Users.GetUsers.GetUsersHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Posts.CreatePost.CreatePostHandler).Assembly);
+});
+
 /* =========================
    BUILD APP
 ========================= */
 
 var app = builder.Build();
+
+// SEED DATA
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        // context.Database.EnsureCreated(); // Use with caution
+        await DbSeeder.SeedAsync(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
 
 /* =========================
    MIDDLEWARE PIPELINE
@@ -87,6 +111,10 @@ app.UseRouting();
 // ⚠️ BẮT BUỘC
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",

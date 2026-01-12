@@ -6,8 +6,10 @@ namespace TripCompass.Domain.Enums
 {
     public enum PostStatus
     {
-        Pending = 0,   // 🟡 Chờ duyệt
-        Approved = 1,  // 🟢 Đã duyệt
-        Rejected = 2   // 🔴 Từ chối
+        Draft = 0,     // 📝 Nháp
+        Pending = 1,   // 🟡 Chờ duyệt
+        Published = 2, // 🟢 Đã xuất bản
+        Rejected = 3,  // 🔴 Từ chối
+        Archived = 4   // 📦 Lưu trữ
     }
 }

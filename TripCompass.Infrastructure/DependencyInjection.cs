@@ -24,6 +24,8 @@ namespace TripCompass.Infrastructure
                 options.UseSqlServer(
                     config.GetConnectionString("DefaultConnection")));
 
+            services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
             // ================= REPOSITORIES =================
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();

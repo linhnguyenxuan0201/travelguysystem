@@ -17,7 +17,7 @@ namespace TripCompass.Application.DTOs
         public int LikeCount { get; set; }
         public DateTime CreatedAt { get; set; }
         // ✅ THÊM CÁI NÀY
-        public string ThumbnailUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
      public PostStatus Status { get; set; }
     }
 

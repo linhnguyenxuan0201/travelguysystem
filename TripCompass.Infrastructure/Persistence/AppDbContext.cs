@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TripCompass.Domain.Entities;
 
+using TripCompass.Application.Interfaces;
+
 namespace TripCompass.Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : DbContext, IApplicationDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -27,6 +29,10 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<PostCategory> PostCategories => Set<PostCategory>();
         public DbSet<PostImage> PostImages => Set<PostImage>();
+        public DbSet<CoinTransaction> CoinTransactions => Set<CoinTransaction>();
+        public DbSet<PostReaction> PostReactions => Set<PostReaction>();
+        public DbSet<Report> Reports => Set<Report>();
+        public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -55,6 +61,78 @@ namespace TripCompass.Infrastructure.Persistence
                 entity.HasOne(x => x.User)
                       .WithMany() // hoặc .WithMany(u => u.Avatars) nếu bạn thêm collection
                       .HasForeignKey(x => x.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ========================
+            // COIN TRANSACTION
+            // ========================
+            modelBuilder.Entity<CoinTransaction>(entity =>
+            {
+                entity.HasKey(e => e.TransactionId);
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // ========================
+            // POST REACTION
+            // ========================
+            modelBuilder.Entity<PostReaction>(entity =>
+            {
+                entity.HasKey(e => e.ReactionId);
+                entity.HasOne(e => e.Post)
+                      .WithMany()
+                      .HasForeignKey(e => e.PostId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.NoAction);
+                
+                // Unique Constraint
+                entity.HasIndex(e => new { e.PostId, e.UserId }).IsUnique();
+            });
+
+            // ========================
+            // REPORT
+            // ========================
+            modelBuilder.Entity<Report>(entity =>
+            {
+                entity.HasKey(e => e.ReportId);
+                entity.HasOne(e => e.Reporter)
+                      .WithMany()
+                      .HasForeignKey(e => e.ReporterId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Resolver)
+                      .WithMany()
+                      .HasForeignKey(e => e.ResolvedBy)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // ========================
+            // ADMIN LOG
+            // ========================
+            modelBuilder.Entity<AdminLog>(entity =>
+            {
+                entity.HasKey(e => e.LogId);
+                entity.HasOne(e => e.Admin)
+                      .WithMany()
+                      .HasForeignKey(e => e.AdminId)
+                      .OnDelete(DeleteBehavior.NoAction);
+            });
+
+            // ========================
+            // POST
+            // ========================
+            modelBuilder.Entity<Post>(entity =>
+            {
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
 

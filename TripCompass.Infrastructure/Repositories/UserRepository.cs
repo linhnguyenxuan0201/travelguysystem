@@ -26,6 +26,11 @@ namespace TripCompass.Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetByIdAsync(long id)
+        {
+            return await _db.Users.FindAsync(id);
+        }
+
         /* =========================
            COMMAND
         ========================= */

@@ -28,5 +28,15 @@
         {
             PasswordHash = newPasswordHash;
         }
+
+        public void Ban()
+        {
+            IsBanned = true;
+        }
+
+        public void Unban()
+        {
+            IsBanned = false;
+        }
     }
 }

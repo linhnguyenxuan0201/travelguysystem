@@ -1,0 +1,347 @@
+/* =========================================================
+   GLOBAL ADMIN FOUNDATION (ALL FILES)
+========================================================= */
+
+body {
+    background-color: #f5f7fb;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.015em;
+    color: #0f172a;
+}
+
+.text-muted {
+    color: #64748b !important;
+}
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+/* =========================================================
+   PAGE HEADER (Index / Details / Edit)
+========================================================= */
+
+.page-header,
+.border-bottom {
+    border-color: #e5e7eb !important;
+}
+
+.page-header h1,
+.h4 {
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+
+/* =========================================================
+   CARD SYSTEM (ALL FILES)
+========================================================= */
+
+.card {
+    border: none;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.card-header {
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+    padding: 0.85rem 1.25rem;
+}
+
+.card-header h6 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    background: #ffffff;
+    border-top: 1px solid #eef2f7;
+}
+
+.shadow-sm {
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* =========================================================
+   BADGES / STATUS (Index + Details)
+========================================================= */
+
+.badge {
+    font-weight: 500;
+    padding: 0.4em 0.7em;
+    border-radius: 7px;
+    font-size: 0.75rem;
+}
+
+.bg-success {
+    background-color: #22c55e !important;
+}
+
+.bg-warning {
+    background-color: #facc15 !important;
+    color: #1f2937 !important;
+}
+
+.bg-danger {
+    background-color: #ef4444 !important;
+}
+
+.bg-secondary {
+    background-color: #64748b !important;
+}
+
+/* =========================================================
+   TABLE – CONTENT MANAGEMENT (Index.cshtml)
+========================================================= */
+
+.table {
+    font-size: 0.9rem;
+}
+
+.table thead th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table td .fw-semibold {
+    color: #0f172a;
+}
+
+/* =========================================================
+   FILTER BAR (Index.cshtml)
+========================================================= */
+
+.card-body form label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+/* =========================================================
+   FORM CONTROLS (Edit.cshtml + Details.cshtml)
+========================================================= */
+
+.form-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.form-control,
+.form-select {
+    border-radius: 9px;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.form-select-lg {
+    font-size: 0.95rem;
+    padding: 0.65rem 2.5rem 0.65rem 0.75rem;
+    font-weight: 500;
+}
+
+.form-select-sm {
+    font-size: 0.8rem;
+    padding: 0.25rem 1.75rem 0.25rem 0.5rem;
+    font-weight: 500;
+    border: 1px solid #d1d5db;
+}
+
+.form-select option:disabled {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.form-select optgroup {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Status select in table */
+.status-change-form {
+    display: inline-block;
+    margin: 0;
+}
+
+.status-select {
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.status-select:hover {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.status-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    outline: none;
+}
+
+textarea.form-control {
+    resize: vertical;
+}
+
+/* Checkbox */
+.form-check-input {
+    border-radius: 4px;
+}
+
+.form-check-input:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* =========================================================
+   BUTTONS (ALL FILES)
+========================================================= */
+
+.btn {
+    border-radius: 9px;
+    font-weight: 500;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.9rem;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1e40af;
+    border-color: #1e40af;
+}
+
+.btn-outline-primary {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.btn-outline-primary:hover {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.btn-outline-danger {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-outline-danger:hover {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.btn-outline-warning {
+    border-color: #facc15;
+    color: #92400e;
+}
+
+/* =========================================================
+   POST CONTENT PREVIEW (Details.cshtml)
+========================================================= */
+
+.post-content {
+    line-height: 1.75;
+    font-size: 0.95rem;
+    color: #1f2937;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3 {
+    margin-top: 1.6rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.post-content p {
+    margin-bottom: 1rem;
+}
+
+.post-content img {
+    max-width: 100%;
+    border-radius: 12px;
+    margin: 1rem 0;
+}
+
+/* =========================================================
+   MODERATION NOTE / ALERT (Details.cshtml)
+========================================================= */
+
+.alert-warning {
+    background-color: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #92400e;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+/* =========================================================
+   METADATA LIST (Details.cshtml)
+========================================================= */
+
+dl.row dt {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+dl.row dd {
+    font-size: 0.85rem;
+    color: #0f172a;
+}
+
+/* =========================================================
+   PAGINATION (Index.cshtml)
+========================================================= */
+
+.card-footer {
+    font-size: 0.75rem;
+}
+
+.card-footer .btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+}
+
+/* =========================================================
+   UTILITIES
+========================================================= */
+
+.small {
+    font-size: 0.75rem;
+}

@@ -5,6 +5,7 @@ namespace TripCompass.Application.Interfaces
     public interface IUserRepository
     {
         Task<User?> GetByEmailAsync(string email);
+        Task<User?> GetByIdAsync(long id);
         
         Task<User> CreateGoogleUserAsync(string email, string name);
         Task AddAsync(User user);

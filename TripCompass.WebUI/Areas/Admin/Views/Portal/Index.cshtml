@@ -1,0 +1,155 @@
+@{
+    ViewData["Title"] = "Admin Portal";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/admin-portal.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="portal-container">
+    
+    <!-- HEADER -->
+    <div class="portal-header">
+        <h2>🎯 Admin Management Portal</h2>
+        <p>Quản lý toàn diện hệ thống TripCompass</p>
+    </div>
+
+    <!-- DASHBOARD QUICK LINK -->
+    <div class="section-card dashboard-link-card">
+        <a href="/Admin/Dashboard" class="dashboard-link-content">
+            <div class="dashboard-left">
+                <i class="fas fa-chart-line"></i>
+                <div>
+                    <h4>Dashboard & Statistics</h4>
+                    <p>Xem tổng quan và thống kê hệ thống</p>
+                </div>
+            </div>
+            <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <!-- MANAGEMENT SECTIONS -->
+    <div class="portal-sections">
+        
+        <!-- 1. USERS SECTION -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Người dùng</h3>
+                    <p>Users Management</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="/Admin/User" class="section-link">
+                    <span><i class="fas fa-user-cog"></i> Quản lý người dùng</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-shield-alt"></i> Phân quyền <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-history"></i> Lịch sử hoạt động <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 2. CONTENT SECTION -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon content">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Nội dung du lịch</h3>
+                    <p>Content Management</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="/Admin/Content" class="section-link">
+                    <span><i class="fas fa-file-alt"></i> Quản lý bài viết</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-star"></i> Quản lý đánh giá <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-map-marker-alt"></i> Quản lý địa điểm <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-tags"></i> Danh mục & Tags <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 3. PARTNERS & MONETIZATION SECTION -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon partners">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="section-title">
+                    <h3>Đối tác & Kinh doanh</h3>
+                    <p>Partners / Monetization</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="/Admin/Partner" class="section-link">
+                    <span><i class="fas fa-building"></i> Quản lý đối tác</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-ad"></i> Gói quảng cáo <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-chart-bar"></i> Thống kê doanh thu <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-coins"></i> Giao dịch Coin <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- 4. TRUST & SAFETY SECTION -->
+        <div class="section-card">
+            <div class="section-header">
+                <div class="section-icon safety">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="section-title">
+                    <h3>An toàn - Chất lượng</h3>
+                    <p>Trust & Safety</p>
+                </div>
+            </div>
+            <div class="section-links">
+                <a href="/Admin/Report" class="section-link">
+                    <span><i class="fas fa-flag"></i> Báo cáo vi phạm</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-check-circle"></i> Kiểm duyệt nội dung <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-clipboard-list"></i> Nhật ký kiểm tra <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="section-link disabled">
+                    <span><i class="fas fa-lock"></i> Cài đặt bảo mật <span class="badge-soon">Soon</span></span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

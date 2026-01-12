@@ -222,7 +222,7 @@ namespace TripCompass.WebUI.Controllers
                 .FirstOrDefaultAsync(p => p.PostId == id && !p.IsDeleted);
 
             if (post == null) return NotFound();
-            if (post.Status == PostStatus.Approved)
+            if (post.Status == PostStatus.Published)
             {
                 TempData["Error"] = "Bài viết đã được duyệt và không thể chỉnh sửa.";
                 return RedirectToAction(nameof(MyReviews));
@@ -232,7 +232,7 @@ namespace TripCompass.WebUI.Controllers
                 PostId = post.PostId,
                 Title = post.Title,
                 Content = post.Content,
-                Location = post.Location,
+                Location = post.Location ?? string.Empty,
                 Rating = post.ReputationImpact,
                 SelectedCategoryId = post.PostCategories.First().CategoryId,
 

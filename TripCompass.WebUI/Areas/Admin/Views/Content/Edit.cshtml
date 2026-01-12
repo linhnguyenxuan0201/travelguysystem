@@ -1,0 +1,111 @@
+@using TripCompass.Application.Features.Admin.Posts.UpdatePost
+@model UpdatePostCommand
+
+@{
+    ViewData["Title"] = "Edit Post";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
+    <h1 class="h4 fw-semibold mb-0">Edit Post</h1>
+    <a asp-action="Details" asp-route-id="@Model.PostId" class="btn btn-outline-secondary">
+        Cancel
+    </a>
+</div>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="PostId" />
+
+    <div class="row g-4">
+        <!-- CONTENT -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="fas fa-pen me-2"></i>Content
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Title</label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Content" class="form-label">Content</label>
+                        <textarea asp-for="Content" class="form-control" rows="16"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="fas fa-search me-2"></i>SEO Settings
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="Slug" class="form-label">Slug</label>
+                        <input asp-for="Slug" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="SeoTitle" class="form-label">SEO Title</label>
+                        <input asp-for="SeoTitle" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="MetaDescription" class="form-label">Meta Description</label>
+                        <textarea asp-for="MetaDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CanonicalUrl" class="form-label">Canonical URL</label>
+                        <input asp-for="CanonicalUrl" class="form-control" />
+                    </div>
+
+                    <div class="form-check">
+                        <input asp-for="IsIndexable" class="form-check-input" />
+                        <label asp-for="IsIndexable" class="form-check-label">
+                            Allow search engine indexing
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="fw-semibold mb-0">
+                        <i class="fas fa-flag me-2"></i>Publishing & Flags
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input asp-for="IsFeatured" class="form-check-input" />
+                        <label asp-for="IsFeatured" class="form-check-label">Featured</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input asp-for="IsTrending" class="form-check-input" />
+                        <label asp-for="IsTrending" class="form-check-label">Trending</label>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input asp-for="IsPinned" class="form-check-input" />
+                        <label asp-for="IsPinned" class="form-check-label">Pinned</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

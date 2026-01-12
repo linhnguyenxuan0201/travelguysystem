@@ -26,6 +26,28 @@ namespace TripCompass.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         // =========================
+        // 🔥 SEO & METADATA
+        // =========================
+        public string? Slug { get; set; }
+        public string? SeoTitle { get; set; }
+        public string? MetaDescription { get; set; }
+        public string? CanonicalUrl { get; set; }
+        public bool IsIndexable { get; set; } = true;
+
+        // =========================
+        // 🔥 FLAGS
+        // =========================
+        public bool IsFeatured { get; set; }
+        public bool IsTrending { get; set; }
+        public bool IsPinned { get; set; }
+
+        // =========================
+        // 🔥 MODERATION
+        // =========================
+        public string? ModerationNote { get; set; }
+        public DateTime? PublishedAt { get; set; }
+
+        // =========================
         // 🔥 SOFT DELETE
         // =========================
         public bool IsDeleted { get; set; } = false;
@@ -41,5 +63,7 @@ namespace TripCompass.Domain.Entities
         public ICollection<PostImage> PostImages { get; set; }
             = new List<PostImage>();
         public PostStatus Status { get; set; } = PostStatus.Pending;
+
+        public User User { get; set; } = null!;
     }
 }

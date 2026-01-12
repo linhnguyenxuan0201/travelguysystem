@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -72,9 +72,12 @@ namespace TripCompass.WebUI.Controllers
         ========================= */
 
         [Authorize]
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
+            // Sign out from TripCompassCookie (this will clear all authentication cookies)
             await HttpContext.SignOutAsync("TripCompassCookie");
+            
             return RedirectToAction("Index", "Home");
         }
 

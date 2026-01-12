@@ -15,6 +15,10 @@ public class CreateCommentHandler
 
     public async Task Handle(CreateCommentCommand command)
     {
+        var user = await _uow.Users.GetByIdAsync(command.UserId);
+        if (user == null) throw new Exception("User not found");
+        if (user.IsBanned) throw new UnauthorizedAccessException("User is banned and cannot comment.");
+
         var comment = PostComment.Create(
             command.PostId,
             command.UserId,

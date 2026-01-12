@@ -1,11 +1,183 @@
-﻿<div style="padding:24px">
-    <h3>📝 TripCompass</h3>
+﻿<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    <a href="/Review/MyReviews">📄 Manage Reviews</a><br />
+<style>
+    .sidebar-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 20px 16px;
+    }
 
-    <a href="/Dashboard/Statistics" class="active">📊 Statistics</a><br />
-    <a href="javascript:void(0)" onclick="openSettings()">
-        ⚙️ Settings
-    </a>
+    .sidebar-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 32px;
+        padding: 0 8px;
+    }
+
+    .sidebar-logo i {
+        font-size: 28px;
+        color: #6366f1;
+    }
+
+    .sidebar-logo h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .nav-section {
+        margin-bottom: 20px;
+    }
+
+    .nav-section-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+        padding: 0 12px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .sidebar-link:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .sidebar-link.active {
+        background: #eef2ff;
+        color: #6366f1;
+    }
+
+    .sidebar-link i {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .sidebar-footer {
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Dark mode */
+    body.dark .sidebar-logo h3 {
+        color: #f9fafb;
+    }
+
+    body.dark .sidebar-link {
+        color: #9ca3af;
+    }
+
+    body.dark .sidebar-link:hover {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    body.dark .sidebar-link.active {
+        background: #1e293b;
+        color: #818cf8;
+    }
+
+    body.dark .sidebar-footer {
+        border-top-color: #374151;
+    }
+</style>
+
+<div class="sidebar-container">
+    
+    <!-- LOGO -->
+    <div class="sidebar-logo">
+        <i class="fas fa-compass"></i>
+        <h3>TripCompass</h3>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="sidebar-nav">
+        
+        <div class="nav-section">
+            <div class="nav-section-title">Main</div>
+            <a href="/Admin/Portal" class="sidebar-link">
+                <i class="fas fa-home"></i>
+                <span>Portal</span>
+            </a>
+            <a href="/Admin/Dashboard" class="sidebar-link">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Management</div>
+            <a href="/Admin/User" class="sidebar-link">
+                <i class="fas fa-users"></i>
+                <span>Người dùng</span>
+            </a>
+            <a href="/Admin/Content" class="sidebar-link">
+                <i class="fas fa-newspaper"></i>
+                <span>Nội dung</span>
+            </a>
+            <a href="/Admin/Partner" class="sidebar-link">
+                <i class="fas fa-handshake"></i>
+                <span>Đối tác</span>
+            </a>
+            <a href="/Admin/Report" class="sidebar-link">
+                <i class="fas fa-shield-alt"></i>
+                <span>An toàn</span>
+            </a>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="sidebar-footer">
+        <a href="javascript:void(0)" onclick="openSettings()" class="sidebar-link">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </a>
+        <a href="/Account/Logout" class="sidebar-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
 
 </div>
+
+<script>
+    // Highlight active link based on current URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.sidebar-link');
+        
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== 'javascript:void(0)' && currentPath.includes(href)) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>

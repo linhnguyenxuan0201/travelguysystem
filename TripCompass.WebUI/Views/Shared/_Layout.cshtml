@@ -49,6 +49,7 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/profile.css" />
 
 </head>
@@ -163,25 +164,31 @@
         <div class="container footer-grid">
 
             <div class="footer-logo">
-                <img src="~/images/logo.png" />
+                <img src="~/images/logo.png" alt="TripCompass Logo" />
                 <p>DISCOVER MORE. PLAN LESS.</p>
             </div>
 
             <div class="footer-social">
                 <h4>TripCompass Social</h4>
                 <div class="social-icons">
-                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
-                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
                 </div>
             </div>
 
             <div class="footer-contact">
                 <h4>Contact</h4>
-                <p>tripcompassvn@gmail.com</p>
-                <p>Hotline 1900 0014</p>
+                <p><i class="fa-regular fa-envelope"></i> tripcompassvn@gmail.com</p>
+                <p><i class="fa-solid fa-phone"></i> Hotline 1900 0014</p>
             </div>
 
+        </div>
+
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; @DateTime.Now.Year TripCompass. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 

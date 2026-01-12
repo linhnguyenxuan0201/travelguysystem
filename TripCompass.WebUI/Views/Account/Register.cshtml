@@ -1,4 +1,4 @@
-﻿@model TripCompass.WebUI.ViewModels.RegisterViewModel
+@model TripCompass.WebUI.ViewModels.RegisterViewModel
 @{
     ViewData["Title"] = "Sign up";
     Layout = "_AuthLayout";
@@ -34,6 +34,7 @@
 
             <button type="submit" class="btn-primary">Sign up</button>
 
+            @* Tạm thời comment Google Login
             <div class="divider">
                 <span>or</span>
             </div>
@@ -42,6 +43,7 @@
                 <i class="fa-brands fa-google"></i>
                 Sign up with Google
             </a>
+            *@
 
             <a asp-action="Login" class="btn-link">
                 Log in

@@ -1,0 +1,149 @@
+@using TripCompass.Application.Features.Admin.Posts.GetPostById
+@using TripCompass.Domain.Enums
+@model PostDetailDto
+
+@{
+    ViewData["Title"] = "Post Review";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<!-- PAGE HEADER -->
+<div class="mb-4 pb-3 border-bottom">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h1 class="h4 fw-semibold mb-1">@Model.Title</h1>
+            <div class="text-muted small">
+                Author: <strong>@Model.AuthorName</strong> • Created @Model.CreatedAt.ToString("dd/MM/yyyy")
+                @if ( Model.PublishedAt.HasValue )
+                {
+                    <span> • Published @Model.PublishedAt.Value.ToString("dd/MM/yyyy")</span>
+                }
+            </div>
+        </div>
+
+        <span class="badge fs-6
+            @( Model.Status == PostStatus.Published ? "bg-success" :
+                            Model.Status == PostStatus.Pending ? "bg-warning text-dark" :
+                            Model.Status == PostStatus.Rejected ? "bg-danger" :
+                            Model.Status == PostStatus.Draft ? "bg-secondary" :
+                            Model.Status == PostStatus.Archived ? "bg-dark" : "bg-secondary" )">
+            @Model.Status
+        </span>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- CONTENT -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="fw-semibold mb-0">
+                    <i class="fas fa-file-alt me-2"></i>Content Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                @if ( Model.Images.Any() )
+                {
+                    <img src="@Model.Images.First()" class="img-fluid rounded mb-4" />
+                }
+
+                <article class="post-content">
+                    @Html.Raw(Model.Content)
+                </article>
+            </div>
+        </div>
+
+        @if ( !string.IsNullOrWhiteSpace(Model.ModerationNote) )
+        {
+            <div class="alert alert-warning mt-4">
+                <strong>Moderation Note:</strong><br />
+                @Model.ModerationNote
+            </div>
+        }
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="col-lg-4">
+        <!-- ACTIONS -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="fw-semibold mb-0">
+                    <i class="fas fa-gavel me-2"></i>Moderation Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="ChangeStatus" method="post">
+                    <input type="hidden" name="PostId" value="@Model.PostId" />
+
+                    <div class="mb-3">
+                        <label for="NewStatus" class="form-label fw-semibold">
+                            <i class="fas fa-tag me-2"></i>Change Status
+                        </label>
+                        <select name="NewStatus" id="NewStatus" class="form-select form-select-lg" required>
+                            <option value="">-- Select New Status --</option>
+                            @if (Model.Status != PostStatus.Draft)
+                            {
+                                <option value="@((int)PostStatus.Draft)">📝 Draft</option>
+                            }
+                            @if (Model.Status != PostStatus.Pending)
+                            {
+                                <option value="@((int)PostStatus.Pending)">🟡 Pending</option>
+                            }
+                            @if (Model.Status != PostStatus.Published)
+                            {
+                                <option value="@((int)PostStatus.Published)">🟢 Published</option>
+                            }
+                            @if (Model.Status != PostStatus.Rejected)
+                            {
+                                <option value="@((int)PostStatus.Rejected)">🔴 Rejected</option>
+                            }
+                            @if (Model.Status != PostStatus.Archived)
+                            {
+                                <option value="@((int)PostStatus.Archived)">📦 Archived</option>
+                            }
+                        </select>
+                        <small class="form-text text-muted">
+                            Current status: <strong>@Model.Status</strong>
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ModerationNote" class="form-label fw-semibold">
+                            <i class="fas fa-sticky-note me-2"></i>Moderation Note (Optional)
+                        </label>
+                        <textarea name="ModerationNote" id="ModerationNote" class="form-control"
+                                  rows="3" placeholder="Reason / internal note..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Update Status
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- METADATA -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="fw-semibold mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Metadata
+                </h6>
+            </div>
+            <div class="card-body small">
+                <dl class="row mb-0">
+                    <dt class="col-5">Views</dt>
+                    <dd class="col-7">@Model.ViewCount</dd>
+
+                    <dt class="col-5">Likes</dt>
+                    <dd class="col-7">@Model.LikeCount</dd>
+
+                    <dt class="col-5">SEO Title</dt>
+                    <dd class="col-7">@Model.SeoTitle ?? "—"</dd>
+
+                    <dt class="col-5">Slug</dt>
+                    <dd class="col-7">@Model.Slug ?? "—"</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
