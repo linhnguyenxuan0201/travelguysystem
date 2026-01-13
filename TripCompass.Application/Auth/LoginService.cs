@@ -34,7 +34,11 @@ namespace TripCompass.Application.Auth
             if (user != null)
                 return user;
 
-            return await _userRepo.CreateGoogleUserAsync(email, name);
+            // Create new Google user (this will assign "User" role)
+            user = await _userRepo.CreateGoogleUserAsync(email, name);
+            
+            // Reload user with UserRoles to ensure they're loaded
+            return await _userRepo.GetByEmailAsync(email) ?? user;
         }
 
     }
