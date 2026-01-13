@@ -39,6 +39,10 @@ namespace TripCompass.Application.Features.Admin.Posts.GetPostById
         // Moderation
         public string? ModerationNote { get; set; }
 
+        // Soft Delete
+        public bool IsDeleted { get; set; }
+        public DateTime? DeletedAt { get; set; }
+
         public List<string> Categories { get; set; } = new List<string>();
         public List<string> Images { get; set; } = new List<string>();
     }

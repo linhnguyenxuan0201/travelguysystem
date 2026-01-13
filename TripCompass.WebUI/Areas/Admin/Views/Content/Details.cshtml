@@ -1,4 +1,6 @@
+@using System.Linq
 @using TripCompass.Application.Features.Admin.Posts.GetPostById
+@using TripCompass.Application.Common
 @using TripCompass.Domain.Enums
 @model PostDetailDto
 
@@ -18,19 +20,45 @@
                 {
                     <span> • Published @Model.PublishedAt.Value.ToString("dd/MM/yyyy")</span>
                 }
+                @if (Model.IsDeleted)
+                {
+                    <span class="text-danger"> • Deleted</span>
+                }
             </div>
         </div>
 
-        <span class="badge fs-6
-            @( Model.Status == PostStatus.Published ? "bg-success" :
-                            Model.Status == PostStatus.Pending ? "bg-warning text-dark" :
-                            Model.Status == PostStatus.Rejected ? "bg-danger" :
-                            Model.Status == PostStatus.Draft ? "bg-secondary" :
-                            Model.Status == PostStatus.Archived ? "bg-dark" : "bg-secondary" )">
-            @Model.Status
-        </span>
+        <div class="d-flex gap-2 align-items-center">
+            @if (Model.IsDeleted)
+            {
+                <span class="badge bg-danger fs-6">🗑️ Deleted</span>
+            }
+            <span class="badge fs-6
+                @( Model.Status == PostStatus.Published ? "bg-success" :
+                                Model.Status == PostStatus.Pending ? "bg-warning text-dark" :
+                                Model.Status == PostStatus.Rejected ? "bg-danger" :
+                                Model.Status == PostStatus.Draft ? "bg-secondary" :
+                                Model.Status == PostStatus.Archived ? "bg-dark" : "bg-secondary" )">
+                @Model.Status
+            </span>
+        </div>
     </div>
 </div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
 <div class="row g-4">
     <!-- CONTENT -->
@@ -79,32 +107,56 @@
                         <label for="NewStatus" class="form-label fw-semibold">
                             <i class="fas fa-tag me-2"></i>Change Status
                         </label>
-                        <select name="NewStatus" id="NewStatus" class="form-select form-select-lg" required>
+                        <select name="NewStatus" id="NewStatus" class="form-select form-select-lg">
                             <option value="">-- Select New Status --</option>
-                            @if (Model.Status != PostStatus.Draft)
-                            {
-                                <option value="@((int)PostStatus.Draft)">📝 Draft</option>
+                            @{
+                                var validStatuses = PostStatusWorkflow.GetValidNextStatuses(Model.Status);
                             }
-                            @if (Model.Status != PostStatus.Pending)
+                            @foreach (var status in validStatuses)
                             {
-                                <option value="@((int)PostStatus.Pending)">🟡 Pending</option>
-                            }
-                            @if (Model.Status != PostStatus.Published)
-                            {
-                                <option value="@((int)PostStatus.Published)">🟢 Published</option>
-                            }
-                            @if (Model.Status != PostStatus.Rejected)
-                            {
-                                <option value="@((int)PostStatus.Rejected)">🔴 Rejected</option>
-                            }
-                            @if (Model.Status != PostStatus.Archived)
-                            {
-                                <option value="@((int)PostStatus.Archived)">📦 Archived</option>
+                                var statusLabel = status switch
+                                {
+                                    PostStatus.Draft => "📝 Draft",
+                                    PostStatus.Pending => "🟡 Pending Approval",
+                                    PostStatus.Published => "🟢 Published",
+                                    PostStatus.Rejected => "🔴 Rejected",
+                                    PostStatus.Archived => "📦 Archived",
+                                    _ => status.ToString()
+                                };
+                                <option value="@((int)status)">@statusLabel</option>
                             }
                         </select>
                         <small class="form-text text-muted">
                             Current status: <strong>@Model.Status</strong>
+                            @if (validStatuses != null && validStatuses.Any())
+                            {
+                                <text>
+                                <br />Valid transitions: @string.Join(", ", validStatuses.Select(s => s.ToString()))
+                                </text>
+                            }
                         </small>
+                    </div>
+
+                    <div class="mb-3">
+                        @if (!Model.IsDeleted)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="IsDeleted" id="IsDeleted" value="true" />
+                                <label class="form-check-label text-danger" for="IsDeleted">
+                                    <i class="fas fa-trash me-2"></i>Soft Delete (can be restored)
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="IsDeleted" id="RestoreDeleted" value="false" />
+                                <label class="form-check-label text-success" for="RestoreDeleted">
+                                    <i class="fas fa-undo me-2"></i>Restore from Deleted
+                                </label>
+                            </div>
+                            <small class="text-muted">Post is currently deleted. Check to restore.</small>
+                        }
                     </div>
 
                     <div class="mb-3">
