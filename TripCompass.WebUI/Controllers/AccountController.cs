@@ -256,7 +256,7 @@ namespace TripCompass.WebUI.Controllers
             if (user == null) return RedirectToAction("Login");
 
             // ❗ Check current password
-            if (!_passwordHasher.Verify(model.CurrentPassword, user.PasswordHash))
+            if (!_passwordHasher.Verify(user.PasswordHash, model.CurrentPassword))
             {
                 ModelState.AddModelError("CurrentPassword", "Current password is incorrect.");
                 return View(model);
@@ -300,32 +300,31 @@ namespace TripCompass.WebUI.Controllers
             if (email == null)
                 return RedirectToAction(nameof(Login));
 
-            var user = await _userRepository.GetByEmailAsync(email);
+            // Use LoginService to handle Google login/signup
+            var user = await _loginService.LoginWithGoogleAsync(email, name ?? email.Split('@')[0]);
 
+            // Reload user with UserRoles to ensure they're loaded
+            user = await _userRepository.GetByEmailAsync(email);
             if (user == null)
             {
-                user = new User(
-                    userName: name ?? email.Split('@')[0],
-                    email: email,
-                    passwordHash: "GOOGLE"
-                );
+                ViewBag.Error = "Failed to authenticate with Google.";
+                return RedirectToAction(nameof(Login));
+            }
 
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
+            // Check if user is banned
+            if (user.IsBanned)
+            {
+                ViewBag.Error = "Your account has been banned.";
+                return RedirectToAction(nameof(Login));
             }
 
             await SignInUser(user);
 
-            return LocalRedirect(returnUrl);
-        }
+            // Redirect based on role
+            if (user.UserRoles.Any(r => r.Role.RoleName == "Admin"))
+                return RedirectToAction("Dashboard", "Admin");
 
-        public static User CreateGoogleUser(string email, string? name)
-        {
-            return new User(
-                userName: name ?? email.Split('@')[0],
-                email: email,
-                passwordHash: "GOOGLE"
-            );
+            return LocalRedirect(returnUrl);
         }
         /* =========================
    REGISTER
@@ -419,6 +418,14 @@ namespace TripCompass.WebUI.Controllers
 
             await _userRepository.AddAsync(user);
             await _userRepository.AssignRoleAsync(user, "User");
+
+            // ✅ Reload user with UserRoles to ensure they're loaded
+            user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Failed to create user account.");
+                return View(model);
+            }
 
             // ✅ login
             await SignInUser(user);
