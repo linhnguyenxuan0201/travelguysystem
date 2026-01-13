@@ -22,6 +22,8 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
         public async Task<IActionResult> Index(GetPostsQuery query)
         {
             var posts = await _mediator.Send(query);
+            ViewBag.SelectedStatus = query.Status; // Pass selected status to view
+            ViewBag.SearchTerm = query.SearchTerm; // Pass search term to view
             return View(posts);
         }
 
@@ -73,10 +75,40 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> ChangeStatus(ChangePostStatusCommand command, string? returnUrl = null)
         {
-            var result = await _mediator.Send(command);
-            if (!result) return NotFound();
+            try
+            {
+                // Parse NewStatus from form (can be null if only IsDeleted is changed)
+                if (Request.Form.ContainsKey("NewStatus") && !string.IsNullOrEmpty(Request.Form["NewStatus"]))
+                {
+                    if (int.TryParse(Request.Form["NewStatus"], out int statusValue))
+                    {
+                        command.NewStatus = (TripCompass.Domain.Enums.PostStatus)statusValue;
+                    }
+                }
 
-            TempData["Success"] = "Post status updated successfully";
+                // Parse IsDeleted from form
+                // Checkbox sends "true" when checked, "false" when unchecked (restore), or nothing if not present
+                if (Request.Form.ContainsKey("IsDeleted"))
+                {
+                    var isDeletedValue = Request.Form["IsDeleted"].ToString();
+                    command.IsDeleted = isDeletedValue == "true" ? true : 
+                                       isDeletedValue == "false" ? false : 
+                                       (bool?)null;
+                }
+
+                var result = await _mediator.Send(command);
+                if (!result) return NotFound();
+
+                TempData["Success"] = "Post status updated successfully";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "An error occurred while updating post status: " + ex.Message;
+            }
             
             // If returnUrl is provided (from Index), redirect back to Index
             if (!string.IsNullOrEmpty(returnUrl))

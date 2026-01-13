@@ -62,6 +62,10 @@ namespace TripCompass.Application.Features.Admin.Posts.GetPostById
                 // Moderation
                 ModerationNote = post.ModerationNote,
 
+                // Soft Delete
+                IsDeleted = post.IsDeleted,
+                DeletedAt = post.DeletedAt,
+
                 Categories = post.PostCategories.Select(pc => pc.Category.Name).ToList(),
                 Images = post.PostImages.Select(pi => pi.ImageUrl).ToList()
             };
