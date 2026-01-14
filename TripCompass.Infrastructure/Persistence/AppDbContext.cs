@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TripCompass.Domain.Entities;
 
 using TripCompass.Application.Interfaces;
@@ -33,6 +33,8 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<PostReaction> PostReactions => Set<PostReaction>();
         public DbSet<Report> Reports => Set<Report>();
         public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
+        public DbSet<UserFollow> UserFollows => Set<UserFollow>();
+        public DbSet<CommentReaction> CommentReactions => Set<CommentReaction>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -134,6 +136,61 @@ namespace TripCompass.Infrastructure.Persistence
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ========================
+            // POST COMMENT
+            // ========================
+            modelBuilder.Entity<PostComment>(entity =>
+            {
+                // Map Id property to CommentId column
+                entity.Property(e => e.Id)
+                      .HasColumnName("CommentId");
+            });
+
+            // ========================
+            // USER FOLLOW
+            // ========================
+            modelBuilder.Entity<UserFollow>(entity =>
+            {
+                entity.HasKey(e => e.FollowId);
+                
+                entity.HasOne(e => e.Follower)
+                      .WithMany()
+                      .HasForeignKey(e => e.FollowerId)
+                      .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.HasOne(e => e.Following)
+                      .WithMany()
+                      .HasForeignKey(e => e.FollowingId)
+                      .OnDelete(DeleteBehavior.NoAction);
+                
+                // Unique constraint: một user chỉ follow một user khác một lần
+                entity.HasIndex(e => new { e.FollowerId, e.FollowingId }).IsUnique();
+                
+                // Không cho phép follow chính mình
+                entity.HasCheckConstraint("CK_UserFollow_NotSelf", "[FollowerId] <> [FollowingId]");
+            });
+
+            // ========================
+            // COMMENT REACTION
+            // ========================
+            modelBuilder.Entity<CommentReaction>(entity =>
+            {
+                entity.HasKey(e => e.ReactionId);
+                
+                entity.HasOne(e => e.Comment)
+                      .WithMany()
+                      .HasForeignKey(e => e.CommentId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.NoAction);
+                
+                // Unique constraint: một user chỉ react một comment một lần
+                entity.HasIndex(e => new { e.CommentId, e.UserId }).IsUnique();
             });
 
             // ========================

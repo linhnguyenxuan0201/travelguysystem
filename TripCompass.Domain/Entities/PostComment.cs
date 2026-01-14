@@ -14,14 +14,15 @@ namespace TripCompass.Domain.Entities
 
         private PostComment() { }
 
-        public static PostComment Create(long postId, long userId, string content)
-            => new(postId, userId, content);
+        public static PostComment Create(long postId, long userId, string content, long? parentCommentId = null)
+            => new(postId, userId, content, parentCommentId);
 
-        private PostComment(long postId, long userId, string content)
+        private PostComment(long postId, long userId, string content, long? parentCommentId = null)
         {
             PostId = postId;
             UserId = userId;
             Content = content;
+            ParentCommentId = parentCommentId;
         }
 
         public void Delete() => IsDeleted = true;

@@ -433,7 +433,9 @@
                             <span class="stars">@stars</span>
                         </div>
 
-                        <h4 class="review-title">@r.Title</h4>
+                        <h4 class="review-title">
+                            <a href="/Review/Detail/@r.PostId" style="text-decoration: none; color: inherit;">@r.Title</a>
+                        </h4>
 
                         <div class="review-meta">
                             <span>📍 @r.Location</span>

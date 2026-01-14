@@ -60,15 +60,15 @@
         <div class="container header-inner">
 
             <!-- LOGO -->
-            <div class="logo">
+            <a class="logo" asp-controller="Home" asp-action="Index">
                 <img src="~/images/logo.png" alt="TripCompass Logo" />
                 <span>TripCompass</span>
-            </div>
+            </a>
 
             <!-- NAV -->
             <nav class="nav">
                 <a asp-controller="Home" asp-action="Index">Explore</a>
-                <a href="#">Reviews</a>
+                <a asp-controller="Review" asp-action="Reviews">Reviews</a>
                 <a href="#">Trips</a>
 
                 @if (User.Identity?.IsAuthenticated == true)
@@ -192,6 +192,180 @@
         </div>
     </footer>
 
+    <!-- Partnership & Upgrade Prompts (sidebar) -->
+    <div class="tc-promo-stack" id="tcPromoStack">
+        <div class="tc-promo-card" id="partnerPrompt" style="display:none;">
+            <button class="tc-promo-close" data-target="partnerPrompt">&times;</button>
+            <div class="tc-promo-badge">Đối tác</div>
+            <h3>Trở thành đối tác của TripCompass</h3>
+            <p>Tham gia cùng chúng tôi để tiếp cận nhiều khách hàng hơn và nhận ưu đãi hoa hồng hấp dẫn.</p>
+            <div class="tc-promo-actions">
+                <a class="tc-promo-primary" href="/Review/Reviews?partnerOnly=true">Đăng ký ngay</a>
+                <button class="tc-promo-secondary" data-dismiss="partnerPrompt">Không hiển thị lại</button>
+            </div>
+        </div>
+
+        <div class="tc-promo-card" id="upgradePrompt" style="display:none;">
+            <button class="tc-promo-close" data-target="upgradePrompt">&times;</button>
+            <div class="tc-promo-badge">Nâng cấp</div>
+            <h3>Nâng cấp lên phiên bản tiếp theo</h3>
+            <p>Mở khóa nhiều tính năng nâng cao hơn, ưu đãi riêng và hỗ trợ nhanh chóng.</p>
+            <div class="tc-promo-actions">
+                <a class="tc-promo-primary" href="/Account/Profile">Nâng cấp ngay</a>
+                <button class="tc-promo-secondary" data-dismiss="upgradePrompt">Không hiển thị lại</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Banner-style promo (ad-like) */
+        .tc-promo-stack {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            pointer-events: none;
+        }
+
+        .tc-promo-card {
+            pointer-events: auto;
+            width: 300px;
+            height: 250px; /* classic ad size */
+            max-width: calc(100vw - 24px);
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(79,70,229,0.35);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+            background:
+                radial-gradient(120px 120px at 20% 20%, rgba(255,255,255,0.25), transparent 60%),
+                linear-gradient(135deg, #1e40af 0%, #4F46E5 55%, #0b1020 100%);
+            color: #fff;
+            animation: tcBannerBlink 0.9s steps(2, end) infinite, tcBannerFloat 3.2s ease-in-out infinite;
+        }
+
+        @@keyframes tcBannerBlink {
+            0%, 100% { filter: brightness(1); border-color: rgba(79,70,229,0.35); }
+            50% { filter: brightness(1.25); border-color: rgba(255,255,255,0.55); }
+        }
+
+        @@keyframes tcBannerFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .tc-promo-card::before {
+            content: "AD";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            font-weight: 800;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+        }
+
+        .tc-promo-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            border: none;
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .tc-promo-close:hover { background: rgba(255,255,255,0.28); }
+
+        .tc-promo-badge {
+            display: inline-block;
+            margin: 16px 16px 8px 16px;
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.22);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .tc-promo-card h3 {
+            margin: 0 16px 8px 16px;
+            font-size: 18px;
+            line-height: 1.2;
+            font-weight: 900;
+        }
+
+        .tc-promo-card p {
+            margin: 0 16px 14px 16px;
+            font-size: 13px;
+            line-height: 1.45;
+            opacity: 0.95;
+        }
+
+        .tc-promo-actions {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 14px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .tc-promo-primary, .tc-promo-secondary {
+            flex: 1;
+            height: 42px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: 0.2px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.08s ease, filter 0.2s ease;
+        }
+
+        .tc-promo-primary {
+            background: #fff;
+            color: #111827;
+        }
+        .tc-promo-secondary {
+            background: rgba(0,0,0,0.28);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        .tc-promo-primary:hover, .tc-promo-secondary:hover { filter: brightness(1.05); }
+        .tc-promo-primary:active, .tc-promo-secondary:active { transform: scale(0.98); }
+
+        @@media (max-width: 768px) {
+            .tc-promo-stack {
+                right: 10px;
+                bottom: 10px;
+            }
+            .tc-promo-card {
+                width: 280px;
+                height: 220px;
+            }
+        }
+    </style>
+
     <!-- JS -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -210,6 +384,48 @@
                     menu.classList.remove("show");
                 }
             });
+
+            // Promo modals - chỉ ẩn trong phiên hiện tại, refresh sẽ hiện lại
+            let partnerDismissed = false;
+            let upgradeDismissed = false;
+
+            function showModal(id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = "block";
+            }
+
+            function hideModal(id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = "none";
+            }
+
+            // Close buttons
+            document.querySelectorAll(".tc-promo-close").forEach(btn => {
+                btn.addEventListener("click", () => hideModal(btn.dataset.target));
+            });
+
+            // Dismiss buttons - chỉ ẩn trong phiên này
+            document.querySelectorAll(".tc-promo-secondary").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const target = btn.dataset.dismiss;
+                    if (target === "partnerPrompt") partnerDismissed = true;
+                    if (target === "upgradePrompt") upgradeDismissed = true;
+                    hideModal(target);
+                });
+            });
+
+            // Auto show with slight delay - luôn hiện khi chưa dismiss trong phiên này
+            setTimeout(() => {
+                if (!partnerDismissed) {
+                    showModal("partnerPrompt");
+                }
+            }, 800);
+
+            setTimeout(() => {
+                if (!upgradeDismissed) {
+                    showModal("upgradePrompt");
+                }
+            }, 1600);
         });
     </script>
 
