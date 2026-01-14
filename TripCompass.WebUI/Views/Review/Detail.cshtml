@@ -1,0 +1,1406 @@
+@model TripCompass.WebUI.ViewModels.ReviewDetailViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
+}
+
+<style>
+    .detail-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .detail-header {
+        margin-bottom: 20px;
+    }
+
+    .detail-content {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+        margin-top: 20px;
+    }
+
+    /* LEFT COLUMN */
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* IMAGE CAROUSEL */
+    .image-carousel {
+        position: relative;
+        width: 100%;
+        height: 400px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+        cursor: pointer;
+        transition: opacity 0.3s;
+    }
+
+    .carousel-image.active {
+        display: block;
+    }
+
+    .carousel-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: background 0.3s, transform 0.2s;
+        z-index: 10;
+    }
+
+    .carousel-nav:hover {
+        background: rgba(0, 0, 0, 0.8);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-nav:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+
+    .carousel-prev {
+        left: 16px;
+    }
+
+    .carousel-next {
+        right: 16px;
+    }
+
+    .carousel-nav:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .carousel-nav:disabled:hover {
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .carousel-indicator {
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 8px;
+        z-index: 10;
+    }
+
+    .carousel-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: background 0.3s, transform 0.2s;
+    }
+
+    .carousel-dot.active {
+        background: white;
+        transform: scale(1.2);
+    }
+
+    .carousel-counter {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        z-index: 10;
+    }
+
+    .title-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 16px;
+    }
+
+    .title-section h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+        flex: 1;
+    }
+
+    .price {
+        font-size: 20px;
+        font-weight: 600;
+        color: #059669;
+        white-space: nowrap;
+    }
+
+    .rating-location {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .stars {
+        color: #fbbf24;
+        font-size: 18px;
+    }
+
+    .rating-text {
+        font-size: 14px;
+        color: #6b7280;
+    }
+
+    .location {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .author-section {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .author-info {
+        flex: 1;
+    }
+
+    .author-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .author-stats {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .author-bio {
+        font-size: 13px;
+        color: #6b7280;
+        margin-top: 4px;
+    }
+
+    .btn-follow {
+        background: #4F46E5;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+        white-space: nowrap;
+    }
+
+    .btn-follow:hover {
+        background: #4338CA;
+    }
+
+    .btn-follow:active {
+        transform: scale(0.95);
+    }
+
+    .reply-form {
+        margin-top: 12px;
+        margin-left: 0;
+        padding: 12px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border-left: 3px solid #4F46E5;
+    }
+
+    .reply-form-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .reply-textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+    }
+
+    .reply-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .btn-reply-submit, .btn-reply-cancel {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .btn-reply-submit {
+        background: #4F46E5;
+        color: white;
+    }
+
+    .btn-reply-submit:hover {
+        background: #4338CA;
+    }
+
+    .btn-reply-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-reply-cancel {
+        background: #e5e7eb;
+        color: #6b7280;
+    }
+
+    .btn-reply-cancel:hover {
+        background: #d1d5db;
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .replies-section {
+        margin-top: 16px;
+    }
+
+    .view-replies-btn {
+        background: none;
+        border: none;
+        color: #4F46E5;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 0;
+        margin-bottom: 8px;
+    }
+
+    .view-replies-btn:hover {
+        text-decoration: underline;
+    }
+
+    .replies-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .btn-follow.following {
+        background: #6b7280;
+    }
+
+    .btn-follow.following:hover {
+        background: #4b5563;
+    }
+
+    .description {
+        line-height: 1.8;
+        color: #374151;
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+
+    .description p {
+        margin-bottom: 16px;
+    }
+
+
+    /* GALLERY LIGHTBOX */
+    .gallery-lightbox {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        animation: fadeIn 0.3s;
+    }
+
+    .gallery-lightbox.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gallery-content {
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gallery-image {
+        max-width: 100%;
+        max-height: 90vh;
+        object-fit: contain;
+        border-radius: 8px;
+    }
+
+    .gallery-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: white;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.5);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+
+    .gallery-close:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 30px;
+        font-weight: bold;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+        user-select: none;
+    }
+
+    .gallery-nav:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    .gallery-prev {
+        left: 20px;
+    }
+
+    .gallery-next {
+        right: 20px;
+    }
+
+    .gallery-counter {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+    }
+
+    .gallery-thumbnails {
+        position: absolute;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        max-width: 80%;
+        overflow-x: auto;
+        padding: 10px;
+    }
+
+    .gallery-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.3s, transform 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .gallery-thumbnail:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .gallery-thumbnail.active {
+        opacity: 1;
+        border-color: white;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Hide scrollbar for thumbnails */
+    .gallery-thumbnails::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+    }
+
+    /* COMMENTS SECTION */
+    .comments-section {
+        margin-top: 40px;
+    }
+
+    .comments-header {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 24px;
+    }
+
+    .comment-form {
+        background: #f9fafb;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 32px;
+    }
+
+    .comment-form-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+
+    .rating-input {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+    }
+
+    .star-input {
+        font-size: 24px;
+        color: #d1d5db;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .star-input.active {
+        color: #fbbf24;
+    }
+
+    .comment-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        margin-bottom: 12px;
+    }
+
+    .comment-hint {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .btn-submit {
+        background: #4F46E5;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .btn-submit:hover {
+        background: #4338CA;
+    }
+
+    .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .comment-item {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .comment-item.comment-reply {
+        margin-left: 48px;
+        margin-top: 12px;
+        padding-left: 16px;
+        border-left: 2px solid #e5e7eb;
+    }
+
+    .comment-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .comment-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .comment-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .comment-author {
+        font-weight: 600;
+        color: #111827;
+        font-size: 14px;
+    }
+
+    .comment-rating {
+        color: #fbbf24;
+        font-size: 14px;
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+    .comment-text {
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 8px;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 16px;
+    }
+
+
+    /* RIGHT COLUMN */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .info-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .info-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 16px;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .info-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-icon {
+        width: 20px;
+        height: 20px;
+        color: #6b7280;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .info-text {
+        flex: 1;
+        font-size: 14px;
+        color: #374151;
+    }
+
+    .similar-posts {
+        margin-top: 24px;
+    }
+
+    .similar-post-item {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+
+    .similar-post-item:hover {
+        background: #f9fafb;
+    }
+
+    .similar-post-thumb {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .similar-post-info {
+        flex: 1;
+    }
+
+    .similar-post-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+
+    .similar-post-rating {
+        color: #fbbf24;
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .similar-post-price {
+        font-size: 13px;
+        color: #059669;
+        font-weight: 500;
+    }
+
+    .btn-directions {
+        width: 100%;
+        background: #4F46E5;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-directions:hover {
+        background: #4338CA;
+    }
+
+    .btn-directions:active {
+        transform: scale(0.98);
+    }
+</style>
+
+@Html.AntiForgeryToken()
+
+<div class="detail-container">
+    <div class="detail-content">
+        <!-- LEFT COLUMN -->
+        <div class="main-content">
+            <!-- Image Carousel -->
+            @if (Model.Images.Any())
+            {
+                <div class="image-carousel">
+                    @for (int i = 0; i < Model.Images.Count; i++)
+                    {
+                        <img src="@Model.Images[i]" 
+                             alt="@Model.Title" 
+                             class="carousel-image @(i == 0 ? "active" : "")" 
+                             data-gallery-index="@i" 
+                             onclick="openGallery(@i)" />
+                    }
+                    
+                    @if (Model.Images.Count > 1)
+                    {
+                        <button class="carousel-nav carousel-prev" onclick="changeCarouselImage(-1)">‹</button>
+                        <button class="carousel-nav carousel-next" onclick="changeCarouselImage(1)">›</button>
+                        <div class="carousel-counter">
+                            <span id="currentImageIndex">1</span> / <span id="totalImagesCount">@Model.Images.Count</span>
+                        </div>
+                        <div class="carousel-indicator">
+                            @for (int i = 0; i < Model.Images.Count; i++)
+                            {
+                                <span class="carousel-dot @(i == 0 ? "active" : "")" onclick="goToImage(@i)"></span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Title and Price -->
+            <div class="title-section">
+                <h1>@Model.Title</h1>
+                @if (Model.Price.HasValue)
+                {
+                    <div class="price">@Model.Price.Value.ToString("N0")₫ / phần</div>
+                }
+            </div>
+
+            <!-- Rating and Location -->
+            <div class="rating-location">
+                <div class="rating">
+                    <div class="stars">
+                        @{
+                            var stars = new string('★', Model.Rating);
+                        }
+                        @stars
+                    </div>
+                    <span class="rating-text">@Model.Rating.ToString("F1") (@Model.CommentCount đánh giá)</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Location))
+                {
+                    <div class="location">
+                        📍 @Model.Location
+                    </div>
+                }
+            </div>
+
+            <!-- Author Section -->
+            <div class="author-section">
+                <img src="@Model.AuthorAvatar" alt="@Model.AuthorName" class="author-avatar" />
+                <div class="author-info">
+                    <div class="author-name">@Model.AuthorName</div>
+                    <div class="author-stats">
+                        <span>Độ uy tín: @Model.AuthorReputationScore%</span>
+                        <span>@Model.AuthorPostCount bài viết</span>
+                        <span>@Model.AuthorFollowerCount.ToString("N0") người theo dõi</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.AuthorBio))
+                    {
+                        <div class="author-bio">@Model.AuthorBio</div>
+                    }
+                </div>
+                @if (User.Identity?.IsAuthenticated == true && User.FindFirst("UserId")?.Value != Model.AuthorId.ToString())
+                {
+                    <button class="btn-follow @(Model.IsFollowing ? "following" : "")" 
+                            data-author-id="@Model.AuthorId" 
+                            id="followBtn"
+                            onclick="toggleFollow(@Model.AuthorId)">
+                        @(Model.IsFollowing ? "Đã theo dõi" : "Theo dõi")
+                    </button>
+                }
+            </div>
+
+            <!-- Description -->
+            <div style="font-size: 14px; color: #111827; margin-bottom: 12px; font-weight: 700; margin-top: 24px;">
+                Mô tả chi tiết
+            </div>
+            <div class="description">
+                @Html.Raw(Model.Content.Replace("\n", "<br/>"))
+            </div>
+
+
+            <!-- Comments Section -->
+            <div class="comments-section">
+                <h2 class="comments-header">Đánh giá của bạn</h2>
+
+                <form id="commentForm" method="post" action="/Review/SubmitComment">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="postId" value="@Model.PostId" />
+                    <div class="comment-form">
+                        <div class="comment-form-title">Đánh giá của bạn</div>
+                        <div class="rating-input">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span class="star-input" data-rating="@i">★</span>
+                            }
+                        </div>
+                        <textarea name="content" id="commentContent" class="comment-textarea" placeholder="Chia sẻ trải nghiệm của bạn về món ăn này....." required></textarea>
+                        <div class="comment-hint">Viết đánh giá, bình luận để nhận coin và tăng độ uy tín</div>
+                        <button type="submit" class="btn-submit">Gửi đánh giá</button>
+                    </div>
+                </form>
+
+                <div class="comment-list">
+                    @foreach (var comment in Model.Comments)
+                    {
+                        var commentViewData = new ViewDataDictionary(ViewData);
+                        commentViewData["Comment"] = comment;
+                        commentViewData["PostId"] = Model.PostId;
+                        commentViewData["IsReply"] = false;
+                        @await Html.PartialAsync("_CommentItem", commentViewData)
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="sidebar">
+            <div class="info-card">
+                <h3 class="info-card-title">Thông tin chi tiết</h3>
+                @if (!string.IsNullOrEmpty(Model.OpeningHours))
+                {
+                    <div class="info-item">
+                        <span class="info-icon">🕒</span>
+                        <span class="info-text">@Model.OpeningHours</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div class="info-item">
+                        <span class="info-icon">📍</span>
+                        <span class="info-text">@Model.Address</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <div class="info-item">
+                        <span class="info-icon">📞</span>
+                        <span class="info-text">@Model.Phone</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.ParkingInfo))
+                {
+                    <div class="info-item">
+                        <span class="info-icon">🚗</span>
+                        <span class="info-text">@Model.ParkingInfo</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <button class="btn-directions" onclick="openDirections('@Html.Raw(Model.Address.Replace("'", "\\'"))')">
+                        🗺️ Chỉ đường
+                    </button>
+                }
+            </div>
+
+            @if (Model.SimilarPosts.Any())
+            {
+                <div class="info-card">
+                    <h3 class="info-card-title">Gợi ý tương tự</h3>
+                    @foreach (var similar in Model.SimilarPosts)
+                    {
+                        <a href="/Review/Detail/@similar.PostId" class="similar-post-item">
+                            <img src="@similar.ThumbnailUrl" alt="@similar.Title" class="similar-post-thumb" />
+                            <div class="similar-post-info">
+                                <div class="similar-post-title">@similar.Title</div>
+                                <div class="similar-post-rating">
+                                    @{
+                                        var similarStars = new string('★', similar.Rating);
+                                    }
+                                    @similarStars
+                                </div>
+                                @if (similar.Price.HasValue)
+                                {
+                                    <div class="similar-post-price">@similar.Price.Value.ToString("N0")₫</div>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Gallery Lightbox -->
+<div class="gallery-lightbox" id="galleryLightbox">
+    <span class="gallery-close" onclick="closeGallery()">&times;</span>
+    <div class="gallery-nav gallery-prev" onclick="changeImage(-1)">&#10094;</div>
+    <div class="gallery-nav gallery-next" onclick="changeImage(1)">&#10095;</div>
+    <div class="gallery-content">
+        <img id="galleryImage" class="gallery-image" src="" alt="Gallery Image" />
+    </div>
+    <div class="gallery-counter">
+        <span id="currentImage">1</span> / <span id="totalImages">1</span>
+    </div>
+    <div class="gallery-thumbnails" id="galleryThumbnails"></div>
+</div>
+
+<script>
+    // Gallery data
+    const galleryImages = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Images));
+    let currentGalleryIndex = 0;
+    
+    // Carousel data
+    let currentCarouselIndex = 0;
+    const totalCarouselImages = @Model.Images.Count;
+
+    // Open gallery
+    function openGallery(index) {
+        currentGalleryIndex = index;
+        updateGalleryImage();
+        document.getElementById('galleryLightbox').classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        
+        // Create thumbnails
+        const thumbnailsContainer = document.getElementById('galleryThumbnails');
+        thumbnailsContainer.innerHTML = '';
+        galleryImages.forEach((img, i) => {
+            const thumb = document.createElement('img');
+            thumb.src = img;
+            thumb.className = 'gallery-thumbnail' + (i === index ? ' active' : '');
+            thumb.onclick = () => {
+                currentGalleryIndex = i;
+                updateGalleryImage();
+            };
+            thumbnailsContainer.appendChild(thumb);
+        });
+    }
+
+    // Close gallery
+    function closeGallery() {
+        document.getElementById('galleryLightbox').classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    // Change image
+    function changeImage(direction) {
+        currentGalleryIndex += direction;
+        if (currentGalleryIndex < 0) {
+            currentGalleryIndex = galleryImages.length - 1;
+        } else if (currentGalleryIndex >= galleryImages.length) {
+            currentGalleryIndex = 0;
+        }
+        updateGalleryImage();
+    }
+
+    // Update gallery image
+    function updateGalleryImage() {
+        document.getElementById('galleryImage').src = galleryImages[currentGalleryIndex];
+        document.getElementById('currentImage').textContent = currentGalleryIndex + 1;
+        document.getElementById('totalImages').textContent = galleryImages.length;
+        
+        // Update active thumbnail
+        const thumbnails = document.querySelectorAll('.gallery-thumbnail');
+        thumbnails.forEach((thumb, i) => {
+            if (i === currentGalleryIndex) {
+                thumb.classList.add('active');
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
+    }
+
+    // Carousel functions
+    function changeCarouselImage(direction) {
+        currentCarouselIndex += direction;
+        
+        if (currentCarouselIndex < 0) {
+            currentCarouselIndex = totalCarouselImages - 1;
+        } else if (currentCarouselIndex >= totalCarouselImages) {
+            currentCarouselIndex = 0;
+        }
+        
+        updateCarousel();
+    }
+    
+    function goToImage(index) {
+        currentCarouselIndex = index;
+        updateCarousel();
+    }
+    
+    function updateCarousel() {
+        const images = document.querySelectorAll('.carousel-image');
+        const dots = document.querySelectorAll('.carousel-dot');
+        const prevBtn = document.querySelector('.carousel-prev');
+        const nextBtn = document.querySelector('.carousel-next');
+        
+        // Update images
+        images.forEach((img, i) => {
+            if (i === currentCarouselIndex) {
+                img.classList.add('active');
+            } else {
+                img.classList.remove('active');
+            }
+        });
+        
+        // Update dots
+        dots.forEach((dot, i) => {
+            if (i === currentCarouselIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+        
+        // Update counter
+        document.getElementById('currentImageIndex').textContent = currentCarouselIndex + 1;
+        
+        // Update button states
+        if (prevBtn) prevBtn.disabled = totalCarouselImages <= 1;
+        if (nextBtn) nextBtn.disabled = totalCarouselImages <= 1;
+    }
+    
+    // Auto-play carousel (optional - uncomment if you want auto-play)
+    // let carouselInterval;
+    // function startCarousel() {
+    //     carouselInterval = setInterval(() => {
+    //         changeCarouselImage(1);
+    //     }, 5000); // Change image every 5 seconds
+    // }
+    // function stopCarousel() {
+    //     if (carouselInterval) {
+    //         clearInterval(carouselInterval);
+    //     }
+    // }
+    // 
+    // const carousel = document.querySelector('.image-carousel');
+    // if (carousel) {
+    //     startCarousel();
+    //     carousel.addEventListener('mouseenter', stopCarousel);
+    //     carousel.addEventListener('mouseleave', startCarousel);
+    // }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const lightbox = document.getElementById('galleryLightbox');
+        if (lightbox.classList.contains('active')) {
+            if (e.key === 'Escape') {
+                closeGallery();
+            } else if (e.key === 'ArrowLeft') {
+                changeImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeImage(1);
+            }
+        } else {
+            // Navigate carousel with arrow keys when gallery is closed
+            if (e.key === 'ArrowLeft') {
+                changeCarouselImage(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeCarouselImage(1);
+            }
+        }
+    });
+    
+    // Initialize carousel
+    if (totalCarouselImages > 0) {
+        updateCarousel();
+    }
+
+    // Follow/Unfollow function
+    async function toggleFollow(authorId) {
+        const btn = document.getElementById('followBtn');
+        const followerCountSpan = document.querySelector('.author-stats span:nth-child(3)');
+        
+        if (!btn) return;
+        
+        // Disable button during request
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        
+        try {
+            // Get anti-forgery token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                         document.querySelector('input[type="hidden"][name="__RequestVerificationToken"]')?.value || '';
+            
+            const formData = new FormData();
+            formData.append('authorId', authorId);
+            if (token) {
+                formData.append('__RequestVerificationToken', token);
+            }
+            
+            const response = await fetch('/Review/ToggleFollow', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update button state
+                if (data.isFollowing) {
+                    btn.textContent = 'Đã theo dõi';
+                    btn.classList.add('following');
+                } else {
+                    btn.textContent = 'Theo dõi';
+                    btn.classList.remove('following');
+                }
+                
+                // Update follower count
+                if (followerCountSpan) {
+                    followerCountSpan.textContent = data.followerCount.toLocaleString('vi-VN') + ' người theo dõi';
+                }
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+                btn.textContent = originalText;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện thao tác');
+            btn.textContent = originalText;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // Close on background click
+    document.getElementById('galleryLightbox').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeGallery();
+        }
+    });
+
+    // Open directions function
+    function openDirections(address) {
+        // Encode address for URL
+        const encodedAddress = encodeURIComponent(address);
+        
+        // Open Google Maps with directions
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+        window.open(googleMapsUrl, '_blank');
+    }
+
+    // Toggle comment reaction (like/dislike)
+    async function toggleCommentReaction(commentId, reactionType) {
+        const likeBtn = document.getElementById(`likeBtn_${commentId}`);
+        const dislikeBtn = document.getElementById(`dislikeBtn_${commentId}`);
+        
+        if (!likeBtn || !dislikeBtn) return;
+        
+        // Disable buttons during request
+        likeBtn.disabled = true;
+        dislikeBtn.disabled = true;
+        
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            
+            const formData = new FormData();
+            formData.append('commentId', commentId);
+            formData.append('reactionType', reactionType);
+            if (token) {
+                formData.append('__RequestVerificationToken', token);
+            }
+            
+            const response = await fetch('/Review/ToggleCommentReaction', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update like button
+                likeBtn.textContent = `👍 Thích (${data.likeCount})`;
+                if (data.userLiked) {
+                    likeBtn.classList.add('liked');
+                } else {
+                    likeBtn.classList.remove('liked');
+                }
+                
+                // Update dislike button
+                dislikeBtn.textContent = `👎 Không thích (${data.dislikeCount})`;
+                if (data.userDisliked) {
+                    dislikeBtn.classList.add('disliked');
+                } else {
+                    dislikeBtn.classList.remove('disliked');
+                }
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện thao tác');
+        } finally {
+            likeBtn.disabled = false;
+            dislikeBtn.disabled = false;
+        }
+    }
+
+    // Star rating input
+    document.querySelectorAll('.star-input').forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            const stars = this.parentElement.querySelectorAll('.star-input');
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+    });
+
+    // Toggle reply form
+    function toggleReplyForm(commentId) {
+        const replyForm = document.getElementById('replyForm_' + commentId);
+        if (replyForm) {
+            replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+            if (replyForm.style.display === 'block') {
+                replyForm.querySelector('.reply-textarea').focus();
+            }
+        }
+    }
+
+    // Submit reply
+    async function submitReply(event, parentCommentId, postId) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const submitBtn = form.querySelector('.btn-reply-submit');
+        const textarea = form.querySelector('.reply-textarea');
+        const content = textarea.value.trim();
+
+        if (!content) {
+            alert('Vui lòng nhập nội dung phản hồi');
+            return;
+        }
+
+        // Disable button to prevent duplicate submit
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang gửi...';
+
+        try {
+            const formData = new FormData();
+            formData.append('postId', postId);
+            formData.append('parentCommentId', parentCommentId);
+            formData.append('content', content);
+            formData.append('__RequestVerificationToken', form.querySelector('input[name="__RequestVerificationToken"]').value);
+
+            const response = await fetch('/Review/SubmitComment', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                // Reload page to show new comment
+                window.location.reload();
+            } else {
+                const errorText = await response.text();
+                alert('Có lỗi xảy ra: ' + errorText);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi gửi phản hồi');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Gửi';
+        }
+    }
+
+    // Prevent duplicate submit for main comment form
+    document.getElementById('commentForm')?.addEventListener('submit', function(e) {
+        const submitBtn = this.querySelector('.btn-submit');
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang gửi...';
+    });
+
+    // Toggle replies visibility
+    function toggleReplies(commentId) {
+        const repliesList = document.getElementById('repliesList_' + commentId);
+        const toggleBtn = document.getElementById('repliesToggle_' + commentId);
+        
+        if (repliesList && toggleBtn) {
+            if (repliesList.style.display === 'none') {
+                repliesList.style.display = 'block';
+                const replyCount = repliesList.querySelectorAll('.comment-reply').length;
+                toggleBtn.textContent = `Ẩn ${replyCount} phản hồi`;
+            } else {
+                repliesList.style.display = 'none';
+                const replyCount = repliesList.querySelectorAll('.comment-reply').length;
+                toggleBtn.textContent = `Xem ${replyCount} phản hồi`;
+            }
+        }
+    }
+</script>

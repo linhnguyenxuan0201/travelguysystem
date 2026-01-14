@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using TripCompass.Domain.Enums;
 
@@ -14,6 +14,14 @@ namespace TripCompass.Domain.Entities
         public string Content { get; set; } = null!;
 
         public string? Location { get; set; }
+
+        // =========================
+        // 🔥 CONTACT INFO
+        // =========================
+        public string? OpeningHours { get; set; }
+        public string? Phone { get; set; }
+        public string? ParkingInfo { get; set; }
+        public decimal? Price { get; set; }
 
         public int ViewCount { get; set; }
         public int LikeCount { get; set; }

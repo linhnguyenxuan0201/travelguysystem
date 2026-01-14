@@ -68,6 +68,7 @@ builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Dashboard.GetDashboardStats.GetDashboardStatsHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Users.GetUsers.GetUsersHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Posts.CreatePost.CreatePostHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Comments.CreateComment.CreateCommentHandler).Assembly);
 });
 
 /* =========================

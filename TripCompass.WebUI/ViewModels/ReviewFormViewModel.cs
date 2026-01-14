@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using TripCompass.Domain.Entities;
 using TripCompass.Domain.Enums;
 namespace TripCompass.WebUI.ViewModels;
@@ -18,6 +18,12 @@ public class ReviewFormViewModel
 
     [Range(1, 5)]
     public int Rating { get; set; }
+
+    // Contact Info (Optional)
+    public string? OpeningHours { get; set; }
+    public string? Phone { get; set; }
+    public string? ParkingInfo { get; set; }
+    public decimal? Price { get; set; }
 
     [Required]
     public long SelectedCategoryId { get; set; }

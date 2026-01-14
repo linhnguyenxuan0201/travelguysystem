@@ -1,0 +1,72 @@
+@using TripCompass.WebUI.ViewModels
+@using System.Collections.Generic
+@{
+    var comment = ViewData["Comment"] as CommentViewModel;
+    var postId = (long)ViewData["PostId"];
+    var isReply = ViewData["IsReply"] as bool? ?? false;
+}
+
+<div class="comment-item @(isReply ? "comment-reply" : "")">
+    <img src="@comment.UserAvatar" alt="@comment.UserName" class="comment-avatar" />
+    <div class="comment-content">
+        <div class="comment-header">
+            <span class="comment-author">@comment.UserName</span>
+            <span class="comment-rating">
+                @{
+                    var commentStars = new string('★', comment.Rating);
+                }
+                @commentStars
+            </span>
+            <span class="comment-time">@comment.TimeAgo</span>
+        </div>
+        <div class="comment-text">@comment.Content</div>
+        <div class="comment-actions">
+            <button class="comment-action-btn @(comment.UserLiked ? "liked" : "")" 
+                    onclick="toggleCommentReaction(@comment.CommentId, 'LIKE')"
+                    id="likeBtn_@comment.CommentId">
+                👍 Thích (@comment.LikeCount)
+            </button>
+            <button class="comment-action-btn @(comment.UserDisliked ? "disliked" : "")" 
+                    onclick="toggleCommentReaction(@comment.CommentId, 'DISLIKE')"
+                    id="dislikeBtn_@comment.CommentId">
+                👎 Không thích (@comment.DislikeCount)
+            </button>
+            <button class="comment-action-btn" onclick="toggleReplyForm(@comment.CommentId)">
+                💬 Trả lời
+            </button>
+        </div>
+        
+        <!-- Reply Form (Hidden by default) -->
+        <div class="reply-form" id="replyForm_@comment.CommentId" style="display: none;">
+            <form class="reply-form-inner" onsubmit="submitReply(event, @comment.CommentId, @postId)">
+                @Html.AntiForgeryToken()
+                <textarea class="reply-textarea" name="content" placeholder="Viết phản hồi..." required></textarea>
+                <div class="reply-actions">
+                    <button type="submit" class="btn-reply-submit">Gửi</button>
+                    <button type="button" class="btn-reply-cancel" onclick="toggleReplyForm(@comment.CommentId)">Hủy</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Replies Section -->
+        @if (comment.Replies.Any())
+        {
+            <div class="replies-section" id="replies_@comment.CommentId">
+                <button class="view-replies-btn" onclick="toggleReplies(@comment.CommentId)">
+                    <span id="repliesToggle_@comment.CommentId">Xem @comment.ReplyCount phản hồi</span>
+                </button>
+                <div class="replies-list" id="repliesList_@comment.CommentId" style="display: none;">
+                    @foreach (var reply in comment.Replies)
+                    {
+                        var replyViewData = new ViewDataDictionary(ViewData);
+                        replyViewData.Remove("Comment");
+                        replyViewData["Comment"] = reply;
+                        replyViewData["PostId"] = postId;
+                        replyViewData["IsReply"] = true;
+                        @await Html.PartialAsync("_CommentItem", replyViewData)
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

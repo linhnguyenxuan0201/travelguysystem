@@ -1,4 +1,4 @@
-﻿<!-- LEAFLET MAP -->
+<!-- LEAFLET MAP -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -16,52 +16,84 @@
     }
 
     .reward-banner {
-        background: linear-gradient(90deg,#f59e0b,#fbbf24);
-        border-radius: 14px;
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        border-radius: 12px;
         padding: 20px 28px;
         color: white;
         margin-bottom: 32px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .reward-banner h3 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .reward-banner p {
+        margin: 0;
+        font-size: 14px;
+        opacity: 0.95;
     }
 
     .review-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr;
         gap: 24px;
     }
 
     .card {
         background: #fff;
-        border-radius: 14px;
+        border-radius: 12px;
         border: 1px solid #e5e7eb;
-        padding: 24px;
+        padding: 32px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
     .card-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 28px;
+        color: #111827;
     }
 
     .form-group {
-        margin-bottom: 18px;
+        margin-bottom: 24px;
     }
 
     label {
         font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 6px;
+        font-weight: 600;
+        margin-bottom: 8px;
         display: block;
+        color: #374151;
     }
 
-    input, textarea, select {
+    input[type="text"],
+    input[type="file"],
+    textarea,
+    select {
         width: 100%;
-        padding: 12px 14px;
-        border-radius: 10px;
+        padding: 12px 16px;
+        border-radius: 8px;
         border: 1px solid #d1d5db;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus,
+    select:focus {
+        outline: none;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
     }
 
     textarea {
-        min-height: 120px;
+        min-height: 150px;
+        resize: vertical;
+        line-height: 1.6;
     }
 
     .location-input {
@@ -73,10 +105,11 @@
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
+            font-size: 18px;
         }
 
         .location-input input {
-            padding-left: 38px;
+            padding-left: 42px;
         }
 
     .location-dropdown {
@@ -86,88 +119,192 @@
         right: 0;
         background: #fff;
         border: 1px solid #e5e7eb;
-        border-radius: 10px;
+        border-radius: 8px;
         margin-top: 6px;
         max-height: 260px;
         overflow-y: auto;
         z-index: 999;
         display: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
         .location-dropdown div {
-            padding: 10px 14px;
+            padding: 12px 16px;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
             .location-dropdown div:hover {
-                background: #f3f4f6;
+                background: #f9fafb;
             }
 
     #map {
         margin-top: 14px;
         height: 260px;
-        border-radius: 14px;
+        border-radius: 8px;
         border: 1px solid #e5e7eb;
         display: none;
     }
 
-    .rating span {
-        font-size: 28px;
-        cursor: pointer;
-        color: #e5e7eb;
+    .rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-        .rating span.active {
-            color: #facc15;
+    .rating span[data-value] {
+        font-size: 32px;
+        cursor: pointer;
+        color: #d1d5db;
+        transition: color 0.2s, transform 0.2s;
+        user-select: none;
+    }
+
+        .rating span[data-value]:hover {
+            transform: scale(1.1);
         }
+
+        .rating span[data-value].active {
+            color: #fbbf24;
+        }
+
+    .rating-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #6b7280;
+        margin-left: 8px;
+    }
 
     .upload-box {
         border: 2px dashed #d1d5db;
-        border-radius: 14px;
-        padding: 30px;
+        border-radius: 12px;
+        padding: 40px 20px;
         text-align: center;
         cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        background: #f9fafb;
     }
 
+        .upload-box:hover {
+            border-color: #4F46E5;
+            background: #f3f4f6;
+        }
+
+        .upload-box::before {
+            content: "📷";
+            font-size: 32px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
     .upload-preview {
-        margin-top: 12px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
     }
 
     .preview-item {
         position: relative;
+        aspect-ratio: 1;
     }
 
         .preview-item img {
-            width: 90px;
-            height: 90px;
-            border-radius: 10px;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
             object-fit: cover;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #e5e7eb;
+            transition: transform 0.2s;
+        }
+
+        .preview-item:hover img {
+            transform: scale(1.05);
         }
 
         .preview-item button {
             position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 22px;
-            height: 22px;
+            top: -8px;
+            right: -8px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
-            border: none;
+            border: 2px solid white;
             background: #ef4444;
             color: white;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .preview-item button:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+    .existing-image-item {
+        position: relative;
+        aspect-ratio: 1;
+    }
+
+        .existing-image-item img {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+        }
+
+        .existing-image-item label {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .existing-image-item input[type="checkbox"] {
+            width: auto;
         }
 
     .btn-primary {
-        background: #3b82f6;
+        background: #4F46E5;
         color: white;
-        padding: 12px;
-        border-radius: 10px;
+        padding: 14px 24px;
+        border-radius: 8px;
         border: none;
         width: 100%;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+        margin-top: 8px;
+    }
+
+        .btn-primary:hover {
+            background: #4338CA;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+    .required-star {
+        color: #ef4444;
+        margin-left: 4px;
     }
 </style>
 
@@ -190,15 +327,19 @@
                 <input type="hidden" asp-for="PostId" />
 
                 <div class="form-group">
-                    <label>Tên địa điểm *</label>
-                    <input asp-for="Title" required />
+                    <label>
+                        Tên địa điểm<span class="required-star">*</span>
+                    </label>
+                    <input asp-for="Title" placeholder="Nhập tên địa điểm..." required />
                 </div>
 
                 <div class="form-group">
-                    <label>Địa chỉ *</label>
+                    <label>
+                        Địa chỉ<span class="required-star">*</span>
+                    </label>
                     <div class="location-input">
                         <i>📍</i>
-                        <input asp-for="Location" id="locationInput" autocomplete="off" required />
+                        <input asp-for="Location" id="locationInput" placeholder="Nhập địa chỉ..." autocomplete="off" required />
                         <div id="locationDropdown" class="location-dropdown"></div>
                     </div>
                 </div>
@@ -210,20 +351,24 @@
                 <div id="map"></div>
 
                 <div class="form-group">
-                    <label>Đánh giá *</label>
+                    <label>
+                        Đánh giá<span class="required-star">*</span>
+                    </label>
                     <div class="rating" id="ratingStars">
                         @for (int i = 1; i <= 5; i++)
                         {
                             <span data-value="@i">★</span>
                         }
-                        <span id="ratingText">0/5</span>
+                        <span class="rating-text" id="ratingText">0/5</span>
                     </div>
                     <input type="hidden" asp-for="Rating" id="ratingInput" />
                 </div>
 
                 <div class="form-group">
-                    <label>Chia sẻ trải nghiệm *</label>
-                    <textarea asp-for="Content" required></textarea>
+                    <label>
+                        Chia sẻ trải nghiệm<span class="required-star">*</span>
+                    </label>
+                    <textarea asp-for="Content" placeholder="Chia sẻ trải nghiệm của bạn về địa điểm này..." required></textarea>
                 </div>
                 @if (Model.PostId > 0 && Model.ExistingImages.Any())
                 {
@@ -232,12 +377,14 @@
                         <div class="upload-preview">
                             @foreach (var img in Model.ExistingImages)
                             {
-                                <div class="preview-item">
+                                <div class="existing-image-item">
                                     <img src="@img.ImageUrl" />
-                                    <input type="checkbox"
-                                           name="DeletedImageIds"
-                                           value="@img.PostImageId" />
-                                    <small>Xoá</small>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="DeletedImageIds"
+                                               value="@img.PostImageId" />
+                                        Xóa
+                                    </label>
                                 </div>
                             }
                         </div>
@@ -246,7 +393,10 @@
 
                 <div class="form-group">
                     <label>Ảnh (tối đa 5)</label>
-                    <div class="upload-box" id="uploadBox">Click để chọn ảnh</div>
+                    <div class="upload-box" id="uploadBox">
+                        <div>Click để chọn ảnh</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">Tối đa 5 ảnh</div>
+                    </div>
                     <input type="file"
                            id="imageInput"
                            asp-for="Images"
@@ -258,9 +408,11 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Danh mục *</label>
+                    <label>
+                        Danh mục<span class="required-star">*</span>
+                    </label>
                     <select asp-for="SelectedCategoryId" required>
-                        <option value="">-- Chọn --</option>
+                        <option value="">-- Chọn danh mục --</option>
                         @foreach (var c in Model.AllCategories)
                         {
                             <option value="@c.CategoryId">@c.Name</option>
@@ -268,7 +420,33 @@
                     </select>
                 </div>
 
-                <button class="btn-primary">Đăng đánh giá 🚀</button>
+                <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
+
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #111827;">Thông tin chi tiết (Tùy chọn)</h3>
+
+                <div class="form-group">
+                    <label>Giờ mở cửa</label>
+                    <input asp-for="OpeningHours" placeholder="VD: 6:00 - 22:00 hàng ngày" />
+                </div>
+
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input asp-for="Phone" placeholder="VD: 024 3123 4567" />
+                </div>
+
+                <div class="form-group">
+                    <label>Bãi đỗ xe</label>
+                    <input asp-for="ParkingInfo" placeholder="VD: Có sẵn" />
+                </div>
+
+                <div class="form-group">
+                    <label>Giá (₫)</label>
+                    <input type="number" asp-for="Price" placeholder="VD: 85000" step="1000" min="0" />
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    @(Model.PostId > 0 ? "Cập nhật đánh giá ✏️" : "Đăng đánh giá 🚀")
+                </button>
             </form>
         </div>
     </div>

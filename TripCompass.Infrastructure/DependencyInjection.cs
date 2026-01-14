@@ -7,6 +7,7 @@ using TripCompass.Application.Interfaces;
 using TripCompass.Application.Interfaces.Repositories;
 using TripCompass.Infrastructure.Auth;
 using TripCompass.Infrastructure.Persistence;
+using TripCompass.Application.Services;
 using TripCompass.Infrastructure.Repositories;
 using TripCompass.Infrastructure.Security;
 using TripCompass.Infrastructure.Services;
@@ -50,6 +51,9 @@ namespace TripCompass.Infrastructure
 
             // ================= EMAIL =================
             services.AddScoped<IEmailService, SmtpEmailService>();
+
+            // ================= SERVICES =================
+            services.AddScoped<SentimentAnalysisService>();
 
             return services;
         }
