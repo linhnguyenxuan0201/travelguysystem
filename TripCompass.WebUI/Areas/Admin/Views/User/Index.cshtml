@@ -6,6 +6,7 @@
     int totalPages = ViewBag.TotalPages;
     string searchTerm = ViewBag.SearchTerm;
     string status = ViewBag.Status;
+    string selectedRole = ViewBag.Role;
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -69,6 +70,13 @@
                 <option value="banned" @(status == "banned" ? "selected" : "")>Banned</option>
             </select>
 
+            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Roles</option>
+                <option value="Admin" @(selectedRole == "Admin" ? "selected" : "")>Admin</option>
+                <option value="Moderator" @(selectedRole == "Moderator" ? "selected" : "")>Moderator</option>
+                <option value="User" @(selectedRole == "User" ? "selected" : "")>User</option>
+            </select>
+
             <input type="text"
                    name="searchTerm"
                    class="form-control form-control-sm"
@@ -110,11 +118,11 @@
                             <td>@user.Email</td>
 
                             <td>
-                                @foreach ( var role in user.Roles.Split(',') )
+                                @foreach ( var roleName in user.Roles.Split(',') )
                                 {
-                                    if ( !string.IsNullOrWhiteSpace(role) )
+                                    if ( !string.IsNullOrWhiteSpace(roleName) )
                                     {
-                                        <span class="badge badge-role me-1">@role.Trim()</span>
+                                        <span class="badge badge-role me-1">@roleName.Trim()</span>
                                     }
                                 }
                             </td>
@@ -175,7 +183,7 @@
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
                             <a class="page-link"
-                               href="?page=@i&searchTerm=@searchTerm&status=@status">
+                               href="?page=@i&searchTerm=@searchTerm&status=@status&role=@selectedRole">
                                 @i
                             </a>
                         </li>

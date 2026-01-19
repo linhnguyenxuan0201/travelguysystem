@@ -22,8 +22,27 @@ namespace TripCompass.Application.Auth
             if (user == null || user.IsBanned)
                 return null;
 
-            if (!_hasher.Verify(user.PasswordHash, password))
+            // Reject placeholder / non-password accounts
+            if (string.IsNullOrEmpty(user.PasswordHash) ||
+                user.PasswordHash == "HASH_ADMIN" ||
+                user.PasswordHash == "HASH_MOD" ||
+                user.PasswordHash == "HASH_USER1" ||
+                user.PasswordHash == "HASH_USER2" ||
+                user.PasswordHash == "GOOGLE")
+            {
                 return null;
+            }
+
+            try
+            {
+                if (!_hasher.Verify(user.PasswordHash, password))
+                    return null;
+            }
+            catch (System.FormatException)
+            {
+                // Corrupted/legacy hash in database (ex: seeded as plain text)
+                return null;
+            }
 
             return user;
         }

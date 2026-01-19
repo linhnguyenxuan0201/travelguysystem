@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripCompass.Application.Features.Admin.Dashboard.GetDashboardStats;
 
@@ -6,6 +7,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Route("Admin/[controller]")]
+    [Authorize(Roles = "Admin")]
     public class DashboardController : Controller
     {
         private readonly IMediator _mediator;
