@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using TripCompass.Domain.Entities;
 using TripCompass.Domain.Enums;
 using TripCompass.Infrastructure.Persistence;
@@ -9,6 +10,9 @@ namespace TripCompass.Infrastructure.Persistence
     {
         public static async Task SeedAsync(AppDbContext context)
         {
+            // Password hasher for creating admin account
+            var passwordHasher = new PasswordHasher<string>();
+
             // 1. Roles
             if (!await context.Roles.AnyAsync())
             {
@@ -24,22 +28,23 @@ namespace TripCompass.Infrastructure.Persistence
             if (!await context.Users.AnyAsync())
             {
                 var users = new List<User>();
-                var passwordHash = "HASHED_PASSWORD"; // In real app use hasher
-
-                // Admin
-                users.Add(new User("admin", "admin@tripcompass.com", passwordHash) { CreatedAt = DateTime.UtcNow.AddMonths(-6) });
                 
-                // Regular Users (Active)
+                // Admin - password: Admin123! (default admin password)
+                var adminPasswordHash = passwordHasher.HashPassword("admin", "Admin123!");
+                users.Add(new User("admin", "admin@tripcompass.com", adminPasswordHash) { CreatedAt = DateTime.UtcNow.AddMonths(-6) });
+                
+                // Regular Users (Active) - password: User123! (default user password)
+                var userPasswordHash = passwordHasher.HashPassword("user", "User123!");
                 for (int i = 1; i <= 20; i++)
                 {
                     var date = DateTime.UtcNow.AddDays(-new Random().Next(0, 30));
-                    users.Add(new User($"user{i}", $"user{i}@example.com", passwordHash) { CreatedAt = date, ReputationScore = new Random().Next(0, 500) });
+                    users.Add(new User($"user{i}", $"user{i}@example.com", userPasswordHash) { CreatedAt = date, ReputationScore = new Random().Next(0, 500) });
                 }
 
                 // Banned Users
                 for (int i = 1; i <= 5; i++)
                 {
-                    var user = new User($"banned{i}", $"banned{i}@example.com", passwordHash) { CreatedAt = DateTime.UtcNow.AddMonths(-1) };
+                    var user = new User($"banned{i}", $"banned{i}@example.com", userPasswordHash) { CreatedAt = DateTime.UtcNow.AddMonths(-1) };
                     user.Ban();
                     users.Add(user);
                 }

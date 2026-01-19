@@ -7,6 +7,7 @@ namespace TripCompass.Application.Features.Admin.Users.GetUsers
     {
         public string? SearchTerm { get; set; }
         public bool? IsBanned { get; set; } // Filter by status
+        public string? Role { get; set; }    // Filter by role name (Admin/User/Moderator)
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }

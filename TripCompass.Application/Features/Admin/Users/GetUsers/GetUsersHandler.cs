@@ -32,6 +32,11 @@ namespace TripCompass.Application.Features.Admin.Users.GetUsers
                 query = query.Where(u => u.IsBanned == request.IsBanned.Value);
             }
 
+            if (!string.IsNullOrEmpty(request.Role))
+            {
+                query = query.Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == request.Role));
+            }
+
             var totalCount = await query.CountAsync(cancellationToken);
 
             var items = await query

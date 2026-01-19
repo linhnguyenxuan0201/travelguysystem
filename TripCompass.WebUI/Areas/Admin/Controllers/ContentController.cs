@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripCompass.Application.Features.Admin.Posts.ChangePostStatus;
 using TripCompass.Application.Features.Admin.Posts.GetPostById;
@@ -9,6 +10,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Route("Admin/[controller]")]
+    [Authorize(Roles = "Admin")]
     public class ContentController : Controller
     {
         private readonly IMediator _mediator;

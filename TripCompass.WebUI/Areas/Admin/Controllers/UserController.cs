@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TripCompass.Application.Features.Admin.Users.BanUser;
 using TripCompass.Application.Features.Admin.Users.GetUsers;
@@ -8,6 +9,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Route("Admin/[controller]")]
+    [Authorize(Roles = "Admin")]
     public class UserController : Controller
     {
         private readonly IMediator _mediator;
@@ -18,7 +20,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string? searchTerm, string? status, int page = 1)
+        public async Task<IActionResult> Index(string? searchTerm, string? status, string? role, int page = 1)
         {
             bool? isBanned = null;
             if (status == "banned") isBanned = true;
@@ -28,6 +30,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
             { 
                 SearchTerm = searchTerm, 
                 IsBanned = isBanned,
+                Role = role,
                 Page = page, 
                 PageSize = 10 
             };
@@ -37,6 +40,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
             ViewBag.CurrentPage = page;
             ViewBag.SearchTerm = searchTerm;
             ViewBag.Status = status;
+            ViewBag.Role = role;
             ViewBag.TotalPages = (int)Math.Ceiling(totalCount / 10.0);
 
             return View(items);

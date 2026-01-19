@@ -8,6 +8,12 @@ namespace TripCompass.WebUI.Controllers
     {
         public IActionResult Index()
         {
+            // Nếu là Admin và đã đăng nhập, tự động điều hướng sang Admin Portal
+            if (User.Identity?.IsAuthenticated == true && User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Index", "Portal", new { area = "Admin" });
+            }
+
             return View();
         }
 
