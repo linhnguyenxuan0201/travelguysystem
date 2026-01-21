@@ -46,6 +46,7 @@ namespace TripCompass.WebUI.ViewModels
         public string? Address { get; set; }
         public string? Phone { get; set; }
         public string? ParkingInfo { get; set; }
+        public bool IsPartner { get; set; }
         
         // Comments
         public List<CommentViewModel> Comments { get; set; } = new();

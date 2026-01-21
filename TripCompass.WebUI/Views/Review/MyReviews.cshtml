@@ -3,7 +3,7 @@
 
 @{
     ViewData["Title"] = "My Reviews";
-    Layout = "_Layout";
+    Layout = "_ReviewManagerLayout";
 }
 
 <style>
@@ -351,7 +351,7 @@
     <div class="stats-simple">
         <div class="stat-box">
             <div class="stat-left">
-                <div class="label">Total Reviews</div>
+                <div class="label">Tổng số bài viết</div>
                 <div class="value">@Model.TotalCount</div>
             </div>
             <div class="stat-icon blue">📄</div>
@@ -359,26 +359,26 @@
 
         <div class="stat-box">
             <div class="stat-left">
-                <div class="label">Food</div>
+                <div class="label">Du lịch</div>
+                <div class="value">@Model.TravelCount</div>
+            </div>
+            <div class="stat-icon orange">✈️</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-left">
+                <div class="label">Ẩm thực</div>
                 <div class="value">@Model.FoodCount</div>
             </div>
-            <div class="stat-icon orange">🍽️</div>
+            <div class="stat-icon purple">🍽️</div>
         </div>
 
         <div class="stat-box">
             <div class="stat-left">
-                <div class="label">Hotel</div>
+                <div class="label">Khách sạn</div>
                 <div class="value">@Model.HotelCount</div>
             </div>
-            <div class="stat-icon purple">🏨</div>
-        </div>
-
-        <div class="stat-box">
-            <div class="stat-left">
-                <div class="label">Entertainment</div>
-                <div class="value">@Model.EntertainmentCount</div>
-            </div>
-            <div class="stat-icon green">🎢</div>
+            <div class="stat-icon green">🏨</div>
         </div>
     </div>
 

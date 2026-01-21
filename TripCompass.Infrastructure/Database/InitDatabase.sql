@@ -138,7 +138,7 @@ CREATE TABLE AdminLogs (
 ========================================================= */
 
 -- ROLES
-INSERT INTO Roles (RoleName) VALUES ('Admin'), ('Moderator'), ('User');
+INSERT INTO Roles (RoleName) VALUES ('Admin'), ('Moderator'), ('User'), ('Partner');
 
 -- USERS
 INSERT INTO Users (UserName, Email, PasswordHash, ReputationScore, ReputationLevel)

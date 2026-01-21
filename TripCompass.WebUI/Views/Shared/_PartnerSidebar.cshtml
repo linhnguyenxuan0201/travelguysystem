@@ -1,0 +1,98 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    .psb-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 20px 16px;
+        background: #fff;
+        border-right: 1px solid #e5e7eb;
+    }
+    .psb-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 26px;
+        padding: 0 8px;
+    }
+    .psb-brand .badge {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: #2563eb;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+    }
+    .psb-brand h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 900;
+        color: #111827;
+    }
+    .psb-brand p {
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        color: #6b7280;
+    }
+    .psb-nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .psb-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #374151;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .psb-link:hover { background: #f3f4f6; }
+    .psb-link.active { background: #eff6ff; color: #2563eb; }
+    .psb-link i { width: 18px; text-align:center; }
+    .psb-footer { padding-top: 14px; border-top: 1px solid #e5e7eb; }
+</style>
+
+<div class="psb-container">
+    <div class="psb-brand">
+        <div class="badge"><i class="fa-solid fa-store"></i></div>
+        <div>
+            <h3>ShopAdmin</h3>
+            <p>Quản lý cửa hàng</p>
+        </div>
+    </div>
+
+    <nav class="psb-nav">
+        <a class="psb-link active" href="/Partner/Dashboard"><i class="fa-solid fa-chart-line"></i> Tổng quan</a>
+        <a class="psb-link" href="/Partner/Dashboard#orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
+        <a class="psb-link" href="/Partner/DiscountCodes"><i class="fa-solid fa-tag"></i> Mã giảm giá</a>
+        <a class="psb-link" href="/Partner/Dashboard#wallet"><i class="fa-solid fa-wallet"></i> Ví tiền</a>
+        <a class="psb-link" href="/Review/MyReviews"><i class="fa-solid fa-star"></i> Bài viết của tôi</a>
+    </nav>
+
+    <div class="psb-footer">
+        <a class="psb-link" href="/"><i class="fa-solid fa-house"></i> Về trang chủ</a>
+        <a class="psb-link" href="/Account/Logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.psb-link').forEach(link => {
+            const href = link.getAttribute('href') || '';
+            // Remove active class from all links first
+            link.classList.remove('active');
+            
+            // Check if current path matches this link
+            if (href === currentPath || 
+                (href === '/Partner/Dashboard' && currentPath === '/Partner/Dashboard') ||
+                (href === '/Partner/DiscountCodes' && currentPath === '/Partner/DiscountCodes')) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+

@@ -70,7 +70,7 @@ namespace TripCompass.WebUI.Controllers
                 .Where(pc =>
                     pc.Post.UserId == userId &&
                     !pc.Post.IsDeleted)
-                .GroupBy(pc => pc.Category.Name)
+                .GroupBy(pc => pc.Category.Slug)
                 .Select(g => new
                 {
                     Category = g.Key,
@@ -78,14 +78,15 @@ namespace TripCompass.WebUI.Controllers
                 })
                 .ToListAsync();
 
+            // Match by seeded slugs in DB: du-lich, am-thuc, khach-san
+            int travelCount =
+                categoryStats.FirstOrDefault(x => x.Category == "du-lich")?.Count ?? 0;
+
             int foodCount =
-                categoryStats.FirstOrDefault(x => x.Category == "Food")?.Count ?? 0;
+                categoryStats.FirstOrDefault(x => x.Category == "am-thuc")?.Count ?? 0;
 
             int hotelCount =
-                categoryStats.FirstOrDefault(x => x.Category == "Hotel")?.Count ?? 0;
-
-            int entertainmentCount =
-                categoryStats.FirstOrDefault(x => x.Category == "Entertainment")?.Count ?? 0;
+                categoryStats.FirstOrDefault(x => x.Category == "khach-san")?.Count ?? 0;
 
             // ---------- VIEW MODEL ----------
             var vm = new MyReviewsViewModel
@@ -100,9 +101,9 @@ namespace TripCompass.WebUI.Controllers
                 TotalPages = (int)Math.Ceiling(filteredCount / (double)pageSize),
 
                 TotalCount = totalAll,
+                TravelCount = travelCount,
                 FoodCount = foodCount,
-                HotelCount = hotelCount,
-                EntertainmentCount = entertainmentCount
+                HotelCount = hotelCount
             };
 
             return View(vm);
@@ -389,6 +390,13 @@ namespace TripCompass.WebUI.Controllers
 
             if (post == null) return NotFound();
 
+            // Load UserRoles và Role riêng để đảm bảo load đúng
+            await _context.Entry(post.User)
+                .Collection(u => u.UserRoles)
+                .Query()
+                .Include(ur => ur.Role)
+                .LoadAsync();
+
             // Tăng view count
             post.ViewCount++;
             await _context.SaveChangesAsync();
@@ -470,7 +478,7 @@ namespace TripCompass.WebUI.Controllers
 
             // Lấy tất cả user IDs từ comments
             var userIds = comments.Select(c => c.UserId).Distinct().ToList();
-            
+
             // Lấy tất cả users một lần
             var users = await _context.Users
                 .Where(u => userIds.Contains(u.UserId))
@@ -575,8 +583,8 @@ namespace TripCompass.WebUI.Controllers
             // Lấy similar posts (cùng category, khác post hiện tại)
             var categoryIds = post.PostCategories.Select(pc => pc.CategoryId).ToList();
             var similarPosts = await _context.Posts
-                .Where(p => 
-                    p.PostId != post.PostId && 
+                .Where(p =>
+                    p.PostId != post.PostId &&
                     !p.IsDeleted &&
                     p.Status == PostStatus.Published &&
                     p.PostCategories.Any(pc => categoryIds.Contains(pc.CategoryId)))
@@ -599,12 +607,26 @@ namespace TripCompass.WebUI.Controllers
                 .ToListAsync();
 
             // Tính average rating từ comments (nếu có)
-            var averageRating = comments.Any() 
+            var averageRating = comments.Any()
                 ? (int)Math.Round(comments.Average(c => 5.0)) // Default 5, có thể lấy từ reactions
                 : post.ReputationImpact;
 
             // Tính rating count
             var ratingCount = comments.Count;
+
+            // Kiểm tra nếu author có role Partner
+            // Đảm bảo UserRoles đã được load
+            var authorRoles = post.User.UserRoles?.Select(ur => ur.Role?.RoleName).ToList() ?? new List<string>();
+            var authorHasPartnerRole = authorRoles.Any(role => role == "Partner");
+
+            // Kiểm tra nếu post có thông tin liên hệ (Phone hoặc OpeningHours)
+            var hasContactInfo = !string.IsNullOrEmpty(post.Phone) || !string.IsNullOrEmpty(post.OpeningHours);
+
+            // IsPartner = true nếu:
+            // 1. post.IsPartner = true, HOẶC
+            // 2. author có role Partner, HOẶC  
+            // 3. post có thông tin liên hệ (Phone hoặc OpeningHours) - để hiển thị phần đặt chỗ
+            var isPartner = post.IsPartner || authorHasPartnerRole || hasContactInfo;
 
             var vm = new ReviewDetailViewModel
             {
@@ -615,15 +637,16 @@ namespace TripCompass.WebUI.Controllers
                 Status = post.Status,
                 Rating = post.ReputationImpact,
                 Price = post.Price,
-                
+                IsPartner = isPartner,
+
                 ViewCount = post.ViewCount,
                 LikeCount = post.LikeCount,
                 DislikeCount = post.DislikeCount,
                 CommentCount = comments.Count,
-                
+
                 CreatedAt = post.CreatedAt,
                 PublishedAt = post.PublishedAt,
-                
+
                 AuthorId = post.UserId,
                 AuthorName = post.User.UserName,
                 AuthorAvatar = authorAvatar ?? "/images/default-avatar.jpg",
@@ -633,7 +656,7 @@ namespace TripCompass.WebUI.Controllers
                 AuthorFollowerCount = authorFollowerCount,
                 AuthorBio = null, // Có thể thêm vào User entity nếu cần
                 IsFollowing = isFollowing,
-                
+
                 Categories = post.PostCategories.Select(pc => pc.Category.Name).ToList(),
                 Images = post.PostImages
                     .Where(i => !i.IsDeleted)
@@ -645,12 +668,12 @@ namespace TripCompass.WebUI.Controllers
                     .OrderBy(i => i.SortOrder)
                     .Select(i => i.ImageUrl)
                     .FirstOrDefault() ?? "/images/placeholder.jpg",
-                
+
                 OpeningHours = post.OpeningHours,
                 Address = post.Location,
                 Phone = post.Phone,
                 ParkingInfo = post.ParkingInfo,
-                
+
                 Comments = commentViewModels,
                 SimilarPosts = similarPosts
             };
@@ -678,8 +701,8 @@ namespace TripCompass.WebUI.Controllers
                 var command = new CreateCommentCommand(postId, userId, content, parentCommentId);
                 await _mediator.Send(command);
 
-                TempData["Success"] = parentCommentId.HasValue 
-                    ? "🎉 Phản hồi của bạn đã được gửi!" 
+                TempData["Success"] = parentCommentId.HasValue
+                    ? "🎉 Phản hồi của bạn đã được gửi!"
                     : "🎉 Đánh giá của bạn đã được gửi! Bạn đã nhận được coin và điểm uy tín.";
                 return RedirectToAction(nameof(Detail), new { id = postId });
             }
@@ -730,7 +753,7 @@ namespace TripCompass.WebUI.Controllers
                 if (existingReaction.ReactionType == reactionType)
                 {
                     _context.CommentReactions.Remove(existingReaction);
-                    
+
                     // Cập nhật uy tín của người comment
                     if (reactionType == "LIKE")
                     {
@@ -747,7 +770,7 @@ namespace TripCompass.WebUI.Controllers
                     var oldType = existingReaction.ReactionType;
                     existingReaction.ReactionType = reactionType;
                     _context.CommentReactions.Update(existingReaction);
-                    
+
                     // Cập nhật uy tín
                     if (oldType == "LIKE" && reactionType == "DISLIKE")
                     {
@@ -770,7 +793,7 @@ namespace TripCompass.WebUI.Controllers
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.CommentReactions.Add(reaction);
-                
+
                 // Cập nhật uy tín của người comment
                 if (reactionType == "LIKE")
                 {
@@ -832,9 +855,10 @@ namespace TripCompass.WebUI.Controllers
                 var newFollowerCount = await _context.UserFollows
                     .CountAsync(f => f.FollowingId == authorId);
 
-                return Json(new { 
-                    success = true, 
-                    isFollowing = false, 
+                return Json(new
+                {
+                    success = true,
+                    isFollowing = false,
                     followerCount = newFollowerCount,
                     message = "Đã bỏ theo dõi"
                 });
@@ -855,9 +879,10 @@ namespace TripCompass.WebUI.Controllers
                 var newFollowerCount = await _context.UserFollows
                     .CountAsync(f => f.FollowingId == authorId);
 
-                return Json(new { 
-                    success = true, 
-                    isFollowing = true, 
+                return Json(new
+                {
+                    success = true,
+                    isFollowing = true,
                     followerCount = newFollowerCount,
                     message = "Đã theo dõi"
                 });
@@ -896,14 +921,14 @@ namespace TripCompass.WebUI.Controllers
             // Tính stats
             var allPublishedPosts = _context.Posts
                 .Where(p => !p.IsDeleted && p.Status == PostStatus.Published);
-            
+
             vm.TotalProducts = await allPublishedPosts.CountAsync();
-            
+
             var avgRating = await allPublishedPosts
                 .Where(p => p.ReputationImpact > 0)
                 .AverageAsync(p => (double?)p.ReputationImpact) ?? 0;
             vm.AverageRating = Math.Round(avgRating, 1);
-            
+
             // Nếu không có products, set default
             if (vm.TotalProducts == 0)
             {
@@ -922,16 +947,16 @@ namespace TripCompass.WebUI.Controllers
             // Apply search filter
             if (!string.IsNullOrWhiteSpace(search))
             {
-                baseQuery = baseQuery.Where(p => 
-                    p.Title.Contains(search) || 
-                    p.Content.Contains(search) || 
+                baseQuery = baseQuery.Where(p =>
+                    p.Title.Contains(search) ||
+                    p.Content.Contains(search) ||
                     p.Location != null && p.Location.Contains(search));
             }
 
             // Apply province filter - exact match or starts with
             if (!string.IsNullOrWhiteSpace(province))
             {
-                baseQuery = baseQuery.Where(p => p.Location != null && 
+                baseQuery = baseQuery.Where(p => p.Location != null &&
                     (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
             }
 
@@ -1028,16 +1053,16 @@ namespace TripCompass.WebUI.Controllers
             // Apply search filter to featured
             if (!string.IsNullOrWhiteSpace(search))
             {
-                featuredBaseQuery = featuredBaseQuery.Where(p => 
-                    p.Title.Contains(search) || 
-                    p.Content.Contains(search) || 
+                featuredBaseQuery = featuredBaseQuery.Where(p =>
+                    p.Title.Contains(search) ||
+                    p.Content.Contains(search) ||
                     p.Location != null && p.Location.Contains(search));
             }
 
             // Apply province filter to featured - exact match or starts with
             if (!string.IsNullOrWhiteSpace(province))
             {
-                featuredBaseQuery = featuredBaseQuery.Where(p => p.Location != null && 
+                featuredBaseQuery = featuredBaseQuery.Where(p => p.Location != null &&
                     (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
             }
 
@@ -1066,7 +1091,7 @@ namespace TripCompass.WebUI.Controllers
                 .ThenByDescending(p => p.ViewCount)
                 .Take(10)
                 .ToListAsync();
-            
+
             // Nếu "Tất cả" và không có posts không có category, lấy tất cả posts (có category cũng được)
             if (string.IsNullOrWhiteSpace(category) && !featuredPosts.Any())
             {
@@ -1081,16 +1106,16 @@ namespace TripCompass.WebUI.Controllers
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    allFeaturedQuery = allFeaturedQuery.Where(p => 
-                        p.Title.Contains(search) || 
-                        p.Content.Contains(search) || 
+                    allFeaturedQuery = allFeaturedQuery.Where(p =>
+                        p.Title.Contains(search) ||
+                        p.Content.Contains(search) ||
                         p.Location != null && p.Location.Contains(search));
                 }
 
                 // Apply province filter
                 if (!string.IsNullOrWhiteSpace(province))
                 {
-                    allFeaturedQuery = allFeaturedQuery.Where(p => p.Location != null && 
+                    allFeaturedQuery = allFeaturedQuery.Where(p => p.Location != null &&
                         (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
                 }
 
@@ -1120,7 +1145,7 @@ namespace TripCompass.WebUI.Controllers
                     .Take(10)
                     .ToListAsync();
             }
-            
+
             vm.FeaturedPosts = await MapToReviewItems(featuredPosts);
 
             // =========================
@@ -1155,14 +1180,14 @@ namespace TripCompass.WebUI.Controllers
             // Apply filters to partner
             if (!string.IsNullOrWhiteSpace(search))
             {
-                partnerBaseQuery = partnerBaseQuery.Where(p => 
-                    p.Title.Contains(search) || 
-                    p.Content.Contains(search) || 
+                partnerBaseQuery = partnerBaseQuery.Where(p =>
+                    p.Title.Contains(search) ||
+                    p.Content.Contains(search) ||
                     p.Location != null && p.Location.Contains(search));
             }
             if (!string.IsNullOrWhiteSpace(province))
             {
-                partnerBaseQuery = partnerBaseQuery.Where(p => p.Location != null && 
+                partnerBaseQuery = partnerBaseQuery.Where(p => p.Location != null &&
                     (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
             }
             if (!string.IsNullOrWhiteSpace(priceRange))
@@ -1189,7 +1214,7 @@ namespace TripCompass.WebUI.Controllers
                 .ThenByDescending(p => p.ViewCount)
                 .Take(10)
                 .ToListAsync();
-            
+
             // Nếu "Tất cả" và không có posts đối tác không có category, lấy tất cả posts đối tác (có category cũng được)
             if (string.IsNullOrWhiteSpace(category) && !partnerPosts.Any())
             {
@@ -1204,16 +1229,16 @@ namespace TripCompass.WebUI.Controllers
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    allPartnerQuery = allPartnerQuery.Where(p => 
-                        p.Title.Contains(search) || 
-                        p.Content.Contains(search) || 
+                    allPartnerQuery = allPartnerQuery.Where(p =>
+                        p.Title.Contains(search) ||
+                        p.Content.Contains(search) ||
                         p.Location != null && p.Location.Contains(search));
                 }
 
                 // Apply province filter
                 if (!string.IsNullOrWhiteSpace(province))
                 {
-                    allPartnerQuery = allPartnerQuery.Where(p => p.Location != null && 
+                    allPartnerQuery = allPartnerQuery.Where(p => p.Location != null &&
                         (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
                 }
 
@@ -1243,7 +1268,7 @@ namespace TripCompass.WebUI.Controllers
                     .Take(10)
                     .ToListAsync();
             }
-            
+
             vm.PartnerPosts = await MapToReviewItems(partnerPosts);
 
             // Apply category filter for category sections
@@ -1306,16 +1331,16 @@ namespace TripCompass.WebUI.Controllers
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    categoryPostsQuery = categoryPostsQuery.Where(p => 
-                        p.Title.Contains(search) || 
-                        p.Content.Contains(search) || 
+                    categoryPostsQuery = categoryPostsQuery.Where(p =>
+                        p.Title.Contains(search) ||
+                        p.Content.Contains(search) ||
                         p.Location != null && p.Location.Contains(search));
                 }
 
                 // Apply province filter
                 if (!string.IsNullOrWhiteSpace(province))
                 {
-                    categoryPostsQuery = categoryPostsQuery.Where(p => p.Location != null && 
+                    categoryPostsQuery = categoryPostsQuery.Where(p => p.Location != null &&
                         (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
                 }
 
@@ -1441,6 +1466,142 @@ namespace TripCompass.WebUI.Controllers
             if (score >= 500) return 2;
             return 1;
         }
+
+        // =========================
+        // REGISTER AS PARTNER
+        // =========================
+        // PARTNER REGISTRATION FORM
+        // =========================
+        [HttpGet]
+        [Authorize]
+        public IActionResult PartnerRegistration()
+        {
+            return View(new PartnerRegistrationViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> SubmitPartnerRegistration(PartnerRegistrationViewModel model)
+        {
+            // Check if it's an AJAX request
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
+                         Request.Headers["Accept"].ToString().Contains("application/json");
+
+            if (!ModelState.IsValid)
+            {
+                if (isAjax)
+                {
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join("\n", errors) });
+                }
+                return View("PartnerRegistration", model);
+            }
+
+            if (!model.AgreeToTerms)
+            {
+                if (isAjax)
+                {
+                    return Json(new { success = false, message = "Bạn phải đồng ý với điều khoản sử dụng." });
+                }
+                ModelState.AddModelError("AgreeToTerms", "Bạn phải đồng ý với điều khoản sử dụng.");
+                return View("PartnerRegistration", model);
+            }
+
+            try
+            {
+                var userId = _currentUser.UserId;
+                if (userId <= 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập để đăng ký làm đối tác." });
+                }
+
+                // Kiểm tra xem user đã là đối tác chưa
+                var partnerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Partner");
+                if (partnerRole == null)
+                {
+                    return Json(new { success = false, message = "Role Partner chưa được tạo trong hệ thống." });
+                }
+
+                var isAlreadyPartner = await _context.UserRoles
+                    .AnyAsync(ur => ur.UserId == userId && ur.RoleId == partnerRole.RoleId);
+
+                if (isAlreadyPartner)
+                {
+                    return Json(new { success = false, message = "Bạn đã là đối tác của TripCompass." });
+                }
+
+                // Kiểm tra xem đã có thông tin partner chưa
+                var existingPartner = await _context.Partners
+                    .FirstOrDefaultAsync(p => p.UserId == userId);
+
+                if (existingPartner != null)
+                {
+                    return Json(new { success = false, message = "Bạn đã đăng ký thông tin đối tác rồi." });
+                }
+
+                // Lưu thông tin đồng ý điều khoản
+                var agreement = new PartnerAgreement
+                {
+                    UserId = userId,
+                    AgreementVersion = "v1.0",
+                    AgreedAt = DateTime.UtcNow,
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = Request.Headers["User-Agent"].ToString()
+                };
+
+                _context.PartnerAgreements.Add(agreement);
+
+                // Lưu thông tin đối tác
+                var partner = new Partner
+                {
+                    UserId = userId,
+                    StoreName = model.StoreName,
+                    BusinessType = model.BusinessType,
+                    RepresentativeName = model.RepresentativeName,
+                    PhoneNumber = model.PhoneNumber,
+                    BusinessAddress = model.BusinessAddress,
+                    BankName = model.BankName,
+                    AccountNumber = model.AccountNumber,
+                    AccountHolderName = model.AccountHolderName,
+                    IdNumber = model.IdNumber,
+                    TaxId = model.TaxId,
+                    ServiceDescription = model.ServiceDescription,
+                    IsApproved = false, // Cần admin phê duyệt
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Partners.Add(partner);
+
+                // Gán role Partner cho user
+                var userRole = new UserRole
+                {
+                    UserId = userId,
+                    RoleId = partnerRole.RoleId
+                };
+
+                _context.UserRoles.Add(userRole);
+
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Đăng ký làm đối tác thành công! Vui lòng đăng xuất và đăng nhập lại để cập nhật quyền đối tác.",
+                    requireRelogin = true
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+            }
+        }
+
+        // =========================
+        // REMOVED: RegisterAsPartner action
+        // Luồng đúng: Modal chỉ redirect đến form, không gọi API
+        // Form submit sẽ gọi SubmitPartnerRegistration để lưu thông tin và đổi role
+        // =========================
 
     }
 }

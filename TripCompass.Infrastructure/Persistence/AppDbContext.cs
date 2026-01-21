@@ -35,6 +35,10 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<AdminLog> AdminLogs => Set<AdminLog>();
         public DbSet<UserFollow> UserFollows => Set<UserFollow>();
         public DbSet<CommentReaction> CommentReactions => Set<CommentReaction>();
+        public DbSet<PartnerAgreement> PartnerAgreements => Set<PartnerAgreement>();
+        public DbSet<Partner> Partners => Set<Partner>();
+        public DbSet<PartnerDiscountCode> PartnerDiscountCodes => Set<PartnerDiscountCode>();
+        public DbSet<PostBooking> PostBookings => Set<PostBooking>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -191,6 +195,127 @@ namespace TripCompass.Infrastructure.Persistence
                 
                 // Unique constraint: một user chỉ react một comment một lần
                 entity.HasIndex(e => new { e.CommentId, e.UserId }).IsUnique();
+            });
+
+            // ========================
+            // PARTNER AGREEMENT
+            // ========================
+            modelBuilder.Entity<PartnerAgreement>(entity =>
+            {
+                entity.HasKey(e => e.AgreementId);
+                
+                entity.Property(e => e.AgreementVersion)
+                      .IsRequired()
+                      .HasMaxLength(20);
+                
+                entity.Property(e => e.AgreedAt)
+                      .HasDefaultValueSql("GETUTCDATE()");
+                
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ========================
+            // PARTNER
+            // ========================
+            modelBuilder.Entity<Partner>(entity =>
+            {
+                entity.HasKey(e => e.PartnerId);
+                
+                entity.Property(e => e.StoreName)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                
+                entity.Property(e => e.BusinessType)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                
+                entity.Property(e => e.RepresentativeName)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                
+                entity.Property(e => e.PhoneNumber)
+                      .IsRequired()
+                      .HasMaxLength(20);
+                
+                entity.Property(e => e.BusinessAddress)
+                      .IsRequired()
+                      .HasMaxLength(500);
+                
+                entity.Property(e => e.BankName)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                
+                entity.Property(e => e.AccountNumber)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                
+                entity.Property(e => e.AccountHolderName)
+                      .IsRequired()
+                      .HasMaxLength(100);
+                
+                entity.Property(e => e.IdNumber)
+                      .IsRequired()
+                      .HasMaxLength(20);
+                
+                entity.Property(e => e.TaxId)
+                      .HasMaxLength(20);
+                
+                entity.Property(e => e.ServiceDescription)
+                      .HasMaxLength(2000);
+                
+                entity.Property(e => e.CreatedAt)
+                      .HasDefaultValueSql("GETUTCDATE()");
+                
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // Unique constraint: một user chỉ có một partner record
+                entity.HasIndex(e => e.UserId).IsUnique();
+            });
+
+            // ========================
+            // PARTNER DISCOUNT CODE
+            // ========================
+            modelBuilder.Entity<PartnerDiscountCode>(entity =>
+            {
+                entity.HasKey(e => e.PartnerDiscountCodeId);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Purpose).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.PercentOff).IsRequired();
+                entity.Property(e => e.ExpiryDate);
+                entity.Property(e => e.IsActive).HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasIndex(e => new { e.PartnerUserId, e.Code }).IsUnique();
+                entity.HasIndex(e => e.IsActive);
+            });
+
+            // ========================
+            // POST BOOKING
+            // ========================
+            modelBuilder.Entity<PostBooking>(entity =>
+            {
+                entity.HasKey(e => e.BookingId);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Note).HasMaxLength(500);
+                entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(120);
+                entity.Property(e => e.CustomerPhone).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.PromoCode).HasMaxLength(30);
+                entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PaymentStatus).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
+                entity.Property(e => e.AmountPaid).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PaymentRef).HasMaxLength(120);
+                entity.Property(e => e.BookedAt).HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasIndex(e => e.PartnerUserId);
+                entity.HasIndex(e => e.PostId);
+                entity.HasIndex(e => e.CustomerUserId);
+                entity.HasIndex(e => e.PaymentStatus);
             });
 
             // ========================

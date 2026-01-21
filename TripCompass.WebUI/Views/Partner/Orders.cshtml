@@ -1,0 +1,136 @@
+@using System
+@model TripCompass.WebUI.ViewModels.Partner.PartnerOrdersViewModel
+
+@{
+    ViewData["Title"] = "Đơn hàng";
+    Layout = "_PartnerDashboardLayout";
+}
+
+<style>
+    .po-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+    .po-title h2 { margin:0; font-size:18px; font-weight:900; color:#111827; }
+    .po-title p { margin:4px 0 0 0; color:#6b7280; font-size:13px; }
+    .po-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
+    .po-row { display:flex; align-items:stretch; justify-content:space-between; gap:12px; padding:14px; border-radius:14px; background:#ffffff; border:1px solid #eef2f7; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .po-row:hover { border-color:#e5e7eb; box-shadow: 0 4px 10px rgba(16,24,40,0.06); }
+    .po-left { display:flex; flex-direction:column; gap:4px; }
+    .po-left .t { font-weight:900; color:#111827; font-size:14px; }
+    .po-left .s { font-size:12px; color:#6b7280; }
+    .po-right { display:flex; flex-direction:column; align-items:flex-end; gap:10px; min-width: 260px; }
+    .po-amt { font-weight:900; color:#111827; font-size:14px; }
+    .po-badges { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+    .po-badge { font-size:11px; font-weight:900; padding:3px 8px; border-radius:999px; }
+    .b-ok { background:#dcfce7; color:#16a34a; }
+    .b-proc { background:#dbeafe; color:#2563eb; }
+    .b-can { background:#fee2e2; color:#dc2626; }
+    .po-actions { display:flex; gap:8px; }
+    .po-btn { height:32px; padding:0 10px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; font-weight:800; cursor:pointer; }
+    .po-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .po-btn.danger { background:#ef4444; color:#fff; border-color:#ef4444; }
+    .po-reason { width:100%; margin-top:8px; display:none; }
+    .po-reason textarea { width:100%; min-height:80px; border-radius:12px; border:1px solid #e5e7eb; padding:10px; font-size:13px; }
+    .po-reason .hint { margin-top:6px; font-size:12px; color:#6b7280; }
+    .po-divider { width:1px; background:#eef2f7; margin:0 2px; }
+    .po-reject-note { margin-top:8px; padding:10px 12px; border-radius:12px; background:#fff1f2; border:1px solid #ffe4e6; color:#9f1239; font-size:12px; }
+    @@media (max-width: 900px) {
+        .po-row { flex-direction:column; }
+        .po-right { align-items:flex-start; min-width: unset; }
+        .po-badges { justify-content:flex-start; }
+        .po-actions { width:100%; }
+    }
+</style>
+
+@if (TempData["Message"] != null)
+{
+    <div class="po-card" style="border-color:#fde68a; background:#fffbeb; color:#92400e; margin-bottom:12px;">
+        @TempData["Message"]
+    </div>
+}
+
+<div class="po-topbar">
+    <div class="po-title">
+        <h2>Tất cả đơn hàng</h2>
+        <p>Duyệt hoặc từ chối đơn đặt chỗ (từ chối sẽ gửi email cho khách)</p>
+    </div>
+    <a class="po-btn" href="/Partner/Dashboard">← Quay lại Dashboard</a>
+</div>
+
+<div class="po-card">
+    @if (Model.Orders.Count == 0)
+    {
+        <div style="color:#6b7280; font-size:13px;">Chưa có đơn đặt chỗ nào.</div>
+    }
+    else
+    {
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            @foreach (var o in Model.Orders)
+            {
+                var statusClass = o.Status == "Completed" ? "b-ok" : (o.Status == "Cancelled" ? "b-can" : "b-proc");
+                var payClass = string.Equals(o.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) ? "b-ok" : "b-proc";
+                var canAction = o.Status != "Completed" && o.Status != "Cancelled";
+                <div class="po-row" id="order-@o.BookingId">
+                    <div class="po-left">
+                        <div class="t">#@o.BookingId • @o.PostTitle</div>
+                        <div class="s">Khách: <b style="color:#111827;">@o.CustomerName</b> • @o.CustomerPhone</div>
+                        @if (!string.IsNullOrWhiteSpace(o.CustomerEmail))
+                        {
+                            <div class="s">Email: @o.CustomerEmail</div>
+                        }
+                        <div class="s">Thời gian đặt: @o.BookedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                        @if (!string.IsNullOrWhiteSpace(o.Note))
+                        {
+                            <div class="po-reject-note"><b>Lý do từ chối:</b> @o.Note</div>
+                        }
+                    </div>
+
+                    <div class="po-right">
+                        <div class="po-amt">@o.TotalAmount.ToString("N0")</div>
+                        <div class="po-badges">
+                            <span class="po-badge @statusClass">@o.Status</span>
+                            <span class="po-badge @payClass">@o.PaymentStatus</span>
+                        </div>
+
+                        @if (canAction)
+                        {
+                            <div class="po-actions">
+                                <form asp-controller="Partner" asp-action="ApproveBooking" method="post" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="bookingId" value="@o.BookingId" />
+                                    <button class="po-btn primary" type="submit">Duyệt</button>
+                                </form>
+
+                                <button class="po-btn danger" type="button" onclick="toggleReject(@o.BookingId)">Từ chối</button>
+                            </div>
+
+                            <form class="po-reason" id="reject-@o.BookingId" asp-controller="Partner" asp-action="RejectBooking" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@o.BookingId" />
+                                <textarea name="reason" maxlength="500" placeholder="Nhập lý do từ chối (bắt buộc)..." required></textarea>
+                                <div class="hint">Lý do sẽ được gửi qua email cho khách.</div>
+                                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+                                    <button class="po-btn" type="button" onclick="toggleReject(@o.BookingId)">Hủy</button>
+                                    <button class="po-btn danger" type="submit">Gửi</button>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    function toggleReject(id) {
+        var el = document.getElementById('reject-' + id);
+        if (!el) return;
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        if (el.style.display === 'block') {
+            var ta = el.querySelector('textarea');
+            if (ta) ta.focus();
+        }
+    }
+</script>
+}
+
