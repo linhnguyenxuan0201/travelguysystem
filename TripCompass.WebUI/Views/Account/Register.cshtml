@@ -1,6 +1,6 @@
 @model TripCompass.WebUI.ViewModels.RegisterViewModel
 @{
-    ViewData["Title"] = "Sign up";
+    ViewData["Title"] = "Đăng ký";
     Layout = "_AuthLayout";
 }
 
@@ -8,53 +8,53 @@
     <!-- LEFT -->
     <div class="register-left">
         <div class="register-nav">
-            <span class="register-nav-text">Sign up</span>
-            <a asp-controller="Home" asp-action="Index" class="register-nav-link">Home</a>
+            <span class="register-nav-text">Đăng ký</span>
+            <a asp-controller="Home" asp-action="Index" class="register-nav-link">Trang chủ</a>
         </div>
         <div class="register-branding">
             <img src="~/images/logo.png" class="register-logo" />
             <h2>TRIPCOMPASS</h2>
-            <p>DISCOVER MORE, PLAN LESS</p>
+            <p>KHÁM PHÁ NHIỀU HƠN, LÊN KẾ HOẠCH ÍT HƠN</p>
         </div>
     </div>
 
     <!-- RIGHT -->
     <div class="register-right">
-        <h1>Sign up</h1>
+        <h1>Đăng ký</h1>
 
         <form asp-action="Register" method="post" class="register-form">
             <div class="form-group">
-                <label>Your full name</label>
-                <input asp-for="FullName" placeholder="Your full name" />
+                <label>Họ và tên của bạn</label>
+                <input asp-for="FullName" placeholder="Họ và tên của bạn" />
                 <span asp-validation-for="FullName" class="error"></span>
             </div>
 
             <div class="form-group">
-                <label>Enter your email</label>
+                <label>Nhập email của bạn</label>
                 <input asp-for="Email" placeholder="Email" />
                 <span asp-validation-for="Email" class="error"></span>
             </div>
 
             <div class="form-group">
-                <label>Choose your password</label>
-                <input asp-for="Password" type="password" placeholder="Password" />
+                <label>Chọn mật khẩu của bạn</label>
+                <input asp-for="Password" type="password" placeholder="Mật khẩu" />
                 <span asp-validation-for="Password" class="error"></span>
             </div>
 
             <div class="form-group">
-                <label>Confirm your password</label>
-                <input asp-for="ConfirmPassword" type="password" placeholder="Confirm password" />
+                <label>Xác nhận mật khẩu của bạn</label>
+                <input asp-for="ConfirmPassword" type="password" placeholder="Xác nhận mật khẩu" />
                 <span asp-validation-for="ConfirmPassword" class="error"></span>
             </div>
 
             <a asp-action="GoogleLogin" class="btn-google-register">
                 <span class="google-icon">G</span>
-                Sign up with Google
+                Đăng ký với Google
             </a>
 
             <div class="register-actions">
-                <button type="submit" class="btn-signup">Sign up</button>
-                <a asp-action="Login" class="btn-login">Log in</a>
+                <button type="submit" class="btn-signup">Đăng ký</button>
+                <a asp-action="Login" class="btn-login">Đăng nhập</a>
             </div>
         </form>
     </div>
