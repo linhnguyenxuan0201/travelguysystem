@@ -307,10 +307,18 @@ namespace TripCompass.Infrastructure.Persistence
                 entity.Property(e => e.CustomerPhone).IsRequired().HasMaxLength(30);
                 entity.Property(e => e.PromoCode).HasMaxLength(30);
                 entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PaymentMethod).IsRequired().HasMaxLength(20).HasDefaultValue("Cash");
                 entity.Property(e => e.PaymentStatus).IsRequired().HasMaxLength(20).HasDefaultValue("Pending");
                 entity.Property(e => e.AmountPaid).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.PaymentRef).HasMaxLength(120);
                 entity.Property(e => e.BookedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CommissionDeducted).HasDefaultValue(false);
+                entity.Property(e => e.CommissionAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.CommissionPaid).HasDefaultValue(false);
+                entity.Property(e => e.CommissionPaymentRef).HasMaxLength(120);
+                entity.Property(e => e.Refunded).HasDefaultValue(false);
+                entity.Property(e => e.RefundAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.RefundReason).HasMaxLength(500);
 
                 entity.HasIndex(e => e.PartnerUserId);
                 entity.HasIndex(e => e.PostId);

@@ -17,6 +17,10 @@
             @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).+$",
             ErrorMessage = "Password must contain upper, lower, number and special character")]
         public string Password { get; set; } = null!;
+
+        [Required(ErrorMessage = "Please confirm your password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = null!;
     }
 
     public class CustomPasswordAttribute : ValidationAttribute

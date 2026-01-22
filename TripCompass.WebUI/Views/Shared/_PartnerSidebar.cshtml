@@ -66,9 +66,10 @@
 
     <nav class="psb-nav">
         <a class="psb-link active" href="/Partner/Dashboard"><i class="fa-solid fa-chart-line"></i> Tổng quan</a>
-        <a class="psb-link" href="/Partner/Dashboard#orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
+        <a class="psb-link" href="/Partner/Orders"><i class="fa-solid fa-bag-shopping"></i> Đơn hàng</a>
         <a class="psb-link" href="/Partner/DiscountCodes"><i class="fa-solid fa-tag"></i> Mã giảm giá</a>
         <a class="psb-link" href="/Partner/Dashboard#wallet"><i class="fa-solid fa-wallet"></i> Ví tiền</a>
+        <a class="psb-link" href="/Partner/Commission"><i class="fa-solid fa-percent"></i> Quản lý hoa hồng</a>
         <a class="psb-link" href="/Review/MyReviews"><i class="fa-solid fa-star"></i> Bài viết của tôi</a>
     </nav>
 
@@ -89,7 +90,9 @@
             // Check if current path matches this link
             if (href === currentPath || 
                 (href === '/Partner/Dashboard' && currentPath === '/Partner/Dashboard') ||
-                (href === '/Partner/DiscountCodes' && currentPath === '/Partner/DiscountCodes')) {
+                (href === '/Partner/DiscountCodes' && currentPath === '/Partner/DiscountCodes') ||
+                (href === '/Partner/Commission' && currentPath === '/Partner/Commission') ||
+                (href === '/Partner/Orders' && currentPath === '/Partner/Orders')) {
                 link.classList.add('active');
             }
         });

@@ -5,25 +5,43 @@
     Layout = "_AuthLayout";
 }
 
-<form asp-action="VerifyForgotOtp" method="post" class="auth-form">
+<div class="auth-container">
+    <div class="auth-right">
+        <h1>Xác thực OTP</h1>
+        <p>Nhập mã OTP đã được gửi đến email <strong>@Model.Email</strong></p>
 
-    <input type="hidden" asp-for="Email" />
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success" style="background-color: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                @TempData["Message"]
+            </div>
+        }
 
-    <label>Enter OTP</label>
+        <form asp-action="VerifyForgotOtp" method="post" class="auth-form">
+            <input type="hidden" asp-for="Email" />
 
-    <input asp-for="OtpCode"
-           class="otp-input"
-           maxlength="6"
-           inputmode="numeric"
-           autocomplete="one-time-code" />
+            <div class="form-group">
+                <label>Mã OTP</label>
+                <input asp-for="OtpCode"
+                       class="form-control"
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       placeholder="Nhập 6 chữ số"
+                       style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;" />
+                <span asp-validation-for="OtpCode" class="error"></span>
+            </div>
 
-    <span asp-validation-for="OtpCode" class="error"></span>
+            <button type="submit" class="btn-primary">
+                Xác thực OTP
+            </button>
 
-    <button type="submit" class="btn-primary">
-        Verify OTP
-    </button>
-
-</form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a asp-action="ForgotPassword" style="color: #2563eb; text-decoration: none;">Gửi lại mã OTP</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

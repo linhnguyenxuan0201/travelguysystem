@@ -1006,6 +1006,20 @@
                                        style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;"
                                        placeholder="VD: SUMMER2026 (nếu có)" />
                             </div>
+                            
+                            <div>
+                                <label style="display:block; font-weight:600; font-size:13px; margin-bottom:8px;">Phương thức thanh toán<span style="color:#ef4444;">*</span></label>
+                                <div style="display:flex; gap:12px;">
+                                    <label style="flex:1; padding:12px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all 0.2s;" id="paymentCashLabel">
+                                        <input type="radio" name="paymentMethod" value="Cash" checked style="width:18px; height:18px; cursor:pointer;" />
+                                        <span style="font-weight:600;">💵 Tiền mặt</span>
+                                    </label>
+                                    <label style="flex:1; padding:12px; border:2px solid #e5e7eb; border-radius:10px; cursor:pointer; display:flex; align-items:center; gap:8px; transition:all 0.2s;" id="paymentOnlineLabel">
+                                        <input type="radio" name="paymentMethod" value="Online" style="width:18px; height:18px; cursor:pointer;" />
+                                        <span style="font-weight:600;">💳 Online</span>
+                                    </label>
+                                </div>
+                            </div>
 
                             <button id="partnerBookingSubmit" type="submit"
                                     style="height:44px; border:none; border-radius:12px; background:#4f46e5; color:#fff; font-weight:800; cursor:pointer;">
@@ -1088,13 +1102,35 @@
         const qrBox = document.getElementById('partnerBookingQrBox');
         const qrImg = document.getElementById('partnerBookingQrImg');
         const qrMeta = document.getElementById('partnerBookingQrMeta');
+        const paymentCashLabel = document.getElementById('paymentCashLabel');
+        const paymentOnlineLabel = document.getElementById('paymentOnlineLabel');
+        const paymentMethodInputs = form.querySelectorAll('input[name="paymentMethod"]');
+
+        // Style payment method labels on selection
+        paymentMethodInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'Cash') {
+                    paymentCashLabel.style.borderColor = '#4f46e5';
+                    paymentCashLabel.style.background = '#eff6ff';
+                    paymentOnlineLabel.style.borderColor = '#e5e7eb';
+                    paymentOnlineLabel.style.background = '#fff';
+                } else {
+                    paymentOnlineLabel.style.borderColor = '#4f46e5';
+                    paymentOnlineLabel.style.background = '#eff6ff';
+                    paymentCashLabel.style.borderColor = '#e5e7eb';
+                    paymentCashLabel.style.background = '#fff';
+                }
+            });
+        });
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(form);
+            const paymentMethod = formData.get('paymentMethod') || 'Cash';
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Đang tạo đơn...';
+            qrBox.style.display = 'none';
 
             try {
                 const res = await fetch('/Booking/CreateForPost', {
@@ -1113,11 +1149,19 @@
 
                 const amount = data.amount || 0;
                 const bookingId = data.bookingId;
-                qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
-                qrImg.src = data.qrImageUrl;
-                qrBox.style.display = 'block';
-
-                submitBtn.textContent = 'Đã tạo QR';
+                
+                if (paymentMethod === 'Online' && data.qrImageUrl) {
+                    qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
+                    qrImg.src = data.qrImageUrl;
+                    qrBox.style.display = 'block';
+                    submitBtn.textContent = 'Đã tạo đơn - Quét QR để thanh toán';
+                } else {
+                    submitBtn.textContent = 'Đã tạo đơn thành công!';
+                    setTimeout(() => {
+                        submitBtn.textContent = 'Đặt chỗ';
+                        submitBtn.disabled = false;
+                    }, 2000);
+                }
             } catch (err) {
                 alert('Có lỗi xảy ra. Vui lòng thử lại.');
                 submitBtn.disabled = false;

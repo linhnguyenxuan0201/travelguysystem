@@ -105,12 +105,29 @@
     <div class="pd-card">
         <div style="display:flex; align-items:center; justify-content:space-between;">
             <h3>Doanh thu theo tháng</h3>
-            <select class="pd-btn" style="height:32px;">
-                <option>@DateTime.UtcNow.Year</option>
+            <select id="yearSelector" class="pd-btn" style="height:32px;" onchange="loadChartData(this.value)">
+                @{
+                    int currentYear = DateTime.UtcNow.Year;
+                    int selectedYear = ViewBag.SelectedYear ?? currentYear;
+                }
+                @for (int y = currentYear; y >= currentYear - 5; y--)
+                {
+                    if (y == selectedYear)
+                    {
+                        <option value="@y" selected>@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
             </select>
         </div>
-        <div style="height:260px; background:#eff6ff; border:1px solid #dbeafe; border-radius:12px; display:grid; place-items:center; color:#2563eb; font-weight:900;">
-            (Chart placeholder) Tổng @Model.MonthlyRevenue.Sum(x => x.Amount).ToString("N0")
+        <div style="height:260px; background:#eff6ff; border:1px solid #dbeafe; border-radius:12px; padding:12px; position:relative;">
+            <canvas id="monthlyRevenueChart"></canvas>
+            <div style="position:absolute; bottom:12px; right:12px; font-size:12px; font-weight:700; color:#2563eb;">
+                Tổng: <span id="totalRevenueDisplay">@Model.MonthlyRevenue.Sum(x => x.Amount).ToString("N0")</span>
+            </div>
         </div>
     </div>
 
@@ -254,7 +271,114 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    let monthlyChart = null;
+    const monthNames = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const initialData = @Html.Raw(Json.Serialize(Model.MonthlyRevenue));
+
+    function initChart(data) {
+        const ctx = document.getElementById('monthlyRevenueChart');
+        if (monthlyChart) {
+            monthlyChart.destroy();
+        }
+
+        // Handle both camelCase and PascalCase from JSON serialization
+        const labels = data.map(d => monthNames[(d.month || d.Month) - 1]);
+        const amounts = data.map(d => d.amount || d.Amount || 0);
+        const total = amounts.reduce((a, b) => a + b, 0);
+        document.getElementById('totalRevenueDisplay').textContent = total.toLocaleString('vi-VN');
+
+        monthlyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: amounts,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#1d4ed8',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            },
+                            font: {
+                                size: 10
+                            },
+                            color: '#6b7280'
+                        },
+                        grid: {
+                            color: 'rgba(219, 234, 254, 0.5)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#6b7280'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function loadChartData(year) {
+        // Reload page with year parameter
+        const url = new URL(window.location.href);
+        url.searchParams.set('year', year);
+        window.location.href = url.toString();
+    }
+
+    // Initialize chart on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart(initialData);
+    });
+
     function openDiscountModal() {
         document.getElementById('discountModal').style.display = 'flex';
     }

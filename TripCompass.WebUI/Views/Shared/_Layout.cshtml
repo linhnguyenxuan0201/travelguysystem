@@ -100,7 +100,7 @@
                                             ⭐ Reputation Lv. @userDropdown.ReputationLevel
                                         </div>
                                         <div class="coin">
-                                            🪙 @userDropdown.WalletBalance.ToString("N0") Coins
+                                            🪙 @userDropdown.ReputationScore.ToString("N0") Coins
                                         </div>
                                     }
                                 </div>
@@ -123,6 +123,12 @@
                             <li>
                                 <a asp-controller="Review" asp-action="MyReviews">
                                     <i class="fa-solid fa-star"></i> Your Reviews
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="Wallet">
+                                    <i class="fa-solid fa-wallet"></i> Ví tiền
                                 </a>
                             </li>
 
