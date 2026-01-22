@@ -1,0 +1,536 @@
+@model TripCompass.WebUI.ViewModels.PartnerRegistrationViewModel
+
+@{
+    ViewData["Title"] = "Đăng ký trở thành đối tác";
+    Layout = "_Layout";
+}
+
+<style>
+    .partner-registration-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+    }
+
+    .partner-benefits {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        padding: 40px;
+        border-radius: 16px;
+        height: fit-content;
+    }
+
+    .benefit-item {
+        display: flex;
+        align-items: start;
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .benefit-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+        .benefit-icon.blue {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .benefit-icon.green {
+            background: #10b981;
+            color: white;
+        }
+
+        .benefit-icon.purple {
+            background: #8b5cf6;
+            color: white;
+        }
+
+    .benefit-content h4 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .benefit-content p {
+        margin: 0;
+        font-size: 14px;
+        color: #4b5563;
+        line-height: 1.5;
+    }
+
+    .registration-form-container {
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .form-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 32px;
+    }
+
+    .form-section {
+        margin-bottom: 32px;
+    }
+
+    .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+        .form-section-title.blue {
+            border-bottom-color: #3b82f6;
+        }
+
+        .form-section-title.green {
+            border-bottom-color: #10b981;
+        }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+        .form-label .required {
+            color: #dc2626;
+        }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-checkbox-group {
+        display: flex;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+        .form-checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .form-checkbox-group label {
+            font-size: 14px;
+            color: #374151;
+            cursor: pointer;
+        }
+
+            .form-checkbox-group label a {
+                color: #3b82f6;
+                text-decoration: none;
+            }
+
+                .form-checkbox-group label a:hover {
+                    text-decoration: underline;
+                }
+
+    .submit-button {
+        width: 100%;
+        padding: 16px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .submit-button:hover {
+            background: #1e40af;
+        }
+
+        .submit-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+    .validation-error {
+        color: #dc2626;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    @@media (max-width: 968px) {
+        .partner-registration-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="partner-registration-container">
+    <!-- Benefits Section -->
+    <div class="partner-benefits">
+        <h2 style="margin-top: 0; font-size: 28px; font-weight: 700; color: #111827; margin-bottom: 32px;">
+            Trở thành đối tác của chúng tôi
+        </h2>
+
+        <div class="benefit-item">
+            <div class="benefit-icon blue">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="benefit-content">
+                <h4>Tăng doanh thu</h4>
+                <p>Tiếp cận hàng triệu khách hàng trên toàn quốc</p>
+            </div>
+        </div>
+
+        <div class="benefit-item">
+            <div class="benefit-icon green">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+            <div class="benefit-content">
+                <h4>Hỗ trợ 24/7</h4>
+                <p>Đội ngũ hỗ trợ chuyên nghiệp luôn sẵn sàng</p>
+            </div>
+        </div>
+
+        <div class="benefit-item">
+            <div class="benefit-icon purple">
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <div class="benefit-content">
+                <h4>Công cụ quản lý</h4>
+                <p>Hệ thống quản lý hiện đại và dễ sử dụng</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div class="registration-form-container">
+        <h2 class="form-title">Thông tin đăng ký</h2>
+        <p class="form-subtitle">Vui lòng điền đầy đủ thông tin để trở thành đối tác</p>
+
+        <form id="partnerRegistrationForm" asp-action="SubmitPartnerRegistration" asp-controller="Review" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- Thông tin đăng ký -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="StoreName">
+                        Tên cửa hàng/Doanh nghiệp <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="StoreName"
+                           name="StoreName"
+                           class="form-input"
+                           placeholder="VD: Khách sạn ABC"
+                           asp-for="StoreName"
+                           required />
+                    <span asp-validation-for="StoreName" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="BusinessType">
+                        Loại hình kinh doanh <span class="required">*</span>
+                    </label>
+                    <select id="BusinessType"
+                            name="BusinessType"
+                            class="form-select"
+                            asp-for="BusinessType"
+                            required>
+                        <option value="">Chọn loại hình</option>
+                        <option value="Khách sạn">Khách sạn</option>
+                        <option value="Nhà hàng">Nhà hàng</option>
+                        <option value="Tour du lịch">Tour du lịch</option>
+                        <option value="Vận chuyển">Vận chuyển</option>
+                        <option value="Dịch vụ giải trí">Dịch vụ giải trí</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                    <span asp-validation-for="BusinessType" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="RepresentativeName">
+                        Họ và tên người đại diện <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="RepresentativeName"
+                           name="RepresentativeName"
+                           class="form-input"
+                           placeholder="Nguyễn Văn A"
+                           asp-for="RepresentativeName"
+                           required />
+                    <span asp-validation-for="RepresentativeName" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="PhoneNumber">
+                        Số điện thoại <span class="required">*</span>
+                    </label>
+                    <input type="tel"
+                           id="PhoneNumber"
+                           name="PhoneNumber"
+                           class="form-input"
+                           placeholder="0123456789"
+                           asp-for="PhoneNumber"
+                           required />
+                    <span asp-validation-for="PhoneNumber" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="BusinessAddress">
+                        Địa chỉ kinh doanh <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="BusinessAddress"
+                           name="BusinessAddress"
+                           class="form-input"
+                           placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                           asp-for="BusinessAddress"
+                           required />
+                    <span asp-validation-for="BusinessAddress" class="validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Thông tin tài khoản ngân hàng -->
+            <div class="form-section">
+                <div class="form-section-title blue">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>Thông tin tài khoản ngân hàng</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="BankName">
+                        Tên ngân hàng <span class="required">*</span>
+                    </label>
+                    <select id="BankName"
+                            name="BankName"
+                            class="form-select"
+                            asp-for="BankName"
+                            required>
+                        <option value="">Chọn ngân hàng</option>
+                        <option value="Vietcombank">Vietcombank</option>
+                        <option value="BIDV">BIDV</option>
+                        <option value="VietinBank">VietinBank</option>
+                        <option value="Agribank">Agribank</option>
+                        <option value="Techcombank">Techcombank</option>
+                        <option value="ACB">ACB</option>
+                        <option value="VPBank">VPBank</option>
+                        <option value="TPBank">TPBank</option>
+                        <option value="MBBank">MBBank</option>
+                        <option value="SHB">SHB</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                    <span asp-validation-for="BankName" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="AccountNumber">
+                        Số tài khoản <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="AccountNumber"
+                           name="AccountNumber"
+                           class="form-input"
+                           placeholder="1234567890"
+                           asp-for="AccountNumber"
+                           required />
+                    <span asp-validation-for="AccountNumber" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="AccountHolderName">
+                        Tên chủ tài khoản <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="AccountHolderName"
+                           name="AccountHolderName"
+                           class="form-input"
+                           placeholder="NGUYEN VAN A"
+                           asp-for="AccountHolderName"
+                           required />
+                    <span asp-validation-for="AccountHolderName" class="validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Giấy tờ pháp lý -->
+            <div class="form-section">
+                <div class="form-section-title green">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>Giấy tờ pháp lý</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="IdNumber">
+                        Số CCCD/CMND <span class="required">*</span>
+                    </label>
+                    <input type="text"
+                           id="IdNumber"
+                           name="IdNumber"
+                           class="form-input"
+                           placeholder="123456789012"
+                           asp-for="IdNumber"
+                           required />
+                    <span asp-validation-for="IdNumber" class="validation-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="TaxId">
+                        Mã số thuế (nếu có)
+                    </label>
+                    <input type="text"
+                           id="TaxId"
+                           name="TaxId"
+                           class="form-input"
+                           placeholder="1234567890"
+                           asp-for="TaxId" />
+                    <span asp-validation-for="TaxId" class="validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Mô tả dịch vụ -->
+            <div class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="ServiceDescription">
+                        Mô tả dịch vụ
+                    </label>
+                    <textarea id="ServiceDescription"
+                              name="ServiceDescription"
+                              class="form-textarea"
+                              placeholder="Mô tả chi tiết về dịch vụ mà bạn cung cấp..."
+                              asp-for="ServiceDescription"></textarea>
+                    <span asp-validation-for="ServiceDescription" class="validation-error"></span>
+                </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="form-section">
+                <div class="form-checkbox-group">
+                    <input type="checkbox" id="AgreeToTerms" name="AgreeToTerms" required />
+                    <label for="AgreeToTerms">
+                        Tôi đồng ý với <a href="#" onclick="openPartnerAgreementModal(); return false;">Điều khoản sử dụng</a> và <a href="#">Chính sách bảo mật</a> của TripCompass
+                    </label>
+                </div>
+
+                <div class="form-checkbox-group">
+                    <input type="checkbox" id="WantPromotions" name="WantPromotions" />
+                    <label for="WantPromotions">
+                        Tôi muốn nhận thông tin khuyến mãi và cập nhật từ TripCompass
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitBtn">
+                Đăng ký trở thành đối tác
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('partnerRegistrationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang xử lý...';
+
+        const formData = new FormData(this);
+
+        // Chuẩn hóa giá trị checkbox thành true/false để model binding không báo lỗi "on"
+        const agreeToTermsChecked = document.getElementById('AgreeToTerms')?.checked ?? false;
+        const wantPromotionsChecked = document.getElementById('WantPromotions')?.checked ?? false;
+        formData.set('AgreeToTerms', agreeToTermsChecked ? 'true' : 'false');
+        formData.set('WantPromotions', wantPromotionsChecked ? 'true' : 'false');
+
+        try {
+            const response = await fetch('/Review/SubmitPartnerRegistration', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message);
+                if (result.requireRelogin) {
+                    if (confirm('Bạn có muốn đăng xuất ngay bây giờ để cập nhật quyền đối tác không?')) {
+                        window.location.href = '/Account/Logout';
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    window.location.href = '/';
+                }
+            } else {
+                alert(result.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Đăng ký trở thành đối tác';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Đăng ký trở thành đối tác';
+        }
+    });
+</script>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

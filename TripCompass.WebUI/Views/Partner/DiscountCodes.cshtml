@@ -1,0 +1,250 @@
+﻿@model TripCompass.WebUI.ViewModels.Partner.DiscountCodesListViewModel
+@{
+    ViewData["Title"] = "Mã giảm giá";
+    Layout = "_PartnerDashboardLayout";
+}
+
+<style>
+    .dc-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+
+        .dc-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+    .dc-btn {
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .dc-btn:hover {
+            background: #1e40af;
+        }
+
+    .dc-table {
+        width: 100%;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+        .dc-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .dc-table th {
+            background: #f9fafb;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dc-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+            color: #111827;
+        }
+
+        .dc-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dc-table tr:hover {
+            background: #f9fafb;
+        }
+
+    .dc-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+        .dc-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .dc-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .dc-badge.rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+    .dc-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+</style>
+
+<div class="dc-header">
+    <h2>Mã giảm giá</h2>
+    <button class="dc-btn" onclick="openDiscountModal()">
+        <i class="fa-solid fa-plus"></i> Tạo mã mới
+    </button>
+</div>
+
+@if (Model == null || Model.Codes == null || Model.Codes.Count == 0)
+{
+    <div class="dc-empty">
+        <i class="fa-solid fa-tag" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+        <div>Chưa có mã giảm giá nào.</div>
+    </div>
+}
+else
+{
+    <div class="dc-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã</th>
+                    <th>Giảm giá</th>
+                    <th>Mục đích</th>
+                    <th>Hạn sử dụng</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var code in Model.Codes)
+                {
+                    var statusClass = code.IsActive ? "approved" : "pending";
+                    var statusText = code.IsActive ? "Đã duyệt" : "Chờ duyệt";
+                    <tr>
+                        <td><strong>@code.Code</strong></td>
+                        <td>@code.PercentOff%</td>
+                        <td>@code.Purpose</td>
+                        <td>@(code.ExpiryDate.HasValue? code.ExpiryDate.Value.ToLocalTime().ToString("dd/MM/yyyy") : "Không giới hạn")</td>
+                        <td>
+                            <span class="dc-badge @statusClass">@statusText</span>
+                        </td>
+                        <td>@code.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Modal tạo mã giảm giá (copy từ Dashboard.cshtml) -->
+<div id="discountModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:90%; max-width:500px; max-height:90vh; overflow-y:auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+            <h3 style="margin:0; font-size:20px; font-weight:700;">Tạo mã giảm giá</h3>
+            <button onclick="closeDiscountModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#6b7280;">&times;</button>
+        </div>
+        <form id="discountForm">
+            @Html.AntiForgeryToken()
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px;">Mã giảm giá <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="discountCode" name="code" required maxlength="30" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px;" placeholder="VD: SUMMER2024" />
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px;">Phần trăm giảm giá <span style="color:#dc2626;">*</span></label>
+                <input type="number" id="discountPercent" name="percentOff" required min="1" max="100" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px;" placeholder="1-100" />
+            </div>
+            <div style="margin-bottom:16px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px;">Mục đích <span style="color:#dc2626;">*</span></label>
+                <input type="text" id="discountPurpose" name="purpose" required maxlength="200" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px;" placeholder="VD: Giảm 20% cho đơn hàng từ 500k" />
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px;">Hạn sử dụng</label>
+                <input type="date" id="discountExpiry" name="expiryDate" style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:8px; font-size:14px;" />
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button type="button" onclick="closeDiscountModal()" style="flex:1; padding:12px; border:2px solid #e5e7eb; background:#fff; border-radius:8px; font-weight:600; cursor:pointer;">Hủy</button>
+                <button type="submit" style="flex:1; padding:12px; background:#2563eb; color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Tạo mã</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDiscountModal() {
+        const modal = document.getElementById('discountModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+    function closeDiscountModal() {
+        const modal = document.getElementById('discountModal');
+        const form = document.getElementById('discountForm');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        if (form) {
+            form.reset();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('discountForm');
+        const modal = document.getElementById('discountModal');
+
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Đang tạo...';
+                try {
+                    const response = await fetch('/Partner/CreateDiscountCode', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.reload();
+                    } else {
+                        alert(result.message);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Tạo mã';
+                    }
+                } catch (error) {
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Tạo mã';
+                }
+            });
+        }
+
+        // Close modal khi click outside
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeDiscountModal();
+            });
+        }
+    });
+</script>

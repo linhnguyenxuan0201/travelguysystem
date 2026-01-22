@@ -504,7 +504,13 @@
         }
 
         if (marker) marker.remove();
-        marker = L.marker([lat, lon]).addTo(map);
+        marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+
+        // Cho phép người dùng kéo marker để chỉnh lại vị trí nếu Nominatim không khớp
+        marker.on("dragend", () => {
+            const pos = marker.getLatLng();
+            map.panTo(pos);
+        });
         document.getElementById("map").style.display = "block";
     }
 

@@ -1,0 +1,195 @@
+@model TripCompass.WebUI.ViewModels.WalletViewModel
+@{
+    ViewData["Title"] = "Ví tiền";
+    Layout = "_Layout";
+}
+
+<style>
+    .wallet-page {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .wallet-header {
+        margin-bottom: 32px;
+    }
+    .wallet-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 32px;
+        font-weight: 900;
+        color: #111827;
+    }
+    .wallet-header p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
+    .wallet-balance {
+        background: linear-gradient(135deg, #4f46e5, #2563eb);
+        color: #fff;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 32px;
+        text-align: center;
+    }
+    .wallet-balance h2 {
+        margin: 0 0 12px 0;
+        font-size: 16px;
+        font-weight: 700;
+        opacity: 0.9;
+    }
+    .wallet-balance .amount {
+        font-size: 48px;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+    .wallet-balance .sub {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 20px;
+    }
+    .wallet-balance .btn-withdraw {
+        background: #fff;
+        color: #4f46e5;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 14px;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 16px;
+    }
+    .wallet-balance .btn-withdraw:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .wallet-balance .btn-withdraw:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .wallet-transactions {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .wallet-transactions h3 {
+        margin: 0;
+        padding: 20px 24px;
+        font-size: 18px;
+        font-weight: 900;
+        color: #111827;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    .wallet-list {
+        padding: 0;
+    }
+    .wallet-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 24px;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s;
+    }
+    .wallet-item:last-child {
+        border-bottom: none;
+    }
+    .wallet-item:hover {
+        background: #f9fafb;
+    }
+    .wallet-item-left {
+        flex: 1;
+    }
+    .wallet-item-type {
+        font-weight: 700;
+        font-size: 14px;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+    .wallet-item-date {
+        font-size: 12px;
+        color: #6b7280;
+    }
+    .wallet-item-amount {
+        font-weight: 900;
+        font-size: 16px;
+    }
+    .wallet-item-amount.positive {
+        color: #16a34a;
+    }
+    .wallet-item-amount.negative {
+        color: #dc2626;
+    }
+    .wallet-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+    .wallet-empty i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="wallet-page">
+    <div class="wallet-header">
+        <h1>Ví tiền</h1>
+        <p>Quản lý số dư và xem lịch sử giao dịch</p>
+    </div>
+
+    <div class="wallet-balance">
+        <h2>Số dư khả dụng</h2>
+        <div class="amount">@Model.Balance.ToString("N0")₫</div>
+        <div class="sub">Số tiền có thể sử dụng</div>
+        @if (Model.Balance > 0)
+        {
+            <form asp-controller="Account" asp-action="Withdraw" method="post" style="margin: 0;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-withdraw">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Rút tiền
+                </button>
+            </form>
+        }
+    </div>
+    
+    @if (TempData["Message"] != null)
+    {
+        <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 12px; padding: 16px; margin-bottom: 24px; color: #92400e; font-weight: 600;">
+            @TempData["Message"]
+        </div>
+    }
+
+    <div class="wallet-transactions">
+        <h3>Lịch sử giao dịch</h3>
+        <div class="wallet-list">
+            @if (Model.Transactions.Count == 0)
+            {
+                <div class="wallet-empty">
+                    <i class="fa-solid fa-receipt"></i>
+                    <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Chưa có giao dịch</div>
+                    <div style="font-size: 14px;">Lịch sử giao dịch sẽ hiển thị tại đây</div>
+                </div>
+            }
+            else
+            {
+                @foreach (var t in Model.Transactions)
+                {
+                    <div class="wallet-item">
+                        <div class="wallet-item-left">
+                            <div class="wallet-item-type">@t.Type</div>
+                            <div class="wallet-item-date">@t.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="wallet-item-amount @(t.Amount >= 0 ? "positive" : "negative")">
+                            @(t.Amount >= 0 ? "+" : "")@t.Amount.ToString("N0")₫
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

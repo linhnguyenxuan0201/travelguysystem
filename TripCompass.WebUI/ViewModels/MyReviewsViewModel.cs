@@ -17,12 +17,11 @@ namespace TripCompass.WebUI.ViewModels
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int TotalCount { get; set; }
-        public int FoodCount { get; set; }
-        public int HotelCount { get; set; }
-        public int EntertainmentCount
-        {
-            get; set;
-        }
+
+        // Stats by category slug (Categories.Slug)
+        public int TravelCount { get; set; }     // du-lich
+        public int FoodCount { get; set; }       // am-thuc
+        public int HotelCount { get; set; }      // khach-san
     }
 }
 

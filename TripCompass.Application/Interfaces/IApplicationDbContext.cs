@@ -21,6 +21,10 @@ namespace TripCompass.Application.Interfaces
         DbSet<PostReaction> PostReactions { get; }
         DbSet<Report> Reports { get; }
         DbSet<AdminLog> AdminLogs { get; }
+        DbSet<PartnerAgreement> PartnerAgreements { get; }
+        DbSet<Partner> Partners { get; }
+        DbSet<PartnerDiscountCode> PartnerDiscountCodes { get; }
+        DbSet<PostBooking> PostBookings { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }

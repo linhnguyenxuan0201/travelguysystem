@@ -1,4 +1,4 @@
-﻿@using TripCompass.Application.Auth
+@using TripCompass.Application.Auth
 @using TripCompass.Application.DTOs
 @using TripCompass.WebUI.ViewModels
 @using System.Security.Claims
@@ -6,11 +6,15 @@
 
 @{
     UserDropdownViewModel? userDropdown = null;
+    bool isPartner = false;
 
     if (User.Identity?.IsAuthenticated == true)
     {
         // ✅ LẤY EMAIL TỪ CLAIM (ĐÚNG)
         var email = User.FindFirstValue(ClaimTypes.Email);
+
+        // Kiểm tra role Partner
+        isPartner = User.IsInRole("Partner");
 
         if (!string.IsNullOrEmpty(email))
         {
@@ -96,7 +100,7 @@
                                             ⭐ Reputation Lv. @userDropdown.ReputationLevel
                                         </div>
                                         <div class="coin">
-                                            🪙 @userDropdown.WalletBalance.ToString("N0") Coins
+                                            🪙 @userDropdown.ReputationScore.ToString("N0") Coins
                                         </div>
                                     }
                                 </div>
@@ -121,6 +125,21 @@
                                     <i class="fa-solid fa-star"></i> Your Reviews
                                 </a>
                             </li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="Wallet">
+                                    <i class="fa-solid fa-wallet"></i> Ví tiền
+                                </a>
+                            </li>
+
+                            @if (User.IsInRole("Partner"))
+                            {
+                                <li>
+                                    <a asp-controller="Partner" asp-action="Dashboard">
+                                        <i class="fa-solid fa-store"></i> Quản lý shop
+                                    </a>
+                                </li>
+                            }
 
                             @if (User.IsInRole("Admin"))
                             {
@@ -194,16 +213,19 @@
 
     <!-- Partnership & Upgrade Prompts (sidebar) -->
     <div class="tc-promo-stack" id="tcPromoStack">
-        <div class="tc-promo-card" id="partnerPrompt" style="display:none;">
-            <button class="tc-promo-close" data-target="partnerPrompt">&times;</button>
-            <div class="tc-promo-badge">Đối tác</div>
-            <h3>Trở thành đối tác của TripCompass</h3>
-            <p>Tham gia cùng chúng tôi để tiếp cận nhiều khách hàng hơn và nhận ưu đãi hoa hồng hấp dẫn.</p>
-            <div class="tc-promo-actions">
-                <a class="tc-promo-primary" href="/Review/Reviews?partnerOnly=true">Đăng ký ngay</a>
-                <button class="tc-promo-secondary" data-dismiss="partnerPrompt">Không hiển thị lại</button>
+        @if (!isPartner)
+        {
+            <div class="tc-promo-card" id="partnerPrompt" style="display:none;">
+                <button class="tc-promo-close" data-target="partnerPrompt">&times;</button>
+                <div class="tc-promo-badge">Đối tác</div>
+                <h3>Trở thành đối tác của TripCompass</h3>
+                <p>Tham gia cùng chúng tôi để tiếp cận nhiều khách hàng hơn và nhận ưu đãi hoa hồng hấp dẫn.</p>
+                <div class="tc-promo-actions">
+                    <button class="tc-promo-primary" onclick="openPartnerAgreementModal()">Đăng ký ngay</button>
+                    <button class="tc-promo-secondary" data-dismiss="partnerPrompt">Không hiển thị lại</button>
+                </div>
             </div>
-        </div>
+        }
 
         <div class="tc-promo-card" id="upgradePrompt" style="display:none;">
             <button class="tc-promo-close" data-target="upgradePrompt">&times;</button>
@@ -238,11 +260,11 @@
             border-radius: 14px;
             position: relative;
             overflow: hidden;
-            border: 2px solid rgba(79,70,229,0.35);
+            border: 2px solid rgba(37,99,235,0.4);
             box-shadow: 0 18px 40px rgba(0,0,0,0.18);
             background:
                 radial-gradient(120px 120px at 20% 20%, rgba(255,255,255,0.25), transparent 60%),
-                linear-gradient(135deg, #1e40af 0%, #4F46E5 55%, #0b1020 100%);
+                linear-gradient(135deg, #2563eb 0%, #1e40af 50%, #1e3a8a 100%);
             color: #fff;
             animation: tcBannerBlink 0.9s steps(2, end) infinite, tcBannerFloat 3.2s ease-in-out infinite;
         }
@@ -364,6 +386,178 @@
                 height: 220px;
             }
         }
+
+        /* Partner Agreement Modal */
+        .partner-agreement-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            overflow-y: auto;
+        }
+
+        .partner-agreement-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .partner-agreement-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .partner-agreement-header {
+            padding: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .partner-agreement-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .partner-agreement-body {
+            padding: 24px;
+            color: #374151;
+            line-height: 1.8;
+        }
+
+        .partner-agreement-body h3 {
+            color: #111827;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .partner-agreement-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .partner-agreement-body p {
+            margin-bottom: 16px;
+        }
+
+        .partner-agreement-body ul {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .partner-agreement-body li {
+            margin-bottom: 8px;
+        }
+
+        .partner-agreement-footer {
+            padding: 24px;
+            border-top: 2px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .partner-agreement-checkbox {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .partner-agreement-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .partner-agreement-checkbox label {
+            cursor: pointer;
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .partner-agreement-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-agreement-primary {
+            flex: 1;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-agreement-primary:hover {
+            background: #1e40af;
+        }
+
+        .btn-agreement-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-agreement-secondary {
+            flex: 1;
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-agreement-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .partner-agreement-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6b7280;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .partner-agreement-close:hover {
+            background: #f3f4f6;
+        }
     </style>
 
     <!-- JS -->
@@ -427,8 +621,167 @@
                 }
             }, 1600);
         });
+
+        // Partner Agreement Modal
+        function openPartnerAgreementModal() {
+            document.getElementById('partnerAgreementModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePartnerAgreementModal() {
+            document.getElementById('partnerAgreementModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function submitPartnerRegistration() {
+            const checkbox = document.getElementById('agreeToTerms');
+            
+            if (!checkbox || !checkbox.checked) {
+                alert('Bạn phải đồng ý với điều khoản hợp tác để trở thành đối tác.');
+                return false;
+            }
+
+            // Đóng modal và chuyển đến trang đăng ký đối tác để điền đầy đủ thông tin
+            closePartnerAgreementModal();
+            // Chuyển đến trang form đăng ký
+            window.location.href = '/Review/PartnerRegistration';
+            return false;
+        }
+        
+        // Đảm bảo hàm này được sử dụng thay vì bất kỳ phiên bản async nào khác
+        window.submitPartnerRegistration = submitPartnerRegistration;
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('partnerAgreementModal');
+            if (e.target === modal) {
+                closePartnerAgreementModal();
+            }
+        });
     </script>
 
+    <!-- Partner Agreement Modal -->
+    <div id="partnerAgreementModal" class="partner-agreement-modal">
+        <div class="partner-agreement-content">
+            <button class="partner-agreement-close" onclick="closePartnerAgreementModal()">&times;</button>
+            <div class="partner-agreement-header">
+                <h2>ĐIỀU KHOẢN HỢP TÁC ĐỐI TÁC</h2>
+                <p style="margin: 8px 0 0 0; color: #6b7280; font-size: 14px;">(Có hiệu lực kể từ ngày Đối tác đồng ý đăng ký trên Website) - Phiên bản v1.0</p>
+            </div>
+            <div class="partner-agreement-body">
+                <h3>Điều 1. Định nghĩa và giải thích thuật ngữ</h3>
+                <p><strong>1. Website:</strong> Nền tảng cung cấp thông tin và kết nối dịch vụ du lịch do chúng tôi vận hành.</p>
+                <p><strong>2. Đối tác:</strong> Cá nhân hoặc tổ chức đăng ký cung cấp dịch vụ du lịch (bao gồm nhưng không giới hạn: tour, vận chuyển, lưu trú, trải nghiệm).</p>
+                <p><strong>3. Khách hàng:</strong> Cá nhân sử dụng Website để tìm kiếm và đặt dịch vụ.</p>
+                <p><strong>4. Đơn hàng:</strong> Giao dịch đặt dịch vụ được Khách hàng thực hiện thông qua Website.</p>
+                <p><strong>5. Phí hoa hồng:</strong> Khoản phí Website được hưởng tương ứng <strong>3% giá trị mỗi Đơn hàng thành công</strong>.</p>
+
+                <h3>Điều 2. Phạm vi hợp tác</h3>
+                <p><strong>1.</strong> Website đóng vai trò là <strong>nền tảng trung gian kết nối</strong>, không phải là bên cung cấp dịch vụ du lịch.</p>
+                <p><strong>2.</strong> Đối tác là bên <strong>trực tiếp cung cấp dịch vụ</strong> và chịu toàn bộ trách nhiệm liên quan đến dịch vụ đó.</p>
+                <p><strong>3.</strong> Website <strong>không tham gia, không thu hộ và không giữ tiền thanh toán</strong> của Khách hàng.</p>
+
+                <h3>Điều 3. Điều kiện trở thành Đối tác</h3>
+                <p><strong>1.</strong> Đối tác cam kết:</p>
+                <ul>
+                    <li>Có đầy đủ năng lực pháp lý theo quy định của pháp luật hiện hành.</li>
+                    <li>Cung cấp thông tin đăng ký trung thực, chính xác và cập nhật.</li>
+                </ul>
+                <p><strong>2.</strong> Website có quyền:</p>
+                <ul>
+                    <li>Từ chối hoặc chấm dứt hợp tác nếu phát hiện thông tin sai lệch hoặc hành vi vi phạm.</li>
+                </ul>
+
+                <h3>Điều 4. Giá dịch vụ và thanh toán</h3>
+                <p><strong>1.</strong> Giá dịch vụ do Đối tác tự xây dựng và công bố trên Website.</p>
+                <p><strong>2.</strong> Khách hàng <strong>thanh toán trực tiếp cho Đối tác</strong> thông qua hình thức thanh toán do Đối tác cung cấp.</p>
+                <p><strong>3.</strong> Website không chịu trách nhiệm đối với:</p>
+                <ul>
+                    <li>Việc thanh toán giữa Khách hàng và Đối tác</li>
+                    <li>Tranh chấp phát sinh liên quan đến thanh toán</li>
+                </ul>
+
+                <h3>Điều 5. Phí hoa hồng</h3>
+                <p><strong>1.</strong> Đối tác đồng ý thanh toán cho Website <strong>phí hoa hồng tương đương 3%</strong> giá trị mỗi Đơn hàng được xác nhận là thành công.</p>
+                <p><strong>2.</strong> Đơn hàng thành công là đơn hàng:</p>
+                <ul>
+                    <li>Được Khách hàng thanh toán đầy đủ cho Đối tác</li>
+                    <li>Được Đối tác xác nhận đã tiếp nhận dịch vụ</li>
+                </ul>
+                <p><strong>3.</strong> Việc thanh toán phí hoa hồng được thực hiện:</p>
+                <ul>
+                    <li>Theo định kỳ (tuần/tháng) <strong>hoặc</strong></li>
+                    <li>Theo thông báo đối soát từ Website</li>
+                </ul>
+
+                <h3>Điều 6. Quyền và nghĩa vụ của Đối tác</h3>
+                <p><strong>1.</strong> Đối tác có trách nhiệm:</p>
+                <ul>
+                    <li>Cung cấp dịch vụ đúng nội dung đã công bố.</li>
+                    <li>Đảm bảo chất lượng, an toàn và quyền lợi của Khách hàng.</li>
+                    <li>Chủ động xử lý các yêu cầu, khiếu nại của Khách hàng.</li>
+                </ul>
+                <p><strong>2.</strong> Đối tác chịu hoàn toàn trách nhiệm pháp lý đối với:</p>
+                <ul>
+                    <li>Chất lượng dịch vụ</li>
+                    <li>Thiệt hại phát sinh trong quá trình cung cấp dịch vụ</li>
+                </ul>
+
+                <h3>Điều 7. Quyền và nghĩa vụ của Website</h3>
+                <p><strong>1.</strong> Website có trách nhiệm:</p>
+                <ul>
+                    <li>Cung cấp nền tảng đặt dịch vụ ổn định.</li>
+                    <li>Gửi thông tin Đơn hàng đến Đối tác.</li>
+                </ul>
+                <p><strong>2.</strong> Website không chịu trách nhiệm đối với:</p>
+                <ul>
+                    <li>Việc thực hiện dịch vụ của Đối tác</li>
+                    <li>Các tranh chấp phát sinh giữa Đối tác và Khách hàng</li>
+                </ul>
+
+                <h3>Điều 8. Hủy dịch vụ và hoàn tiền</h3>
+                <p><strong>1.</strong> Chính sách hủy và hoàn tiền do Đối tác xây dựng và công bố.</p>
+                <p><strong>2.</strong> Website chỉ đóng vai trò hỗ trợ chuyển thông tin yêu cầu giữa các bên.</p>
+
+                <h3>Điều 9. Bảo mật thông tin</h3>
+                <p><strong>1.</strong> Hai bên cam kết bảo mật thông tin liên quan đến:</p>
+                <ul>
+                    <li>Khách hàng</li>
+                    <li>Giao dịch</li>
+                    <li>Dữ liệu kinh doanh</li>
+                </ul>
+                <p><strong>2.</strong> Việc sử dụng thông tin phải tuân thủ quy định pháp luật hiện hành.</p>
+
+                <h3>Điều 10. Chấm dứt hợp tác</h3>
+                <p><strong>1.</strong> Website có quyền đơn phương chấm dứt hợp tác nếu Đối tác:</p>
+                <ul>
+                    <li>Vi phạm điều khoản</li>
+                    <li>Gây ảnh hưởng đến uy tín Website</li>
+                </ul>
+                <p><strong>2.</strong> Đối tác có quyền chấm dứt hợp tác bằng cách thông báo trước bằng văn bản.</p>
+
+                <h3>Điều 11. Giải quyết tranh chấp</h3>
+                <p><strong>1.</strong> Mọi tranh chấp phát sinh sẽ được ưu tiên giải quyết thông qua thương lượng.</p>
+                <p><strong>2.</strong> Trường hợp không đạt được thỏa thuận, tranh chấp sẽ được giải quyết theo quy định pháp luật Việt Nam.</p>
+
+                <h3>Điều 12. Điều khoản chung</h3>
+                <p><strong>1.</strong> Việc Đối tác đăng ký và sử dụng Website được xem là đã đọc, hiểu và đồng ý toàn bộ Điều khoản này.</p>
+                <p><strong>2.</strong> Website có quyền sửa đổi, bổ sung Điều khoản và sẽ thông báo công khai trên Website.</p>
+            </div>
+            <div class="partner-agreement-footer">
+                <div class="partner-agreement-checkbox">
+                    <input type="checkbox" id="agreeToTerms" required>
+                    <label for="agreeToTerms">Tôi đã đọc và đồng ý với toàn bộ điều khoản hợp tác đối tác trên đây <span style="color: #dc2626;">*</span></label>
+                </div>
+                <div class="partner-agreement-actions">
+                    <button class="btn-agreement-secondary" onclick="closePartnerAgreementModal()">Hủy</button>
+                    <button class="btn-agreement-primary" id="submitPartnerBtn" onclick="submitPartnerRegistration()">Đăng ký làm đối tác</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @Html.AntiForgeryToken()
     @RenderSection("Scripts", required: false)
 </body>
 </html>

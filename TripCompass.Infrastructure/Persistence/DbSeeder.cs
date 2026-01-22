@@ -19,7 +19,8 @@ namespace TripCompass.Infrastructure.Persistence
                 context.Roles.AddRange(
                     new Role { RoleName = "Admin" },
                     new Role { RoleName = "User" },
-                    new Role { RoleName = "Moderator" }
+                    new Role { RoleName = "Moderator" },
+                    new Role { RoleName = "Partner" }
                 );
                 await context.SaveChangesAsync();
             }

@@ -27,12 +27,11 @@ namespace TripCompass.Infrastructure.Repositories
                 int page,
                 int pageSize)
         {
+            // NOTE: tránh Include + Select cùng lúc (dễ tạo join nặng, timeout).
+            // Chỉ select đúng dữ liệu cần cho list view, EF sẽ tự sinh subquery gọn hơn.
             IQueryable<Post> query = _context.Posts
                 .AsNoTracking()
-                .Where(p => p.UserId == userId && !p.IsDeleted)
-                .Include(p => p.PostCategories)
-                    .ThenInclude(pc => pc.Category)
-                .Include(p => p.PostImages);
+                .Where(p => p.UserId == userId && !p.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -56,34 +55,35 @@ namespace TripCompass.Infrastructure.Repositories
             var totalCount = await query.CountAsync();
 
             var items = await query
-      .OrderByDescending(p => p.CreatedAt)
-      .Skip((page - 1) * pageSize)
-      .Take(pageSize)
-      .Select(p => new ReviewListItemDto
-      {
-          PostId = p.PostId,
-          Title = p.Title,
-          Location = p.Location,
-          Rating = p.ReputationImpact,
-          ViewCount = p.ViewCount,
-          LikeCount = p.LikeCount,
-          CreatedAt = p.CreatedAt,
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new ReviewListItemDto
+                {
+                    PostId = p.PostId,
+                    Title = p.Title,
+                    Location = p.Location,
+                    Rating = p.ReputationImpact,
+                    ViewCount = p.ViewCount,
+                    LikeCount = p.LikeCount,
+                    CreatedAt = p.CreatedAt,
 
-          // ⭐⭐ DÒNG QUAN TRỌNG NHẤT ⭐⭐
-          Status = p.Status,
+                    // ⭐⭐ DÒNG QUAN TRỌNG NHẤT ⭐⭐
+                    Status = p.Status,
 
-          Categories = p.PostCategories
-              .Select(pc => pc.Category.Name)
-              .ToList(),
+                    Categories = _context.PostCategories
+                        .Where(pc => pc.PostId == p.PostId)
+                        .Select(pc => pc.Category.Name)
+                        .ToList(),
 
-          ThumbnailUrl = p.PostImages
-              .Where(i => i.IsCover)
-              .OrderBy(i => i.SortOrder)
-              .Select(i => i.ImageUrl)
-              .FirstOrDefault()
-              ?? "/images/placeholder.jpg"
-      })
-      .ToListAsync();
+                    ThumbnailUrl = _context.PostImages
+                        .Where(i => i.PostId == p.PostId && i.IsCover)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault()
+                        ?? "/images/placeholder.jpg"
+                })
+                .ToListAsync();
 
             return (items, totalCount);
         }

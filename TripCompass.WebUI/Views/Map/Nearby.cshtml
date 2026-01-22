@@ -1,0 +1,387 @@
+@{
+    ViewData["Title"] = "Bản đồ gần bạn";
+}
+
+<style>
+    /* Hide global footer on this page only */
+    footer.footer { display:none !important; }
+
+    .nm-wrap { max-width: 1400px; margin: 0 auto; padding: 18px 16px 28px; }
+    .nm-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom: 12px; }
+    .nm-head h2 { margin:0; font-size:20px; font-weight:900; color:#111827; }
+    .nm-head p { margin:6px 0 0 0; font-size:13px; color:#6b7280; }
+    .nm-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .nm-pill { height:40px; padding:0 14px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-weight:800; font-size:13px; cursor:pointer; }
+    .nm-pill.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .nm-actions .nm-pill { min-width: 190px; }
+    .nm-actions .nm-pill { display:inline-flex; align-items:center; justify-content:center; }
+    .nm-panel { display:grid; grid-template-columns: 3fr 1.2fr; gap:12px; }
+    .nm-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; overflow:hidden; }
+    .nm-map { height: 720px; }
+    .nm-form { padding:14px; display:flex; flex-direction:column; gap:10px; }
+    .nm-row { display:flex; gap:10px; }
+    .nm-input, .nm-select { height:40px; border-radius:12px; border:1px solid #e5e7eb; padding:0 12px; font-weight:700; font-size:13px; width:100%; outline:none; }
+    .nm-input:focus, .nm-select:focus { border-color:#93c5fd; box-shadow: 0 0 0 4px rgba(59,130,246,0.12); }
+    .nm-help { font-size:12px; color:#6b7280; }
+    .nm-results { padding:0 14px 14px; display:flex; flex-direction:column; gap:10px; max-height: 420px; overflow:auto; }
+    .nm-item { padding:10px; border-radius:14px; background:#f9fafb; border:1px solid #f3f4f6; cursor:pointer; }
+    .nm-item:hover { background:#fff; border-color:#e5e7eb; }
+    .nm-item .t { font-weight:900; color:#111827; font-size:13px; }
+    .nm-item .s { margin-top:4px; font-size:12px; color:#6b7280; }
+    .nm-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:900; padding:3px 8px; border-radius:999px; background:#dbeafe; color:#2563eb; }
+    .nm-msg { padding:12px 14px; border-top:1px solid #e5e7eb; background:#fffbeb; color:#92400e; font-weight:800; font-size:13px; display:none; }
+    .nm-route { padding:12px 14px; border-top:1px solid #e5e7eb; background:#eff6ff; color:#1e3a8a; font-weight:900; font-size:13px; display:none; }
+    .nm-route a { color:#1d4ed8; text-decoration:none; font-weight:900; }
+    .nm-route a:hover { text-decoration:underline; }
+    @@media (max-width: 980px) {
+        .nm-panel { grid-template-columns: 1fr; }
+        .nm-map { height: 520px; }
+        .nm-results { max-height: 280px; }
+    }
+</style>
+
+<div class="nm-wrap">
+    <div class="nm-head">
+        <div>
+            <h2>Bản đồ gần bạn</h2>
+            <p>Tìm nhanh địa điểm ăn uống, du lịch, khách sạn… gần vị trí hiện tại.</p>
+        </div>
+        <div class="nm-actions">
+            <a class="nm-pill" href="/">← Về trang chủ</a>
+            <button class="nm-pill primary" type="button" id="btnLocate">Dùng vị trí của tôi</button>
+        </div>
+    </div>
+
+    <div class="nm-panel">
+        <div class="nm-card">
+            <div id="map" class="nm-map"></div>
+            <div id="msg" class="nm-msg"></div>
+            <div id="route" class="nm-route"></div>
+        </div>
+
+        <div class="nm-card">
+            <div class="nm-form">
+                <div class="nm-row">
+                    <input class="nm-input" id="q" placeholder="Tìm kiếm (vd: bún bò, coffee, museum…)" />
+                </div>
+                <div class="nm-row">
+                    <select class="nm-select" id="category">
+                        <option value="food">Ăn uống (nhà hàng/quán ăn/cafe)</option>
+                        <option value="tourism">Du lịch (điểm tham quan)</option>
+                        <option value="hotel">Lưu trú (hotel/hostel)</option>
+                        <option value="shopping">Mua sắm</option>
+                        <option value="all">Tất cả</option>
+                    </select>
+                </div>
+                <div class="nm-row">
+                    <select class="nm-select" id="radius">
+                        <option value="800">Bán kính 800m</option>
+                        <option value="1500" selected>Bán kính 1.5km</option>
+                        <option value="3000">Bán kính 3km</option>
+                        <option value="5000">Bán kính 5km</option>
+                    </select>
+                </div>
+                <div class="nm-row">
+                    <button class="nm-pill primary" type="button" id="btnSearch" style="width:100%; height:40px; border-radius:12px;">Tìm quanh đây</button>
+                </div>
+                <div class="nm-help">
+                    Tip: bấm “Dùng vị trí của tôi” để định vị nhanh. Nếu bạn chặn quyền vị trí, hãy bật lại trong trình duyệt.
+                </div>
+            </div>
+
+            <div style="padding:0 14px 8px;">
+                <span class="nm-badge" id="countBadge">0 kết quả</span>
+            </div>
+            <div class="nm-results" id="results"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // --- basic state ---
+    let map, userMarker, userCircle;
+    let markers = [];
+    let userLatLng = null;
+    let routeLine = null;
+
+    const elMsg = document.getElementById('msg');
+    const elRoute = document.getElementById('route');
+    const elResults = document.getElementById('results');
+    const elCount = document.getElementById('countBadge');
+    const elQ = document.getElementById('q');
+    const elCategory = document.getElementById('category');
+    const elRadius = document.getElementById('radius');
+
+    function showMsg(text) {
+        elMsg.textContent = text;
+        elMsg.style.display = text ? 'block' : 'none';
+    }
+
+    function showRouteBox(html) {
+        elRoute.innerHTML = html || '';
+        elRoute.style.display = html ? 'block' : 'none';
+    }
+
+    function initMap() {
+        map = L.map('map', { zoomControl: true }).setView([10.762622, 106.660172], 13); // default: HCM
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+    }
+
+    function clearMarkers() {
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        elResults.innerHTML = '';
+        elCount.textContent = '0 kết quả';
+        if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+        showRouteBox('');
+    }
+
+    function setUserLocation(lat, lon) {
+        userLatLng = { lat, lon };
+
+        if (userMarker) map.removeLayer(userMarker);
+        if (userCircle) map.removeLayer(userCircle);
+
+        userMarker = L.marker([lat, lon]).addTo(map).bindPopup('Vị trí của bạn');
+        const r = parseInt(elRadius.value || '1500', 10);
+        userCircle = L.circle([lat, lon], { radius: r, color: '#2563eb', fillColor: '#93c5fd', fillOpacity: 0.15 }).addTo(map);
+        map.setView([lat, lon], 15);
+    }
+
+    function formatKm(meters) {
+        if (!isFinite(meters)) return '';
+        if (meters < 1000) return `${Math.round(meters)} m`;
+        return `${(meters / 1000).toFixed(1)} km`;
+    }
+
+    function formatMin(seconds) {
+        if (!isFinite(seconds)) return '';
+        const mins = Math.round(seconds / 60);
+        if (mins < 60) return `${mins} phút`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return `${h}h ${m}m`;
+    }
+
+    async function drawRouteTo(destLat, destLon, destName) {
+        showMsg('');
+        showRouteBox('Đang tính đường đi…');
+
+        if (!userLatLng) {
+            const ok = await locateMe();
+            if (!ok) return;
+        }
+
+        // OSRM public routing (best-effort)
+        const url = `https://router.project-osrm.org/route/v1/driving/${userLatLng.lon},${userLatLng.lat};${destLon},${destLat}?overview=full&geometries=geojson`;
+
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                showRouteBox('Không lấy được chỉ đường (dịch vụ định tuyến bận). Bạn có thể bấm “Mở Google Maps”.');
+                return;
+            }
+            const data = await res.json();
+            const route = data.routes && data.routes[0];
+            if (!route || !route.geometry) {
+                showRouteBox('Không có tuyến đường phù hợp. Bạn có thể bấm “Mở Google Maps”.');
+                return;
+            }
+
+            if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+
+            routeLine = L.geoJSON(route.geometry, {
+                style: { color: '#2563eb', weight: 5, opacity: 0.85 }
+            }).addTo(map);
+
+            const bounds = routeLine.getBounds();
+            if (bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.15));
+
+            const gmaps = `https://www.google.com/maps/dir/?api=1&origin=${userLatLng.lat},${userLatLng.lon}&destination=${destLat},${destLon}`;
+            showRouteBox(`Chỉ đường tới <b>${destName}</b> • ${formatKm(route.distance)} • ~${formatMin(route.duration)} • <a href="${gmaps}" target="_blank" rel="noopener">Mở Google Maps</a>`);
+        } catch (e) {
+            showRouteBox('Có lỗi khi lấy chỉ đường. Bạn có thể bấm “Mở Google Maps”.');
+        }
+    }
+
+    async function locateMe() {
+        showMsg('');
+        if (!navigator.geolocation) {
+            showMsg('Trình duyệt không hỗ trợ định vị.');
+            return;
+        }
+
+        return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    setUserLocation(latitude, longitude);
+                    resolve(true);
+                },
+                (err) => {
+                    showMsg('Không lấy được vị trí. Hãy cho phép quyền Location trong trình duyệt rồi thử lại.');
+                    resolve(false);
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
+        });
+    }
+
+    function buildOverpassQuery(lat, lon, radius, category, q) {
+        // Overpass QL: find nodes/ways/relations around point
+        // We'll filter by common tags depending on category, and optionally by name containing 'q' (case-insensitive)
+        const around = `around:${radius},${lat},${lon}`;
+        const nameFilter = q ? `["name"~"${q.replace(/"/g, '\\"')}",i]` : '';
+
+        const blocks = [];
+        const add = (tag) => blocks.push(`nwr${tag}(${around});`);
+
+        if (category === 'food') {
+            add(`["amenity"="restaurant"]${nameFilter}`);
+            add(`["amenity"="cafe"]${nameFilter}`);
+            add(`["amenity"="fast_food"]${nameFilter}`);
+            add(`["amenity"="bar"]${nameFilter}`);
+        } else if (category === 'tourism') {
+            add(`["tourism"="attraction"]${nameFilter}`);
+            add(`["tourism"="museum"]${nameFilter}`);
+            add(`["tourism"="viewpoint"]${nameFilter}`);
+            add(`["leisure"="park"]${nameFilter}`);
+        } else if (category === 'hotel') {
+            add(`["tourism"="hotel"]${nameFilter}`);
+            add(`["tourism"="hostel"]${nameFilter}`);
+            add(`["tourism"="guest_house"]${nameFilter}`);
+        } else if (category === 'shopping') {
+            add(`["shop"]${nameFilter}`);
+            add(`["amenity"="marketplace"]${nameFilter}`);
+            add(`["shop"="mall"]${nameFilter}`);
+        } else {
+            // all
+            add(`${nameFilter}`);
+        }
+
+        const query =
+`[out:json][timeout:25];
+(
+  ${blocks.join('\n  ')}
+);
+out center tags;`;
+        return query;
+    }
+
+    function elementToLatLng(el) {
+        if (el.type === 'node') return { lat: el.lat, lon: el.lon };
+        if (el.center) return { lat: el.center.lat, lon: el.center.lon };
+        return null;
+    }
+
+    function guessLabel(tags) {
+        if (!tags) return 'Địa điểm';
+        return tags.amenity || tags.tourism || tags.shop || tags.leisure || 'Địa điểm';
+    }
+
+    function renderResults(items) {
+        elResults.innerHTML = '';
+        elCount.textContent = `${items.length} kết quả`;
+
+        items.forEach((it, idx) => {
+            const div = document.createElement('div');
+            div.className = 'nm-item';
+            div.innerHTML = `
+                <div class="t">${it.name}</div>
+                <div class="s">${it.label}${it.address ? ' • ' + it.address : ''}</div>
+            `;
+            div.addEventListener('click', () => {
+                map.setView([it.lat, it.lon], 17);
+                if (it.marker) it.marker.openPopup();
+                drawRouteTo(it.lat, it.lon, it.name);
+            });
+            elResults.appendChild(div);
+        });
+    }
+
+    async function searchNearby() {
+        showMsg('');
+        clearMarkers();
+
+        // ensure location
+        if (!userLatLng) {
+            const ok = await locateMe();
+            if (!ok) return;
+        }
+
+        const lat = userLatLng.lat;
+        const lon = userLatLng.lon;
+        const radius = parseInt(elRadius.value || '1500', 10);
+        const category = elCategory.value || 'food';
+        const q = (elQ.value || '').trim();
+
+        // update circle radius
+        if (userCircle) userCircle.setRadius(radius);
+
+        const overpassQuery = buildOverpassQuery(lat, lon, radius, category, q);
+
+        try {
+            const res = await fetch('https://overpass-api.de/api/interpreter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                body: 'data=' + encodeURIComponent(overpassQuery)
+            });
+
+            if (!res.ok) {
+                showMsg('Không tìm được dữ liệu (Overpass bị giới hạn/timeout). Thử lại sau hoặc giảm bán kính.');
+                return;
+            }
+
+            const data = await res.json();
+            const elements = (data.elements || []).slice(0, 80); // cap results for UI
+
+            const items = [];
+            for (const el of elements) {
+                const ll = elementToLatLng(el);
+                if (!ll) continue;
+
+                const tags = el.tags || {};
+                const name = tags.name || tags['name:vi'] || '(Không tên)';
+                const label = guessLabel(tags);
+                const address = tags['addr:full'] || [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']].filter(Boolean).join(' ');
+
+                const marker = L.marker([ll.lat, ll.lon]).addTo(map);
+                marker.bindPopup(`<b>${name}</b><br/>${label}${address ? '<br/>' + address : ''}<br/><span style="color:#2563eb; font-weight:900; cursor:pointer;" onclick="window.__tcRouteTo && window.__tcRouteTo(${ll.lat},${ll.lon},${JSON.stringify(name)})">Chỉ đường</span>`);
+                markers.push(marker);
+
+                items.push({ name, label, address, lat: ll.lat, lon: ll.lon, marker });
+            }
+
+            if (items.length === 0) {
+                showMsg('Không tìm thấy địa điểm phù hợp trong bán kính này. Thử tăng bán kính hoặc đổi từ khóa.');
+            }
+
+            renderResults(items);
+        } catch (e) {
+            showMsg('Có lỗi khi tải dữ liệu bản đồ. Vui lòng thử lại.');
+        }
+    }
+
+    // init
+    initMap();
+    // expose for popup click
+    window.__tcRouteTo = drawRouteTo;
+
+    document.getElementById('btnLocate').addEventListener('click', locateMe);
+    document.getElementById('btnSearch').addEventListener('click', searchNearby);
+    elRadius.addEventListener('change', () => {
+        if (userLatLng) setUserLocation(userLatLng.lat, userLatLng.lon);
+    });
+
+    // auto-locate once to make it feel magical
+    locateMe();
+</script>
+}
+

@@ -314,7 +314,8 @@ GO
 INSERT INTO Roles (RoleName) VALUES 
 ('Admin'), 
 ('Moderator'), 
-('User');
+('User'),
+('Partner');
 PRINT '✓ Roles seeded';
 GO
 
