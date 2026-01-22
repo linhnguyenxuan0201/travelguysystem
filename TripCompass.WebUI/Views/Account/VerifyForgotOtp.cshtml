@@ -1,7 +1,7 @@
 ﻿@model TripCompass.WebUI.ViewModels.VerifyForgotOtpViewModel
 
 @{
-    ViewData["Title"] = "Verify OTP";
+    ViewData["Title"] = "Xác thực OTP";
     Layout = "_AuthLayout";
 }
 
@@ -12,7 +12,7 @@
 
         @if (TempData["Message"] != null)
         {
-            <div class="alert alert-success" style="background-color: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+            <div class="alert alert-success">
                 @TempData["Message"]
             </div>
         }
@@ -28,7 +28,7 @@
                        inputmode="numeric"
                        autocomplete="one-time-code"
                        placeholder="Nhập 6 chữ số"
-                       style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;" />
+                       class="form-control otp-input" />
                 <span asp-validation-for="OtpCode" class="error"></span>
             </div>
 
@@ -36,8 +36,8 @@
                 Xác thực OTP
             </button>
 
-            <div style="text-align: center; margin-top: 20px;">
-                <a asp-action="ForgotPassword" style="color: #2563eb; text-decoration: none;">Gửi lại mã OTP</a>
+            <div class="auth-link">
+                <a asp-action="ForgotPassword">Gửi lại mã OTP</a>
             </div>
         </form>
     </div>

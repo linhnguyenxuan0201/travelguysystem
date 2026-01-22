@@ -5,203 +5,9 @@
     Layout = "_PartnerDashboardLayout";
 }
 
-<style>
-    .cm-header {
-        margin-bottom: 24px;
-    }
-    .cm-header h2 {
-        margin: 0 0 8px 0;
-        font-size: 24px;
-        font-weight: 900;
-        color: #111827;
-    }
-    .cm-header p {
-        margin: 0;
-        color: #6b7280;
-        font-size: 14px;
-    }
-    .cm-summary {
-        background: linear-gradient(135deg, #4f46e5, #2563eb);
-        color: #fff;
-        border-radius: 14px;
-        padding: 20px;
-        margin-bottom: 24px;
-    }
-    .cm-summary h3 {
-        margin: 0 0 12px 0;
-        font-size: 16px;
-        font-weight: 700;
-        opacity: 0.9;
-    }
-    .cm-summary .amount {
-        font-size: 32px;
-        font-weight: 900;
-    }
-    .cm-unpaid {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24);
-        color: #fff;
-        border-radius: 14px;
-        padding: 20px;
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .cm-unpaid .left h3 {
-        margin: 0 0 8px 0;
-        font-size: 16px;
-        font-weight: 700;
-    }
-    .cm-unpaid .amount {
-        font-size: 28px;
-        font-weight: 900;
-    }
-    .cm-unpaid .btn-pay-all {
-        background: #fff;
-        color: #f59e0b;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 10px;
-        font-weight: 800;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-    .cm-unpaid .btn-pay-all:hover {
-        transform: scale(1.05);
-    }
-    .cm-table {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-    .cm-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .cm-table th {
-        background: #f9fafb;
-        padding: 14px 16px;
-        text-align: left;
-        font-size: 13px;
-        font-weight: 800;
-        color: #374151;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    .cm-table td {
-        padding: 14px 16px;
-        border-bottom: 1px solid #f3f4f6;
-        font-size: 14px;
-        color: #111827;
-    }
-    .cm-table tr:last-child td {
-        border-bottom: none;
-    }
-    .cm-table tr:hover {
-        background: #f9fafb;
-    }
-    .cm-badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-    }
-    .cm-badge-cash {
-        background: #fef3c7;
-        color: #92400e;
-    }
-    .cm-badge-online {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-    .cm-badge-paid {
-        background: #dcfce7;
-        color: #166534;
-    }
-    .cm-badge-pending {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-    .cm-btn-pay {
-        background: #4f46e5;
-        color: #fff;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .cm-btn-pay:hover {
-        background: #4338ca;
-    }
-    .cm-btn-pay:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-    }
-    .cm-empty {
-        text-align: center;
-        padding: 60px 20px;
-        color: #6b7280;
-    }
-    .cm-empty i {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-    }
-    .cm-qr-modal {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.55);
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-    .cm-qr-modal.active {
-        display: flex;
-    }
-    .cm-qr-box {
-        background: #fff;
-        border-radius: 16px;
-        padding: 24px;
-        max-width: 400px;
-        width: calc(100vw - 24px);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-    }
-    .cm-qr-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-    .cm-qr-header h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 900;
-        color: #111827;
-    }
-    .cm-qr-close {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #6b7280;
-    }
-    .cm-qr-img {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 12px;
-    }
-    .cm-qr-info {
-        font-size: 13px;
-        color: #6b7280;
-        text-align: center;
-    }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/commission.css" />
+}
 
 <div class="cm-header">
     <h2>Quản lý hoa hồng</h2>
@@ -229,8 +35,8 @@
     {
         <div class="cm-empty">
             <i class="fa-solid fa-receipt"></i>
-            <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Chưa có giao dịch hoa hồng</div>
-            <div style="font-size: 14px;">Phí hoa hồng sẽ được trừ tự động khi có đơn hàng</div>
+            <div class="cm-empty-title">Chưa có giao dịch hoa hồng</div>
+            <div class="cm-empty-desc">Phí hoa hồng sẽ được trừ tự động khi có đơn hàng</div>
         </div>
     }
     else
@@ -252,11 +58,11 @@
                 {
                     <tr>
                         <td>
-                            <div style="font-weight: 700; color: #111827;">#@b.BookingId</div>
-                            <div style="font-size: 12px; color: #6b7280;">@b.PostTitle</div>
+                            <div class="cm-table-booking-id">#@b.BookingId</div>
+                            <div class="cm-table-post-title">@b.PostTitle</div>
                         </td>
-                        <td style="font-weight: 700;">@b.TotalAmount.ToString("N0")₫</td>
-                        <td style="color: #dc2626; font-weight: 700;">-@b.CommissionAmount.ToString("N0")₫</td>
+                        <td class="cm-table-amount">@b.TotalAmount.ToString("N0")₫</td>
+                        <td class="cm-table-commission">-@b.CommissionAmount.ToString("N0")₫</td>
                         <td>
                             <span class="cm-badge @(b.PaymentMethod == "Cash" ? "cm-badge-cash" : "cm-badge-online")">
                                 @(b.PaymentMethod == "Cash" ? "💵 Tiền mặt" : "💳 Online")
@@ -268,7 +74,7 @@
                                 <span class="cm-badge cm-badge-paid">✅ Đã trả</span>
                                 @if (b.CommissionPaidAt.HasValue)
                                 {
-                                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">@b.CommissionPaidAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div class="cm-table-paid-date">@b.CommissionPaidAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                                 }
                             }
                             else
@@ -276,7 +82,7 @@
                                 <span class="cm-badge cm-badge-pending">⏳ Chưa trả</span>
                             }
                         </td>
-                        <td style="color: #6b7280; font-size: 13px;">@b.BookedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="cm-table-date">@b.BookedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
                         <td>
                             @if (!b.CommissionPaid)
                             {
@@ -284,7 +90,7 @@
                             }
                             else
                             {
-                                <span style="color: #6b7280; font-size: 12px;">Đã thanh toán</span>
+                                <span class="cm-table-paid-text">Đã thanh toán</span>
                             }
                         </td>
                     </tr>
@@ -304,7 +110,7 @@
         <div id="qrContent">
             <img id="qrImage" class="cm-qr-img" alt="QR thanh toán" />
             <div class="cm-qr-info" id="qrInfo"></div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 12px; text-align: center;">
+            <div class="cm-qr-footer">
                 Quét QR để thanh toán vào <strong>MB Bank - 68161397979</strong>.<br />
                 Hệ thống sẽ tự động xác nhận sau khi nhận được thanh toán.
             </div>

@@ -56,6 +56,7 @@
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/profile.css" />
 
+    @RenderSection("Styles", required: false)
 </head>
 <body>
 
@@ -110,19 +111,19 @@
 
                             <li>
                                 <a asp-controller="Account" asp-action="Profile">
-                                    <i class="fa-regular fa-user"></i> View Profile
+                                    <i class="fa-regular fa-user"></i> Xem hồ sơ
                                 </a>
                             </li>
 
                             <li>
                                 <a asp-controller="Account" asp-action="ChangePassword">
-                                    <i class="fa-solid fa-lock"></i> Change Password
+                                    <i class="fa-solid fa-lock"></i> Đổi mật khẩu
                                 </a>
                             </li>
 
                             <li>
                                 <a asp-controller="Review" asp-action="MyReviews">
-                                    <i class="fa-solid fa-star"></i> Your Reviews
+                                    <i class="fa-solid fa-star"></i> Đánh giá của bạn
                                 </a>
                             </li>
 
@@ -154,7 +155,7 @@
 
                             <li>
                                 <a asp-controller="Account" asp-action="Logout" class="logout">
-                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                                 </a>
                             </li>
                         </ul>
@@ -165,7 +166,7 @@
                     <a asp-controller="Account"
                        asp-action="Login"
                        class="login-btn">
-                        Log in
+                        Đăng nhập
                     </a>
                 }
             </nav>
