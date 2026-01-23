@@ -48,6 +48,11 @@ namespace TripCompass.Application.Features.Admin.Users.GetUsers
                     UserId = u.UserId,
                     UserName = u.UserName,
                     Email = u.Email,
+                    Role = u.UserRoles
+                        .OrderBy(ur => ur.RoleId)
+                        .Select(ur => ur.Role.RoleName)
+                        .FirstOrDefault() ?? string.Empty,
+                    Status = u.IsBanned ? "Banned" : "Active",
                     ReputationScore = u.ReputationScore,
                     IsBanned = u.IsBanned,
                     CreatedAt = u.CreatedAt,

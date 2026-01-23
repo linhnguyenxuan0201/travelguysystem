@@ -19,7 +19,7 @@ namespace TripCompass.Application.Auth
         {
             var user = await _userRepo.GetByEmailAsync(email);
 
-            if (user == null || user.IsBanned)
+            if (user == null)
                 return null;
 
             // Reject placeholder / non-password accounts

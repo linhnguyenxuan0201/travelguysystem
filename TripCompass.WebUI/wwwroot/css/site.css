@@ -207,7 +207,7 @@ button:focus-visible {
     padding: 10px 24px;
     border-radius: var(--radius-full);
     background: var(--primary);
-    color: #fff;
+    color: snow;
     font-weight: 600;
     font-size: 14px;
     transition: all var(--transition-base);
