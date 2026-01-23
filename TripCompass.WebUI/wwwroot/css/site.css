@@ -954,12 +954,16 @@ button:focus-visible {
 .login-left h2 {
     font-size: 28px;
     margin-bottom: 6px;
+    color: #1e3a8a;
+    font-weight: 900;
 }
 
 .login-slogan {
     font-size: 13px;
     letter-spacing: 1px;
-    color: #6b7280;
+    color: #3b82f6;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 /* RIGHT */
@@ -1006,24 +1010,50 @@ button:focus-visible {
     display: flex;
     gap: 12px;
     margin-bottom: 24px;
+    align-items: center;
 }
 
 .btn-outline {
     flex: 1;
-    padding: 12px;
+    padding: 0;
     border-radius: 10px;
     border: 1px solid #1f2937;
-    background: transparent;
+    background: #ffffff;
     font-weight: 600;
+    min-width: 0;
+    height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    color: #1f2937;
+    line-height: 1;
+    font-size: 15px;
+    vertical-align: middle;
+    margin-top: 10px;
 }
 
 .btn-primary {
     flex: 1;
-    padding: 12px;
+    padding: 0;
     border-radius: 10px;
-    background: #000000;
+    background: #2563eb;
     color: #ffffff;
     font-weight: 600;
+    border: none;
+    min-width: 0;
+    height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1;
+    font-size: 15px;
+    cursor: pointer;
+    vertical-align: middle;
 }
 
 /* DIVIDER */

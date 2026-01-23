@@ -1,0 +1,67 @@
+@model TripCompass.WebUI.ViewModels.WalletViewModel
+@{
+    ViewData["Title"] = "Ví tiền";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/wallet.css" />
+}
+
+<div class="wallet-page">
+    <div class="wallet-header">
+        <h1>Ví tiền</h1>
+        <p>Quản lý số dư và xem lịch sử giao dịch</p>
+    </div>
+
+    <div class="wallet-balance">
+        <h2>Số dư khả dụng</h2>
+        <div class="amount">@Model.Balance.ToString("N0")₫</div>
+        <div class="sub">Số tiền có thể sử dụng</div>
+        @if (Model.Balance > 0)
+        {
+            <form asp-controller="Account" asp-action="Withdraw" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-withdraw">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Rút tiền
+                </button>
+            </form>
+        }
+    </div>
+    
+    @if (TempData["Message"] != null)
+    {
+        <div class="wallet-message">
+            @TempData["Message"]
+        </div>
+    }
+
+    <div class="wallet-transactions">
+        <h3>Lịch sử giao dịch</h3>
+        <div class="wallet-list">
+            @if (Model.Transactions.Count == 0)
+            {
+                <div class="wallet-empty">
+                    <i class="fa-solid fa-receipt"></i>
+                    <div class="wallet-empty-title">Chưa có giao dịch</div>
+                    <div class="wallet-empty-desc">Lịch sử giao dịch sẽ hiển thị tại đây</div>
+                </div>
+            }
+            else
+            {
+                @foreach (var t in Model.Transactions)
+                {
+                    <div class="wallet-item">
+                        <div class="wallet-item-left">
+                            <div class="wallet-item-type">@t.Type</div>
+                            <div class="wallet-item-date">@t.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="wallet-item-amount @(t.Amount >= 0 ? "positive" : "negative")">
+                            @(t.Amount >= 0 ? "+" : "")@t.Amount.ToString("N0")₫
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

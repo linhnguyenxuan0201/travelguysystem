@@ -6,6 +6,10 @@
     Layout = "_Layout";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/review-detail.css" />
+}
+
 <style>
     .detail-container {
         max-width: 1400px;
@@ -880,7 +884,7 @@
             </div>
 
             <!-- Description -->
-            <div style="font-size: 14px; color: #111827; margin-bottom: 12px; font-weight: 700; margin-top: 24px;">
+            <div class="review-detail-section-title">
                 Mô tả chi tiết
             </div>
             <div class="description">
@@ -962,6 +966,84 @@
                 }
             </div>
 
+            @if (Model.IsPartner)
+            {
+                <div class="info-card">
+                    <h3 class="info-card-title">Đặt chỗ đối tác</h3>
+                    <div class="info-item">
+                        <span class="info-icon">🤝</span>
+                        <span class="info-text">Sản phẩm do đối tác cung cấp</span>
+                    </div>
+
+                    <form id="partnerBookingForm" class="partner-booking-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="postId" value="@Model.PostId" />
+
+                        <div class="partner-booking-form-fields">
+                            <div>
+                                <label class="partner-booking-field">Tên</label>
+                                <input name="customerName" type="text" maxlength="120" required
+                                       class="partner-booking-input"
+                                       placeholder="Nhập họ tên" />
+                            </div>
+                            <div>
+                                <label class="partner-booking-field">Số điện thoại</label>
+                                <input name="customerPhone" type="tel" maxlength="30" required
+                                       class="partner-booking-input"
+                                       placeholder="VD: 09xxxxxxxx" />
+                            </div>
+                            <div class="partner-booking-grid">
+                                <div>
+                                    <label class="partner-booking-field">Số người</label>
+                                    <input name="quantity" type="number" min="1" max="100" value="1" required
+                                           class="partner-booking-input" />
+                                </div>
+                                <div>
+                                    <label class="partner-booking-field">Thời gian đến</label>
+                                    <input name="arrivalTime" type="datetime-local" required
+                                           class="partner-booking-input" />
+                                </div>
+                            </div>
+                            <div>
+                                <label class="partner-booking-field">Ưu đãi (mã giảm giá)</label>
+                                <input name="promoCode" type="text" maxlength="30"
+                                       class="partner-booking-input"
+                                       placeholder="VD: SUMMER2026 (nếu có)" />
+                            </div>
+                            
+                            <div>
+                                <label class="partner-booking-payment-label">Phương thức thanh toán<span class="required">*</span></label>
+                                <div class="partner-booking-payment-options">
+                                    <label class="partner-booking-payment-option" id="paymentCashLabel">
+                                        <input type="radio" name="paymentMethod" value="Cash" checked />
+                                        <span>💵 Tiền mặt</span>
+                                    </label>
+                                    <label class="partner-booking-payment-option" id="paymentOnlineLabel">
+                                        <input type="radio" name="paymentMethod" value="Online" />
+                                        <span>💳 Online</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button id="partnerBookingSubmit" type="submit" class="partner-booking-submit">
+                                Đặt chỗ
+                            </button>
+
+                            <div id="partnerBookingQrBox" class="partner-booking-qr-box">
+                                <div class="partner-booking-qr-title">Thanh toán bằng QR</div>
+                                <div id="partnerBookingQrMeta" class="partner-booking-qr-meta"></div>
+                                <div class="partner-booking-qr-img-wrapper">
+                                    <img id="partnerBookingQrImg" alt="QR thanh toán" class="partner-booking-qr-img" />
+                                </div>
+                                <div class="partner-booking-qr-footer">
+                                    Quét QR để thanh toán vào <strong>MB Bank - 68161397979</strong>.
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            }
+
             @if (Model.SimilarPosts.Any())
             {
                 <div class="info-card">
@@ -1013,6 +1095,83 @@
     // Carousel data
     let currentCarouselIndex = 0;
     const totalCarouselImages = @Model.Images.Count;
+
+    // Partner booking form -> create PostBooking + return QR
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('partnerBookingForm');
+        if (!form) return;
+
+        const submitBtn = document.getElementById('partnerBookingSubmit');
+        const qrBox = document.getElementById('partnerBookingQrBox');
+        const qrImg = document.getElementById('partnerBookingQrImg');
+        const qrMeta = document.getElementById('partnerBookingQrMeta');
+        const paymentCashLabel = document.getElementById('paymentCashLabel');
+        const paymentOnlineLabel = document.getElementById('paymentOnlineLabel');
+        const paymentMethodInputs = form.querySelectorAll('input[name="paymentMethod"]');
+
+        // Style payment method labels on selection
+        paymentMethodInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'Cash') {
+                    paymentCashLabel.style.borderColor = '#4f46e5';
+                    paymentCashLabel.style.background = '#eff6ff';
+                    paymentOnlineLabel.style.borderColor = '#e5e7eb';
+                    paymentOnlineLabel.style.background = '#fff';
+                } else {
+                    paymentOnlineLabel.style.borderColor = '#4f46e5';
+                    paymentOnlineLabel.style.background = '#eff6ff';
+                    paymentCashLabel.style.borderColor = '#e5e7eb';
+                    paymentCashLabel.style.background = '#fff';
+                }
+            });
+        });
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const paymentMethod = formData.get('paymentMethod') || 'Cash';
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đang tạo đơn...';
+            qrBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/Booking/CreateForPost', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                const data = await res.json();
+
+                if (!data.success) {
+                    alert(data.message || 'Có lỗi xảy ra.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Đặt chỗ';
+                    return;
+                }
+
+                const amount = data.amount || 0;
+                const bookingId = data.bookingId;
+                
+                if (paymentMethod === 'Online' && data.qrImageUrl) {
+                    qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
+                    qrImg.src = data.qrImageUrl;
+                    qrBox.style.display = 'block';
+                    submitBtn.textContent = 'Đã tạo đơn - Quét QR để thanh toán';
+                } else {
+                    submitBtn.textContent = 'Đã tạo đơn thành công!';
+                    setTimeout(() => {
+                        submitBtn.textContent = 'Đặt chỗ';
+                        submitBtn.disabled = false;
+                    }, 2000);
+                }
+            } catch (err) {
+                alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Đặt chỗ';
+            }
+        });
+    });
 
     // Open gallery
     function openGallery(index) {

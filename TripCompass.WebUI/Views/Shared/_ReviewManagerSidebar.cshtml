@@ -1,0 +1,153 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    .review-manager-sidebar-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 20px 16px;
+    }
+
+    .review-manager-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 32px;
+        padding: 0 8px;
+    }
+
+    .review-manager-logo i {
+        font-size: 28px;
+        color: #6366f1;
+    }
+
+    .review-manager-logo h3 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+
+    .review-manager-nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .review-manager-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #6b7280;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .review-manager-link:hover {
+        background: #f3f4f6;
+        color: #111827;
+    }
+
+    .review-manager-link.active {
+        background: #eef2ff;
+        color: #6366f1;
+    }
+
+    .review-manager-link i {
+        width: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .review-manager-footer {
+        padding-top: 16px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Dark mode */
+    body.dark .review-manager-logo h3 {
+        color: #f9fafb;
+    }
+
+    body.dark .review-manager-link {
+        color: #9ca3af;
+    }
+
+    body.dark .review-manager-link:hover {
+        background: #1f2937;
+        color: #f9fafb;
+    }
+
+    body.dark .review-manager-link.active {
+        background: #1e293b;
+        color: #818cf8;
+    }
+
+    body.dark .review-manager-footer {
+        border-top-color: #374151;
+    }
+</style>
+
+<div class="review-manager-sidebar-container">
+    
+    <!-- LOGO -->
+    <div class="review-manager-logo">
+        <i class="fas fa-compass"></i>
+        <h3>TripCompass</h3>
+    </div>
+
+    <!-- NAVIGATION -->
+    <div class="review-manager-nav">
+        
+        <a href="/Review/MyReviews" class="review-manager-link">
+            <i class="fas fa-file-alt"></i>
+            <span>Quản lý bài viết</span>
+        </a>
+        
+        <a href="/Dashboard/Statistics" class="review-manager-link">
+            <i class="fas fa-chart-bar"></i>
+            <span>Thống kê</span>
+        </a>
+        
+        <a href="/Account/Profile" class="review-manager-link">
+            <i class="fas fa-user"></i>
+            <span>Hồ sơ</span>
+        </a>
+        
+        <a href="javascript:void(0)" onclick="openSettings()" class="review-manager-link">
+            <i class="fas fa-cog"></i>
+            <span>Cài đặt</span>
+        </a>
+        
+    </div>
+
+    <!-- FOOTER -->
+    <div class="review-manager-footer">
+        <a href="/Account/Logout" class="review-manager-link">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Đăng xuất</span>
+        </a>
+    </div>
+
+</div>
+
+<script>
+    // Highlight active link based on current URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.review-manager-link');
+        
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== 'javascript:void(0)' && currentPath.includes(href)) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>

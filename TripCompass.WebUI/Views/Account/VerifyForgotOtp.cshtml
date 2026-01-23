@@ -1,29 +1,47 @@
 ﻿@model TripCompass.WebUI.ViewModels.VerifyForgotOtpViewModel
 
 @{
-    ViewData["Title"] = "Verify OTP";
+    ViewData["Title"] = "Xác thực OTP";
     Layout = "_AuthLayout";
 }
 
-<form asp-action="VerifyForgotOtp" method="post" class="auth-form">
+<div class="auth-container">
+    <div class="auth-right">
+        <h1>Xác thực OTP</h1>
+        <p>Nhập mã OTP đã được gửi đến email <strong>@Model.Email</strong></p>
 
-    <input type="hidden" asp-for="Email" />
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Message"]
+            </div>
+        }
 
-    <label>Enter OTP</label>
+        <form asp-action="VerifyForgotOtp" method="post" class="auth-form">
+            <input type="hidden" asp-for="Email" />
 
-    <input asp-for="OtpCode"
-           class="otp-input"
-           maxlength="6"
-           inputmode="numeric"
-           autocomplete="one-time-code" />
+            <div class="form-group">
+                <label>Mã OTP</label>
+                <input asp-for="OtpCode"
+                       class="form-control"
+                       maxlength="6"
+                       inputmode="numeric"
+                       autocomplete="one-time-code"
+                       placeholder="Nhập 6 chữ số"
+                       class="form-control otp-input" />
+                <span asp-validation-for="OtpCode" class="error"></span>
+            </div>
 
-    <span asp-validation-for="OtpCode" class="error"></span>
+            <button type="submit" class="btn-primary">
+                Xác thực OTP
+            </button>
 
-    <button type="submit" class="btn-primary">
-        Verify OTP
-    </button>
-
-</form>
+            <div class="auth-link">
+                <a asp-action="ForgotPassword">Gửi lại mã OTP</a>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

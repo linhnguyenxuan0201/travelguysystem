@@ -5,8 +5,8 @@
 
     <!-- PAGE HEADER -->
     <div class="profile-page-header">
-        <h1>User Profile</h1>
-        <p>Manage your account information and services</p>
+        <h1>Hồ sơ người dùng</h1>
+        <p>Quản lý thông tin tài khoản và dịch vụ của bạn</p>
     </div>
 
     <div class="profile-layout">
@@ -26,7 +26,7 @@
                         <h2>@Model.UserName</h2>
                         <span class="email">@Model.Email</span>
                         <small class="joined">
-                            Joined @Model.JoinedAt.ToString("MMMM yyyy")
+                            Tham gia @Model.JoinedAt.ToString("MMMM yyyy", new System.Globalization.CultureInfo("vi-VN"))
                         </small>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                       enctype="multipart/form-data"
                       class="avatar-upload">
                     <label class="change-avatar">
-                        Change avatar
+                        Đổi avatar
                         <input type="file"
                                name="avatar"
                                hidden
@@ -49,11 +49,11 @@
                 <hr />
 
                 <!-- BASIC INFO -->
-                <h4 class="section-title">Basic Information</h4>
+                <h4 class="section-title">Thông tin cơ bản</h4>
 
                 <div class="info-grid">
                     <div class="info-item">
-                        <span>Full Name</span>
+                        <span>Họ và tên</span>
                         <strong>@Model.UserName</strong>
                     </div>
 
@@ -63,13 +63,13 @@
                     </div>
 
                     <div class="info-item">
-                        <span>Status</span>
-                        <span class="badge badge-active">Active</span>
+                        <span>Trạng thái</span>
+                        <span class="badge badge-active">Hoạt động</span>
                     </div>
 
                     <div class="info-item">
-                        <span>Account Type</span>
-                        <span class="badge badge-free">Free</span>
+                        <span>Loại tài khoản</span>
+                        <span class="badge badge-free">Miễn phí</span>
                     </div>
                 </div>
             </div>
@@ -77,13 +77,13 @@
             <!-- STATS -->
             <div class="stats-grid">
                 <div class="stat-card coin">
-                    <h3>@Model.WalletBalance.ToString("N0")</h3>
-                    <p>Available Coins</p>
+                    <h3>@Model.ReputationScore.ToString("N0")</h3>
+                    <p>Số coin hiện có</p>
                 </div>
 
                 <div class="stat-card trust">
-                    <h3>@Model.ReputationScore%</h3>
-                    <p>Trust Score</p>
+                    <h3>@Model.ReputationLevel</h3>
+                    <p>Độ uy tín</p>
                     <div class="stars">
                         ★★★★☆
                     </div>
@@ -97,46 +97,46 @@
 
             <!-- CURRENT PLAN -->
             <div class="card plan-card">
-                <h4>Current Plan</h4>
+                <h4>Gói hiện tại</h4>
 
                 <div class="plan-box">
-                    <strong>Free</strong>
-                    <span>Basic access</span>
+                    <strong>Miễn phí</strong>
+                    <span>Truy cập cơ bản</span>
                 </div>
 
                 <ul class="plan-features">
-                    <li>✔ Standard access</li>
-                    <li>✔ Community support</li>
-                    <li>✔ Basic features</li>
+                    <li>✔ Truy cập tiêu chuẩn</li>
+                    <li>✔ Hỗ trợ cộng đồng</li>
+                    <li>✔ Tính năng cơ bản</li>
                 </ul>
             </div>
 
             <!-- UPGRADE -->
             <div class="card upgrade-card">
-                <h4>Upgrade to Next Plan?</h4>
-                <p>Unlock more advanced features</p>
+                <h4>Nâng cấp lên gói tiếp theo?</h4>
+                <p>Mở khóa thêm nhiều tính năng nâng cao</p>
 
                 <div class="upgrade-box">
-                    <span>Enterprise</span>
+                    <span>Doanh nghiệp</span>
                     <strong>+50%</strong>
                 </div>
 
                 <button class="btn-upgrade">
-                    Upgrade Now →
+                    Nâng cấp ngay →
                 </button>
             </div>
 
             <!-- QUICK ACTIONS -->
             <div class="card quick-actions">
-                <h4>Quick Actions</h4>
+                <h4>Thao tác nhanh</h4>
 
                 <a asp-action="ChangePassword"
                    asp-controller="Account">
-                    Change Password
+                    Đổi mật khẩu
                 </a>
 
                 <a href="#">
-                    Transaction History
+                    Lịch sử giao dịch
                 </a>
             </div>
 

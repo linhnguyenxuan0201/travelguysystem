@@ -1,0 +1,106 @@
+@using System
+@model TripCompass.WebUI.ViewModels.Partner.PartnerOrdersViewModel
+
+@{
+    ViewData["Title"] = "Đơn hàng";
+    Layout = "_PartnerDashboardLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/partner-orders.css" />
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="po-card warning">
+        @TempData["Message"]
+    </div>
+}
+
+<div class="po-topbar">
+    <div class="po-title">
+        <h2>Tất cả đơn hàng</h2>
+        <p>Duyệt hoặc từ chối đơn đặt chỗ (từ chối sẽ gửi email cho khách)</p>
+    </div>
+    <a class="po-btn" href="/Partner/Dashboard">← Quay lại Dashboard</a>
+</div>
+
+<div class="po-card">
+    @if (Model.Orders.Count == 0)
+    {
+        <div class="po-empty">Chưa có đơn đặt chỗ nào.</div>
+    }
+    else
+    {
+        <div class="po-list">
+            @foreach (var o in Model.Orders)
+            {
+                var statusClass = o.Status == "Completed" ? "b-ok" : (o.Status == "Cancelled" ? "b-can" : "b-proc");
+                var payClass = string.Equals(o.PaymentStatus, "Paid", StringComparison.OrdinalIgnoreCase) ? "b-ok" : "b-proc";
+                var canAction = o.Status != "Completed" && o.Status != "Cancelled";
+                <div class="po-row" id="order-@o.BookingId">
+                    <div class="po-left">
+                        <div class="t">#@o.BookingId • @o.PostTitle</div>
+                        <div class="s">Khách: <b>@o.CustomerName</b> • @o.CustomerPhone</div>
+                        @if (!string.IsNullOrWhiteSpace(o.CustomerEmail))
+                        {
+                            <div class="s">Email: @o.CustomerEmail</div>
+                        }
+                        <div class="s">Thời gian đặt: @o.BookedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                        @if (!string.IsNullOrWhiteSpace(o.Note))
+                        {
+                            <div class="po-reject-note"><b>Lý do từ chối:</b> @o.Note</div>
+                        }
+                    </div>
+
+                    <div class="po-right">
+                        <div class="po-amt">@o.TotalAmount.ToString("N0")</div>
+                        <div class="po-badges">
+                            <span class="po-badge @statusClass">@o.Status</span>
+                            <span class="po-badge @payClass">@o.PaymentStatus</span>
+                        </div>
+
+                        @if (canAction)
+                        {
+                            <div class="po-actions">
+                                <form asp-controller="Partner" asp-action="ApproveBooking" method="post" class="po-actions-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="bookingId" value="@o.BookingId" />
+                                    <button class="po-btn primary" type="submit">Duyệt</button>
+                                </form>
+
+                                <button class="po-btn danger" type="button" onclick="toggleReject(@o.BookingId)">Từ chối</button>
+                            </div>
+
+                            <form class="po-reason" id="reject-@o.BookingId" asp-controller="Partner" asp-action="RejectBooking" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@o.BookingId" />
+                                <textarea name="reason" maxlength="500" placeholder="Nhập lý do từ chối (bắt buộc)..." required></textarea>
+                                <div class="hint">Lý do sẽ được gửi qua email cho khách.</div>
+                                <div class="po-actions-inline">
+                                    <button class="po-btn" type="button" onclick="toggleReject(@o.BookingId)">Hủy</button>
+                                    <button class="po-btn danger" type="submit">Gửi</button>
+                                </div>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+    function toggleReject(id) {
+        var el = document.getElementById('reject-' + id);
+        if (!el) return;
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+        if (el.style.display === 'block') {
+            var ta = el.querySelector('textarea');
+            if (ta) ta.focus();
+        }
+    }
+</script>
+}
+

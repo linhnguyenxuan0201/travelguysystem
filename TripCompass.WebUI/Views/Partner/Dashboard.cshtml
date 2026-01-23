@@ -1,0 +1,401 @@
+@model TripCompass.WebUI.ViewModels.Partner.PartnerDashboardViewModel
+
+@{
+    ViewData["Title"] = "Quản lý shop";
+    Layout = "_PartnerDashboardLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/partner-dashboard.css" />
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="pd-card warning">
+        @TempData["Message"]
+    </div>
+}
+
+<div class="pd-topbar">
+    <div class="pd-title">
+        <h2>Dashboard Quản lý</h2>
+        <p>Chào mừng bạn trở lại, theo dõi hoạt động shop</p>
+    </div>
+    <div class="pd-actions">
+        <button class="pd-btn"><i class="fa-regular fa-bell"></i></button>
+        <button class="pd-btn primary"><i class="fa-solid fa-plus"></i> Tạo mới</button>
+    </div>
+</div>
+
+<div class="pd-kpis">
+    <div class="pd-kpi">
+        <div class="meta">
+            <div class="label">Tổng doanh thu</div>
+            <div class="value">@Model.TotalRevenue.ToString("N0")</div>
+            <div class="sub">+12.5% so với tháng trước</div>
+        </div>
+        <div class="icon ic-green"><i class="fa-solid fa-dollar-sign"></i></div>
+    </div>
+    <div class="pd-kpi">
+        <div class="meta">
+            <div class="label">Đơn hàng mới</div>
+            <div class="value">@Model.NewOrders</div>
+            <div class="sub">+8.2% so với tuần trước</div>
+        </div>
+        <div class="icon ic-blue"><i class="fa-solid fa-cart-shopping"></i></div>
+    </div>
+    <div class="pd-kpi">
+        <div class="meta">
+            <div class="label">Số dư ví</div>
+            <div class="value">@Model.WalletBalance.ToString("N0")</div>
+            <div class="sub">Khả dụng</div>
+        </div>
+        <div class="icon ic-purple"><i class="fa-solid fa-wallet"></i></div>
+    </div>
+    <div class="pd-kpi" style="cursor:pointer;" onclick="openDiscountModal()">
+        <div class="meta">
+            <div class="label">Mã giảm giá</div>
+            <div class="value">@Model.ActiveDiscountCodes</div>
+            <div class="sub">Đang hoạt động</div>
+        </div>
+        <div class="icon ic-orange"><i class="fa-solid fa-tag"></i></div>
+    </div>
+</div>
+
+<div class="pd-grid">
+    <div class="pd-card">
+        <div class="pd-card-header">
+            <h3>Doanh thu theo tháng</h3>
+            <select id="yearSelector" class="pd-btn pd-year-select" onchange="loadChartData(this.value)">
+                @{
+                    int currentYear = DateTime.UtcNow.Year;
+                    int selectedYear = ViewBag.SelectedYear ?? currentYear;
+                }
+                @for (int y = currentYear; y >= currentYear - 5; y--)
+                {
+                    if (y == selectedYear)
+                    {
+                        <option value="@y" selected>@y</option>
+                    }
+                    else
+                    {
+                        <option value="@y">@y</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="pd-chart-container">
+            <canvas id="monthlyRevenueChart"></canvas>
+            <div class="pd-chart-total">
+                Tổng: <span id="totalRevenueDisplay">@Model.MonthlyRevenue.Sum(x => x.Amount).ToString("N0")</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="pd-card" id="orders">
+        <div class="pd-card-header">
+            <h3>Đơn hàng gần đây</h3>
+            <a href="/Partner/Orders" class="pd-card-link">Xem tất cả</a>
+        </div>
+        <div class="pd-list">
+            @if (Model.RecentOrders.Count == 0)
+            {
+                <div class="pd-empty">Chưa có đơn đặt chỗ nào.</div>
+            }
+            else
+            {
+                foreach (var o in Model.RecentOrders)
+                {
+                    var badgeClass = o.Status == "Completed" ? "b-ok" : (o.Status == "Cancelled" ? "b-can" : "b-proc");
+                    <div class="pd-row">
+                        <div class="left">
+                            <div class="t">#@o.BookingId - @o.PostTitle</div>
+                            <div class="s">@o.BookedAt.ToLocalTime().ToString("dd/MM HH:mm")</div>
+                        </div>
+                        <div class="pd-row-right">
+                            <div class="amt">@o.TotalAmount.ToString("N0")</div>
+                            <span class="pd-badge @badgeClass">@o.Status</span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div class="pd-two">
+    <div class="pd-card" id="discounts">
+        <div class="pd-card-header">
+            <h3>Mã giảm giá hoạt động</h3>
+            <button class="pd-btn primary small" type="button" onclick="openDiscountModal()"><i class="fa-solid fa-plus"></i> Tạo mã mới</button>
+        </div>
+        <div class="pd-list">
+            @if (Model.DiscountCodes.Count == 0)
+            {
+                <div class="pd-empty">Chưa có mã giảm giá.</div>
+            }
+            else
+            {
+                foreach (var c in Model.DiscountCodes)
+                {
+                    <div class="pd-row white">
+                        <div class="left">
+                            <div class="t">@c.Code</div>
+                            <div class="s">
+                                @c.Purpose
+                                @if (c.ExpiryDate != null)
+                                {
+                                    <text> • HSD: @c.ExpiryDate.Value.ToLocalTime().ToString("dd/MM/yyyy")</text>
+                                }
+                            </div>
+                        </div>
+                        <div class="pd-row-right">
+                            <div class="amt">@c.PercentOff<text>%</text></div>
+                            <span class="pd-badge @(c.IsActive ? "b-ok" : "b-can")">@(c.IsActive ? "Đang hoạt động" : "Tạm dừng")</span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="pd-card" id="wallet">
+        <div class="pd-card-header">
+            <h3>Quản lý ví tiền</h3>
+            <form asp-controller="Partner" asp-action="Withdraw" method="post" class="pd-form-inline">
+                @Html.AntiForgeryToken()
+                <button class="pd-btn primary small" type="submit"><i class="fa-solid fa-arrow-up-right-from-square"></i> Rút tiền</button>
+            </form>
+        </div>
+        <div class="pd-wallet-balance">
+            <div class="pd-wallet-label">Số dư khả dụng</div>
+            <div class="pd-wallet-amount">@Model.WalletBalance.ToString("N0")</div>
+        </div>
+        <div class="pd-list pd-wallet-list">
+            @if (Model.WalletActivities.Count == 0)
+            {
+                <div class="pd-empty">Chưa có giao dịch ví.</div>
+            }
+            else
+            {
+                foreach (var a in Model.WalletActivities)
+                {
+                    <div class="pd-row">
+                        <div class="left">
+                            <div class="t">@a.Label</div>
+                            <div class="s">@a.At.ToLocalTime().ToString("dd/MM HH:mm")</div>
+                        </div>
+                        <div class="amt @(a.Amount >= 0 ? "positive" : "negative")">
+                            @(a.Amount >= 0 ? "+" : "")@a.Amount.ToString("N0")
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Create Discount Code Modal -->
+<div id="discountModal" class="pd-modal">
+    <div class="pd-modal-box">
+        <div class="pd-modal-header">
+            <div class="pd-modal-title">Tạo mã giảm giá</div>
+            <button type="button" class="pd-btn small" onclick="closeDiscountModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="createDiscountForm" method="post" class="pd-modal-body">
+            @Html.AntiForgeryToken()
+            <div class="pd-modal-form-grid">
+                <div>
+                    <label class="pd-modal-label">Code *</label>
+                    <input name="code" id="dc_code" class="pd-btn pd-modal-input" placeholder="VD: SUMMER2026" maxlength="30" required />
+                </div>
+                <div>
+                    <label class="pd-modal-label">Phần trăm giảm *</label>
+                    <input name="percentOff" id="dc_percent" type="number" min="1" max="100" class="pd-btn pd-modal-input" placeholder="10" required />
+                </div>
+                <div class="pd-modal-form-full">
+                    <label class="pd-modal-label">Mục đích *</label>
+                    <input name="purpose" id="dc_purpose" class="pd-btn pd-modal-input" placeholder="Dùng để làm gì..." maxlength="200" required />
+                </div>
+                <div>
+                    <label class="pd-modal-label">Hạn sử dụng</label>
+                    <input name="expiryDate" id="dc_expiry" type="date" class="pd-btn pd-modal-input" />
+                </div>
+                <div class="pd-modal-form-actions">
+                    <button type="button" class="pd-btn" style="height:40px;" onclick="closeDiscountModal()">Hủy</button>
+                    <button type="submit" id="dc_submit" class="pd-btn primary" style="height:40px;">Tạo mã</button>
+                </div>
+            </div>
+            <div id="dc_error" class="pd-modal-error"></div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let monthlyChart = null;
+    const monthNames = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const initialData = @Html.Raw(Json.Serialize(Model.MonthlyRevenue));
+
+    function initChart(data) {
+        const ctx = document.getElementById('monthlyRevenueChart');
+        if (monthlyChart) {
+            monthlyChart.destroy();
+        }
+
+        // Handle both camelCase and PascalCase from JSON serialization
+        const labels = data.map(d => monthNames[(d.month || d.Month) - 1]);
+        const amounts = data.map(d => d.amount || d.Amount || 0);
+        const total = amounts.reduce((a, b) => a + b, 0);
+        document.getElementById('totalRevenueDisplay').textContent = total.toLocaleString('vi-VN');
+
+        monthlyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: amounts,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#1d4ed8',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 10,
+                        titleFont: {
+                            size: 13,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + ' đ';
+                            },
+                            font: {
+                                size: 10
+                            },
+                            color: '#6b7280'
+                        },
+                        grid: {
+                            color: 'rgba(219, 234, 254, 0.5)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            },
+                            color: '#6b7280'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function loadChartData(year) {
+        // Reload page with year parameter
+        const url = new URL(window.location.href);
+        url.searchParams.set('year', year);
+        window.location.href = url.toString();
+    }
+
+    // Initialize chart on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart(initialData);
+    });
+
+    function openDiscountModal() {
+        document.getElementById('discountModal').classList.add('active');
+    }
+    function closeDiscountModal() {
+        document.getElementById('discountModal').classList.remove('active');
+        const err = document.getElementById('dc_error');
+        err.style.display = 'none';
+        err.textContent = '';
+    }
+
+    document.getElementById('discountModal').addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'discountModal') {
+            closeDiscountModal();
+        }
+    });
+
+    document.getElementById('createDiscountForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('dc_submit');
+        const err = document.getElementById('dc_error');
+        err.style.display = 'none';
+        err.textContent = '';
+
+        btn.disabled = true;
+        btn.textContent = 'Đang tạo...';
+
+        try {
+            const formData = new FormData(this);
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            const response = await fetch('/Partner/CreateDiscountCode', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    ...(token ? { 'RequestVerificationToken': token } : {})
+                }
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(result.message || 'Tạo mã thành công!');
+                window.location.reload();
+            } else {
+                err.textContent = result.message || 'Tạo mã thất bại.';
+                err.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Tạo mã';
+            }
+        } catch (ex) {
+            err.textContent = 'Có lỗi xảy ra. Vui lòng thử lại.';
+            err.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Tạo mã';
+        }
+    });
+</script>
+}
+
