@@ -1,4 +1,5 @@
 using MediatR;
+using TripCompass.Application.Common;
 using TripCompass.Application.Interfaces;
 using TripCompass.Domain.Entities;
 
@@ -33,6 +34,15 @@ namespace TripCompass.Application.Features.Posts.CreatePost
 
             _context.Posts.Add(post);
             await _context.SaveChangesAsync(cancellationToken);
+
+            // Log activity
+            await ActivityLogger.LogActivityAsync(
+                _context,
+                request.UserId,
+                "CREATE_POST",
+                "Posts",
+                post.PostId,
+                $"Created post: {post.Title}");
 
             return post.PostId;
         }

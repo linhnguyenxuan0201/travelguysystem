@@ -41,10 +41,30 @@ namespace TripCompass.WebUI.Controllers
         ========================= */
 
         [HttpGet, AllowAnonymous]
-        public IActionResult Login()
+        public async Task<IActionResult> Login(int? banned = null)
         {
+            if (banned == 1)
+            {
+                TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+            }
+
             if (User.Identity?.IsAuthenticated == true)
+            {
+                // Nếu user đã đăng nhập nhưng bị ban (cookie còn sống) -> đá ra ngay và báo lỗi
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (long.TryParse(userIdStr, out var userId))
+                {
+                    var dbUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+                    if (dbUser == null || dbUser.IsBanned)
+                    {
+                        await HttpContext.SignOutAsync("TripCompassCookie");
+                        TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                }
+
                 return RedirectToAction("Index", "Home");
+            }
 
             // Mặc định không hiển thị lỗi
             ViewBag.Error = null;
@@ -53,6 +73,23 @@ namespace TripCompass.WebUI.Controllers
             if (TempData["Error"] is string errorMessage)
             {
                 ViewBag.Error = errorMessage;
+            }
+
+            return View();
+        }
+
+        [HttpGet, AllowAnonymous]
+        public async Task<IActionResult> Banned(int? b = null)
+        {
+            if (b == 1)
+            {
+                ViewBag.Error = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+            }
+
+            // Nếu vẫn còn cookie đăng nhập, sign-out để tránh tiếp tục sử dụng
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                await HttpContext.SignOutAsync("TripCompassCookie");
             }
 
             return View();
@@ -481,8 +518,9 @@ namespace TripCompass.WebUI.Controllers
             // Check if user is banned
             if (user.IsBanned)
             {
-                TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
-                return RedirectToAction(nameof(Login));
+                // Cho đăng nhập nhưng sẽ hiển thị banner "bị khóa" trong layout
+                await SignInUser(user);
+                return LocalRedirect(returnUrl);
             }
 
             await SignInUser(user);

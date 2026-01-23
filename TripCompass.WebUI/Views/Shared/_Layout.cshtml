@@ -3,10 +3,12 @@
 @using TripCompass.WebUI.ViewModels
 @using System.Security.Claims
 @inject UserContextService UserContext
+@inject TripCompass.Infrastructure.Persistence.AppDbContext Db
+@using Microsoft.EntityFrameworkCore
 
 @{
     UserDropdownViewModel? userDropdown = null;
-    bool isPartner = false;
+    bool isBanned = false;
 
     if (User.Identity?.IsAuthenticated == true)
     {
@@ -34,6 +36,13 @@
                 };
             }
         }
+
+        // Check banned status from DB (real-time)
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (long.TryParse(userIdStr, out var uid))
+        {
+            isBanned = await Db.Users.AsNoTracking().AnyAsync(u => u.UserId == uid && u.IsBanned);
+        }
     }
 }
 
@@ -59,6 +68,87 @@
     @RenderSection("Styles", required: false)
 </head>
 <body>
+
+    @if (User.Identity?.IsAuthenticated == true && isBanned)
+    {
+        <div id="banned-overlay">
+            <div class="banned-card">
+                <div class="banned-title">⚠️ Tài khoản đã bị khóa</div>
+                <div class="banned-text">Vui lòng liên hệ quản trị viên để được hỗ trợ.</div>
+                <div class="banned-actions">
+                    <a class="btn-logout" href="/Account/Logout">Đăng xuất</a>
+                    <button class="btn-dismiss" type="button" onclick="dismissBannedBanner()">Để sau</button>
+                </div>
+            </div>
+        </div>
+        <style>
+            #banned-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.4);
+                backdrop-filter: blur(4px);
+                z-index: 9999;
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                padding: 16px;
+            }
+            #banned-overlay.hidden { display: none; }
+            .banned-card {
+                margin-top: 12px;
+                background: #111827;
+                color: #fef2f2;
+                border: 1px solid #ef4444;
+                border-radius: 14px;
+                padding: 16px 18px;
+                min-width: 320px;
+                box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+                font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            }
+            .banned-title {
+                font-weight: 800;
+                font-size: 15px;
+                margin-bottom: 6px;
+            }
+            .banned-text {
+                font-size: 13px;
+                line-height: 1.5;
+                margin-bottom: 12px;
+                color: #fee2e2;
+            }
+            .banned-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .btn-logout {
+                background: #ef4444;
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                padding: 8px 14px;
+                text-decoration: none;
+                font-weight: 700;
+                box-shadow: 0 8px 20px rgba(239,68,68,0.35);
+            }
+            .btn-logout:hover { background: #dc2626; }
+            .btn-dismiss {
+                background: transparent;
+                color: #fef2f2;
+                border: 1px solid rgba(255,255,255,0.25);
+                border-radius: 10px;
+                padding: 8px 14px;
+                cursor: pointer;
+            }
+            .btn-dismiss:hover { border-color: rgba(255,255,255,0.45); }
+        </style>
+        <script>
+            function dismissBannedBanner() {
+                const el = document.getElementById('banned-overlay');
+                if (el) el.classList.add('hidden');
+            }
+        </script>
+    }
 
     <!-- ================= HEADER ================= -->
     <header class="header">

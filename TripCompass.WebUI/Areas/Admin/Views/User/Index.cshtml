@@ -51,6 +51,10 @@
         background-color: #0d6efd;
         border-color: #0d6efd;
     }
+
+    .form-select-sm {
+        min-width: 110px;
+    }
 </style>
 
 <div class="container-fluid p-4">
@@ -66,15 +70,31 @@
         <form method="get" class="d-flex gap-2">
             <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                <option value="active" @(status == "active" ? "selected" : "")>Active</option>
-                <option value="banned" @(status == "banned" ? "selected" : "")>Banned</option>
+                @if (status == "Active")
+                {
+                    <option value="Active" selected>Active</option>
+                }
+                else
+                {
+                    <option value="Active">Active</option>
+                }
+
+                @if (status == "Banned")
+                {
+                    <option value="Banned" selected>Banned</option>
+                }
+                else
+                {
+                    <option value="Banned">Banned</option>
+                }
             </select>
 
             <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
                 <option value="">All Roles</option>
-                <option value="Admin" @(selectedRole == "Admin" ? "selected" : "")>Admin</option>
-                <option value="Moderator" @(selectedRole == "Moderator" ? "selected" : "")>Moderator</option>
-                <option value="User" @(selectedRole == "User" ? "selected" : "")>User</option>
+                @if (selectedRole == "Admin") { <option value="Admin" selected>Admin</option> } else { <option value="Admin">Admin</option> }
+                @if (selectedRole == "Moderator") { <option value="Moderator" selected>Moderator</option> } else { <option value="Moderator">Moderator</option> }
+                @if (selectedRole == "Staff") { <option value="Staff" selected>Staff</option> } else { <option value="Staff">Staff</option> }
+                @if (selectedRole == "User") { <option value="User" selected>User</option> } else { <option value="User">User</option> }
             </select>
 
             <input type="text"
@@ -98,11 +118,10 @@
                         <th class="ps-3">ID</th>
                         <th>User</th>
                         <th>Email</th>
-                        <th>Roles</th>
+                        <th style="width: 160px;">Role</th>
                         <th>Reputation</th>
-                        <th>Status</th>
+                        <th style="width: 160px;">Status</th>
                         <th>Joined</th>
-                        <th class="text-end pe-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,58 +136,43 @@
 
                             <td>@user.Email</td>
 
+                            <!-- ROLE -->
                             <td>
-                                @foreach ( var roleName in user.Roles.Split(',') )
-                                {
-                                    if ( !string.IsNullOrWhiteSpace(roleName) )
-                                    {
-                                        <span class="badge badge-role me-1">@roleName.Trim()</span>
-                                    }
-                                }
+                                <form asp-action="ChangeRole" method="post" class="d-inline">
+                                    <input type="hidden" name="userId" value="@user.UserId" />
+                                    @Html.AntiForgeryToken()
+
+                                    <select name="role"
+                                            class="form-select form-select-sm"
+                                            onchange="return confirmChange(this)">
+                                        @if (user.Role == "User") { <option value="User" selected>User</option> } else { <option value="User">User</option> }
+                                        @if (user.Role == "Staff") { <option value="Staff" selected>Staff</option> } else { <option value="Staff">Staff</option> }
+                                        @if (user.Role == "Moderator") { <option value="Moderator" selected>Moderator</option> } else { <option value="Moderator">Moderator</option> }
+                                        @if (user.Role == "Admin") { <option value="Admin" selected>Admin</option> } else { <option value="Admin">Admin</option> }
+                                    </select>
+                                </form>
                             </td>
 
                             <td>
                                 <span class="fw-semibold">@user.ReputationScore</span>
                             </td>
 
+                            <!-- STATUS -->
                             <td>
-                                @if ( user.IsBanned )
-                                {
-                                    <span class="badge bg-danger">Banned</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">Active</span>
-                                }
+                                <form asp-action="ChangeStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="userId" value="@user.UserId" />
+                                    @Html.AntiForgeryToken()
+
+                                    <select name="status"
+                                            class="form-select form-select-sm"
+                                            onchange="return confirmChange(this)">
+                                        @if (user.Status == "Active") { <option value="Active" selected>Active</option> } else { <option value="Active">Active</option> }
+                                        @if (user.Status == "Banned") { <option value="Banned" selected>Banned</option> } else { <option value="Banned">Banned</option> }
+                                    </select>
+                                </form>
                             </td>
 
                             <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-
-                            <td class="text-end pe-3">
-                                @if ( user.IsBanned )
-                                {
-                                    <form asp-action="Unban"
-                                          asp-route-id="@user.UserId"
-                                          method="post"
-                                          class="d-inline">
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('Unban this user?')">
-                                            <i class="fas fa-unlock me-1"></i>Unban
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#banModal"
-                                            onclick="setBanUserId(@user.UserId, '@user.UserName')">
-                                        <i class="fas fa-ban me-1"></i>Ban
-                                    </button>
-                                }
-                            </td>
                         </tr>
                     }
                 </tbody>
@@ -201,49 +205,13 @@
     </a>
 </div>
 
-<!-- BAN MODAL -->
-<div class="modal fade" id="banModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" asp-action="Ban" id="banForm">
-                <div class="modal-header">
-                    <h5 class="modal-title">Ban User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <p>
-                        Are you sure you want to ban
-                        <strong id="banUserName"></strong>?
-                    </p>
-
-                    <div class="mb-3">
-                        <label class="form-label">Reason</label>
-                        <textarea class="form-control"
-                                  name="reason"
-                                  rows="3"
-                                  required></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        Ban User
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function setBanUserId(id, name) {
-        document.getElementById('banForm').action = '/Admin/User/Ban/' + id;
-        document.getElementById('banUserName').innerText = name;
+    function confirmChange(select) {
+        if (confirm("Are you sure you want to apply this change?")) {
+            select.form.submit();
+        } else {
+            location.reload();
+            return false;
+        }
     }
 </script>

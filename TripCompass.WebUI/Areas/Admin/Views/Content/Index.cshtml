@@ -27,26 +27,50 @@
                 <label class="form-label">Status</label>
                 <select name="Status" class="form-select" id="statusFilter">
                     <option value="">All Status</option>
-                    <option value="@((int)PostStatus.Draft)" 
-                            @(ViewBag.SelectedStatus == PostStatus.Draft ? "selected" : "")>
-                        📝 Draft
-                    </option>
-                    <option value="@((int)PostStatus.Pending)" 
-                            @(ViewBag.SelectedStatus == PostStatus.Pending ? "selected" : "")>
-                        🟡 Pending Approval
-                    </option>
-                    <option value="@((int)PostStatus.Published)" 
-                            @(ViewBag.SelectedStatus == PostStatus.Published ? "selected" : "")>
-                        🟢 Published
-                    </option>
-                    <option value="@((int)PostStatus.Rejected)" 
-                            @(ViewBag.SelectedStatus == PostStatus.Rejected ? "selected" : "")>
-                        🔴 Rejected
-                    </option>
-                    <option value="@((int)PostStatus.Archived)" 
-                            @(ViewBag.SelectedStatus == PostStatus.Archived ? "selected" : "")>
-                        📦 Archived
-                    </option>
+                    @if (ViewBag.SelectedStatus == PostStatus.Draft)
+                    {
+                        <option value="@((int)PostStatus.Draft)" selected>📝 Draft</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)PostStatus.Draft)">📝 Draft</option>
+                    }
+
+                    @if (ViewBag.SelectedStatus == PostStatus.Pending)
+                    {
+                        <option value="@((int)PostStatus.Pending)" selected>🟡 Pending Approval</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)PostStatus.Pending)">🟡 Pending Approval</option>
+                    }
+
+                    @if (ViewBag.SelectedStatus == PostStatus.Published)
+                    {
+                        <option value="@((int)PostStatus.Published)" selected>🟢 Published</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)PostStatus.Published)">🟢 Published</option>
+                    }
+
+                    @if (ViewBag.SelectedStatus == PostStatus.Rejected)
+                    {
+                        <option value="@((int)PostStatus.Rejected)" selected>🔴 Rejected</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)PostStatus.Rejected)">🔴 Rejected</option>
+                    }
+
+                    @if (ViewBag.SelectedStatus == PostStatus.Archived)
+                    {
+                        <option value="@((int)PostStatus.Archived)" selected>📦 Archived</option>
+                    }
+                    else
+                    {
+                        <option value="@((int)PostStatus.Archived)">📦 Archived</option>
+                    }
                 </select>
             </div>
             <div class="col-md-3">
