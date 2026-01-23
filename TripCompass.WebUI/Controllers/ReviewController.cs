@@ -1597,11 +1597,7 @@ namespace TripCompass.WebUI.Controllers
             }
         }
 
-        // =========================
-        // REMOVED: RegisterAsPartner action
-        // Luồng đúng: Modal chỉ redirect đến form, không gọi API
-        // Form submit sẽ gọi SubmitPartnerRegistration để lưu thông tin và đổi role
-        // =========================
+        
 
     }
 }
