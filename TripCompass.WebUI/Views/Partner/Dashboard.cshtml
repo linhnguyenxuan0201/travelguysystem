@@ -5,52 +5,13 @@
     Layout = "_PartnerDashboardLayout";
 }
 
-<style>
-    .pd-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 18px; }
-    .pd-title h2 { margin:0; font-size:20px; font-weight:900; color:#111827; }
-    .pd-title p { margin:4px 0 0 0; color:#6b7280; font-size:13px; }
-    .pd-actions { display:flex; gap:10px; align-items:center; }
-    .pd-btn { height:36px; padding:0 12px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; font-weight:700; cursor:pointer; }
-    .pd-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
-
-    .pd-kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; margin-bottom: 14px; }
-    .pd-kpi { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px; display:flex; justify-content:space-between; gap:10px; }
-    .pd-kpi .meta { display:flex; flex-direction:column; gap:6px; }
-    .pd-kpi .label { font-size:12px; color:#6b7280; font-weight:700; }
-    .pd-kpi .value { font-size:20px; color:#111827; font-weight:900; }
-    .pd-kpi .sub { font-size:12px; color:#10b981; font-weight:700; }
-    .pd-kpi .icon { width:36px; height:36px; border-radius:12px; display:grid; place-items:center; font-weight:900; }
-    .ic-green { background:#dcfce7; color:#16a34a; }
-    .ic-blue { background:#dbeafe; color:#2563eb; }
-    .ic-purple { background:#ede9fe; color:#7c3aed; }
-    .ic-orange { background:#ffedd5; color:#ea580c; }
-
-    .pd-grid { display:grid; grid-template-columns: 2fr 1fr; gap:12px; margin-top: 12px; }
-    .pd-card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:14px; }
-    .pd-card h3 { margin:0 0 10px 0; font-size:14px; font-weight:900; color:#111827; }
-    .pd-list { display:flex; flex-direction:column; gap:10px; }
-    .pd-row { display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:12px; background:#f9fafb; border:1px solid #f3f4f6; }
-    .pd-row .left { display:flex; flex-direction:column; gap:2px; }
-    .pd-row .left .t { font-weight:900; font-size:13px; color:#111827; }
-    .pd-row .left .s { font-size:12px; color:#6b7280; }
-    .pd-row .amt { font-weight:900; color:#111827; font-size:13px; }
-    .pd-badge { font-size:11px; font-weight:900; padding:3px 8px; border-radius:999px; }
-    .b-ok { background:#dcfce7; color:#16a34a; }
-    .b-proc { background:#dbeafe; color:#2563eb; }
-    .b-can { background:#fee2e2; color:#dc2626; }
-
-    .pd-two { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px; }
-
-    @@media (max-width: 1024px) {
-        .pd-kpis { grid-template-columns: 1fr 1fr; }
-        .pd-grid { grid-template-columns: 1fr; }
-        .pd-two { grid-template-columns: 1fr; }
-    }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="~/css/partner-dashboard.css" />
+}
 
 @if (TempData["Message"] != null)
 {
-    <div class="pd-card" style="border-color:#fde68a; background:#fffbeb; color:#92400e; margin-bottom:12px;">
+    <div class="pd-card warning">
         @TempData["Message"]
     </div>
 }
@@ -103,9 +64,9 @@
 
 <div class="pd-grid">
     <div class="pd-card">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="pd-card-header">
             <h3>Doanh thu theo tháng</h3>
-            <select id="yearSelector" class="pd-btn" style="height:32px;" onchange="loadChartData(this.value)">
+            <select id="yearSelector" class="pd-btn pd-year-select" onchange="loadChartData(this.value)">
                 @{
                     int currentYear = DateTime.UtcNow.Year;
                     int selectedYear = ViewBag.SelectedYear ?? currentYear;
@@ -123,23 +84,23 @@
                 }
             </select>
         </div>
-        <div style="height:260px; background:#eff6ff; border:1px solid #dbeafe; border-radius:12px; padding:12px; position:relative;">
+        <div class="pd-chart-container">
             <canvas id="monthlyRevenueChart"></canvas>
-            <div style="position:absolute; bottom:12px; right:12px; font-size:12px; font-weight:700; color:#2563eb;">
+            <div class="pd-chart-total">
                 Tổng: <span id="totalRevenueDisplay">@Model.MonthlyRevenue.Sum(x => x.Amount).ToString("N0")</span>
             </div>
         </div>
     </div>
 
     <div class="pd-card" id="orders">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="pd-card-header">
             <h3>Đơn hàng gần đây</h3>
-            <a href="/Partner/Orders" style="font-size:12px; font-weight:800; color:#2563eb; text-decoration:none;">Xem tất cả</a>
+            <a href="/Partner/Orders" class="pd-card-link">Xem tất cả</a>
         </div>
         <div class="pd-list">
             @if (Model.RecentOrders.Count == 0)
             {
-                <div style="color:#6b7280; font-size:13px;">Chưa có đơn đặt chỗ nào.</div>
+                <div class="pd-empty">Chưa có đơn đặt chỗ nào.</div>
             }
             else
             {
@@ -151,7 +112,7 @@
                             <div class="t">#@o.BookingId - @o.PostTitle</div>
                             <div class="s">@o.BookedAt.ToLocalTime().ToString("dd/MM HH:mm")</div>
                         </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                        <div class="pd-row-right">
                             <div class="amt">@o.TotalAmount.ToString("N0")</div>
                             <span class="pd-badge @badgeClass">@o.Status</span>
                         </div>
@@ -164,20 +125,20 @@
 
 <div class="pd-two">
     <div class="pd-card" id="discounts">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="pd-card-header">
             <h3>Mã giảm giá hoạt động</h3>
-            <button class="pd-btn primary" style="height:32px;" type="button" onclick="openDiscountModal()"><i class="fa-solid fa-plus"></i> Tạo mã mới</button>
+            <button class="pd-btn primary small" type="button" onclick="openDiscountModal()"><i class="fa-solid fa-plus"></i> Tạo mã mới</button>
         </div>
         <div class="pd-list">
             @if (Model.DiscountCodes.Count == 0)
             {
-                <div style="color:#6b7280; font-size:13px;">Chưa có mã giảm giá.</div>
+                <div class="pd-empty">Chưa có mã giảm giá.</div>
             }
             else
             {
                 foreach (var c in Model.DiscountCodes)
                 {
-                    <div class="pd-row" style="background:#fff;">
+                    <div class="pd-row white">
                         <div class="left">
                             <div class="t">@c.Code</div>
                             <div class="s">
@@ -188,7 +149,7 @@
                                 }
                             </div>
                         </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                        <div class="pd-row-right">
                             <div class="amt">@c.PercentOff<text>%</text></div>
                             <span class="pd-badge @(c.IsActive ? "b-ok" : "b-can")">@(c.IsActive ? "Đang hoạt động" : "Tạm dừng")</span>
                         </div>
@@ -199,21 +160,21 @@
     </div>
 
     <div class="pd-card" id="wallet">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div class="pd-card-header">
             <h3>Quản lý ví tiền</h3>
-            <form asp-controller="Partner" asp-action="Withdraw" method="post" style="margin:0;">
+            <form asp-controller="Partner" asp-action="Withdraw" method="post" class="pd-form-inline">
                 @Html.AntiForgeryToken()
-                <button class="pd-btn primary" type="submit" style="height:32px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Rút tiền</button>
+                <button class="pd-btn primary small" type="submit"><i class="fa-solid fa-arrow-up-right-from-square"></i> Rút tiền</button>
             </form>
         </div>
-        <div style="margin-top:10px; border-radius:14px; background:linear-gradient(135deg,#4f46e5,#2563eb); color:#fff; padding:16px;">
-            <div style="font-size:12px; opacity:0.9; font-weight:700;">Số dư khả dụng</div>
-            <div style="font-size:22px; font-weight:900; margin-top:6px;">@Model.WalletBalance.ToString("N0")</div>
+        <div class="pd-wallet-balance">
+            <div class="pd-wallet-label">Số dư khả dụng</div>
+            <div class="pd-wallet-amount">@Model.WalletBalance.ToString("N0")</div>
         </div>
-        <div class="pd-list" style="margin-top:12px;">
+        <div class="pd-list pd-wallet-list">
             @if (Model.WalletActivities.Count == 0)
             {
-                <div style="color:#6b7280; font-size:13px;">Chưa có giao dịch ví.</div>
+                <div class="pd-empty">Chưa có giao dịch ví.</div>
             }
             else
             {
@@ -224,7 +185,7 @@
                             <div class="t">@a.Label</div>
                             <div class="s">@a.At.ToLocalTime().ToString("dd/MM HH:mm")</div>
                         </div>
-                        <div class="amt" style="color:@(a.Amount >= 0 ? "#16a34a" : "#dc2626")">
+                        <div class="amt @(a.Amount >= 0 ? "positive" : "negative")">
                             @(a.Amount >= 0 ? "+" : "")@a.Amount.ToString("N0")
                         </div>
                     </div>
@@ -235,37 +196,37 @@
 </div>
 
 <!-- Create Discount Code Modal -->
-<div id="discountModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); align-items:center; justify-content:center; z-index:9999;">
-    <div style="width:520px; max-width: calc(100vw - 24px); background:#fff; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.25); overflow:hidden;">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid #e5e7eb;">
-            <div style="font-weight:900; color:#111827;">Tạo mã giảm giá</div>
-            <button type="button" class="pd-btn" style="height:32px;" onclick="closeDiscountModal()"><i class="fa-solid fa-xmark"></i></button>
+<div id="discountModal" class="pd-modal">
+    <div class="pd-modal-box">
+        <div class="pd-modal-header">
+            <div class="pd-modal-title">Tạo mã giảm giá</div>
+            <button type="button" class="pd-btn small" onclick="closeDiscountModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <form id="createDiscountForm" method="post" style="padding:18px;">
+        <form id="createDiscountForm" method="post" class="pd-modal-body">
             @Html.AntiForgeryToken()
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div class="pd-modal-form-grid">
                 <div>
-                    <label style="display:block; font-size:12px; font-weight:800; color:#374151; margin-bottom:6px;">Code *</label>
-                    <input name="code" id="dc_code" class="pd-btn" style="width:100%; height:40px; text-align:left;" placeholder="VD: SUMMER2026" maxlength="30" required />
-                </div>
-                <div>
-                    <label style="display:block; font-size:12px; font-weight:800; color:#374151; margin-bottom:6px;">Phần trăm giảm *</label>
-                    <input name="percentOff" id="dc_percent" type="number" min="1" max="100" class="pd-btn" style="width:100%; height:40px; text-align:left;" placeholder="10" required />
-                </div>
-                <div style="grid-column: 1 / -1;">
-                    <label style="display:block; font-size:12px; font-weight:800; color:#374151; margin-bottom:6px;">Mục đích *</label>
-                    <input name="purpose" id="dc_purpose" class="pd-btn" style="width:100%; height:40px; text-align:left;" placeholder="Dùng để làm gì..." maxlength="200" required />
+                    <label class="pd-modal-label">Code *</label>
+                    <input name="code" id="dc_code" class="pd-btn pd-modal-input" placeholder="VD: SUMMER2026" maxlength="30" required />
                 </div>
                 <div>
-                    <label style="display:block; font-size:12px; font-weight:800; color:#374151; margin-bottom:6px;">Hạn sử dụng</label>
-                    <input name="expiryDate" id="dc_expiry" type="date" class="pd-btn" style="width:100%; height:40px; text-align:left;" />
+                    <label class="pd-modal-label">Phần trăm giảm *</label>
+                    <input name="percentOff" id="dc_percent" type="number" min="1" max="100" class="pd-btn pd-modal-input" placeholder="10" required />
                 </div>
-                <div style="display:flex; align-items:flex-end; justify-content:flex-end; gap:10px;">
+                <div class="pd-modal-form-full">
+                    <label class="pd-modal-label">Mục đích *</label>
+                    <input name="purpose" id="dc_purpose" class="pd-btn pd-modal-input" placeholder="Dùng để làm gì..." maxlength="200" required />
+                </div>
+                <div>
+                    <label class="pd-modal-label">Hạn sử dụng</label>
+                    <input name="expiryDate" id="dc_expiry" type="date" class="pd-btn pd-modal-input" />
+                </div>
+                <div class="pd-modal-form-actions">
                     <button type="button" class="pd-btn" style="height:40px;" onclick="closeDiscountModal()">Hủy</button>
                     <button type="submit" id="dc_submit" class="pd-btn primary" style="height:40px;">Tạo mã</button>
                 </div>
             </div>
-            <div id="dc_error" style="margin-top:10px; color:#dc2626; font-weight:700; font-size:13px; display:none;"></div>
+            <div id="dc_error" class="pd-modal-error"></div>
         </form>
     </div>
 </div>
@@ -380,17 +341,19 @@
     });
 
     function openDiscountModal() {
-        document.getElementById('discountModal').style.display = 'flex';
+        document.getElementById('discountModal').classList.add('active');
     }
     function closeDiscountModal() {
-        document.getElementById('discountModal').style.display = 'none';
+        document.getElementById('discountModal').classList.remove('active');
         const err = document.getElementById('dc_error');
         err.style.display = 'none';
         err.textContent = '';
     }
 
     document.getElementById('discountModal').addEventListener('click', function (e) {
-        if (e.target && e.target.id === 'discountModal') closeDiscountModal();
+        if (e.target && e.target.id === 'discountModal') {
+            closeDiscountModal();
+        }
     });
 
     document.getElementById('createDiscountForm').addEventListener('submit', async function (e) {

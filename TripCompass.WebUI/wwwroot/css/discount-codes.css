@@ -1,0 +1,219 @@
+.dc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.dc-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.dc-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dc-btn:hover {
+    background: #1e40af;
+}
+
+.dc-table {
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dc-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dc-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dc-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+    color: #111827;
+}
+
+.dc-table tr:last-child td {
+    border-bottom: none;
+}
+
+.dc-table tr:hover {
+    background: #f9fafb;
+}
+
+.dc-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dc-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.dc-badge.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.dc-badge.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.dc-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.dc-empty-icon {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.dc-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.dc-modal.active {
+    display: flex;
+}
+
+.dc-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.dc-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.dc-modal-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.dc-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.dc-modal-close:hover {
+    color: #111827;
+}
+
+.dc-modal-form-group {
+    margin-bottom: 16px;
+}
+
+.dc-modal-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.dc-modal-label .required {
+    color: #dc2626;
+}
+
+.dc-modal-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.dc-modal-input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.dc-modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.dc-modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dc-modal-btn-cancel {
+    border: 2px solid #e5e7eb;
+    background: #fff;
+}
+
+.dc-modal-btn-cancel:hover {
+    background: #f9fafb;
+}
+
+.dc-modal-btn-submit {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+}
+
+.dc-modal-btn-submit:hover {
+    background: #1e40af;
+}
+
+.dc-modal-btn-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

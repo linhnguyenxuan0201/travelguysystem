@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using TripCompass.Application.Auth;
+using TripCompass.Application.Common;
 using TripCompass.Application.Features.Comments.CreateComment;
+using TripCompass.Application.Interfaces;
 using TripCompass.Application.Interfaces.Repositories;
 using TripCompass.Domain.Entities;
 using TripCompass.Domain.Enums;
@@ -12,6 +14,7 @@ using TripCompass.WebUI.ViewModels;
 
 namespace TripCompass.WebUI.Controllers
 {
+    [Authorize]
     public class ReviewController : Controller
     {
         private readonly IPostRepository _postRepository;
@@ -366,10 +369,30 @@ namespace TripCompass.WebUI.Controllers
             var post = await _context.Posts.FirstOrDefaultAsync(p => p.PostId == id);
             if (post == null) return NotFound();
 
+            var userId = _currentUser.UserId;
+            if (post.UserId != userId)
+            {
+                TempData["Error"] = "Bạn không có quyền xóa bài viết này";
+                return RedirectToAction(nameof(MyReviews));
+            }
+
             post.IsDeleted = true;
             post.DeletedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Log activity
+            var appDbContext = _context as IApplicationDbContext;
+            if (appDbContext != null)
+            {
+                await ActivityLogger.LogActivityAsync(
+                    appDbContext,
+                    userId,
+                    "DELETE_OWN_POST",
+                    "Posts",
+                    post.PostId,
+                    $"User deleted own post: {post.Title}");
+            }
 
             TempData["Success"] = "🗑️ Đã xóa đánh giá";
             return RedirectToAction(nameof(MyReviews));
@@ -809,6 +832,26 @@ namespace TripCompass.WebUI.Controllers
             commentUser.ReputationLevel = CalculateReputationLevel(commentUser.ReputationScore);
             await _context.SaveChangesAsync();
 
+            // Log activity
+            var actionType = reactionType == "LIKE" ? "LIKE_COMMENT" : "DISLIKE_COMMENT";
+            if (existingReaction != null && existingReaction.ReactionType == reactionType)
+            {
+                // Removed reaction - log as opposite action
+                actionType = reactionType == "LIKE" ? "DISLIKE_COMMENT" : "LIKE_COMMENT";
+            }
+            
+            var appDbContext = _context as IApplicationDbContext;
+            if (appDbContext != null)
+            {
+                await ActivityLogger.LogActivityAsync(
+                    appDbContext,
+                    currentUserId,
+                    actionType,
+                    "CommentReactions",
+                    commentId,
+                    $"User {actionType.ToLower()} on comment ID: {commentId}");
+            }
+
             // Lấy counts mới
             var likeCount = await _context.CommentReactions
                 .CountAsync(r => r.CommentId == commentId && r.ReactionType == "LIKE");
@@ -852,6 +895,19 @@ namespace TripCompass.WebUI.Controllers
                 _context.UserFollows.Remove(existingFollow);
                 await _context.SaveChangesAsync();
 
+                // Log activity
+                var appDbContext = _context as IApplicationDbContext;
+                if (appDbContext != null)
+                {
+                    await ActivityLogger.LogActivityAsync(
+                        appDbContext,
+                        currentUserId,
+                        "UNFOLLOW_USER",
+                        "UserFollows",
+                        authorId,
+                        $"User unfollowed user ID: {authorId}");
+                }
+
                 var newFollowerCount = await _context.UserFollows
                     .CountAsync(f => f.FollowingId == authorId);
 
@@ -875,6 +931,19 @@ namespace TripCompass.WebUI.Controllers
 
                 _context.UserFollows.Add(follow);
                 await _context.SaveChangesAsync();
+
+                // Log activity
+                var appDbContext = _context as IApplicationDbContext;
+                if (appDbContext != null)
+                {
+                    await ActivityLogger.LogActivityAsync(
+                        appDbContext,
+                        currentUserId,
+                        "FOLLOW_USER",
+                        "UserFollows",
+                        authorId,
+                        $"User followed user ID: {authorId}");
+                }
 
                 var newFollowerCount = await _context.UserFollows
                     .CountAsync(f => f.FollowingId == authorId);
