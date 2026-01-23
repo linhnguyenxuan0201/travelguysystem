@@ -639,7 +639,11 @@ namespace TripCompass.WebUI.Controllers
 
             // Kiểm tra nếu author có role Partner
             // Đảm bảo UserRoles đã được load
-            var authorRoles = post.User.UserRoles?.Select(ur => ur.Role?.RoleName).ToList() ?? new List<string>();
+            var authorRoles = post.User.UserRoles?
+                .Select(ur => ur.Role?.RoleName)
+                .Where(r => !string.IsNullOrEmpty(r))
+                .Cast<string>()
+                .ToList() ?? new List<string>();
             var authorHasPartnerRole = authorRoles.Any(role => role == "Partner");
 
             // Kiểm tra nếu post có thông tin liên hệ (Phone hoặc OpeningHours)

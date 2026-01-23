@@ -416,7 +416,7 @@ TripCompass";
 
                 return View("DiscountCodes", vm);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log error và trả về view với model rỗng
                 var emptyVm = new DiscountCodesListViewModel
