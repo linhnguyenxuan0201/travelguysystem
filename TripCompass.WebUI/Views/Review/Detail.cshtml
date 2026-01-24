@@ -1010,7 +1010,7 @@
                                        class="partner-booking-input"
                                        placeholder="VD: SUMMER2026 (nếu có)" />
                             </div>
-                            
+
                             <div>
                                 <label class="partner-booking-payment-label">Phương thức thanh toán<span class="required">*</span></label>
                                 <div class="partner-booking-payment-options">
@@ -1154,9 +1154,9 @@
                 const bookingId = data.bookingId;
                 
                 if (paymentMethod === 'Online' && data.qrImageUrl) {
-                    qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
-                    qrImg.src = data.qrImageUrl;
-                    qrBox.style.display = 'block';
+                qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
+                qrImg.src = data.qrImageUrl;
+                qrBox.style.display = 'block';
                     submitBtn.textContent = 'Đã tạo đơn - Quét QR để thanh toán';
                 } else {
                     submitBtn.textContent = 'Đã tạo đơn thành công!';

@@ -8,6 +8,7 @@ namespace TripCompass.Domain.Entities
 
         // Bài viết (dịch vụ) được đặt
         public long PostId { get; set; }
+        public Post Post { get; set; } = null!;
 
         // Đối tác (chủ bài viết)
         public long PartnerUserId { get; set; }

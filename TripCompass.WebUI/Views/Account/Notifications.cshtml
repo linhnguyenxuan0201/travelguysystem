@@ -1,0 +1,129 @@
+@model List<TripCompass.Domain.Entities.Notification>
+@{
+    ViewData["Title"] = "Thông báo";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/notifications.css" />
+}
+
+<div class="notifications-container">
+    <div class="notifications-header">
+        <h1>Thông báo</h1>
+        @if (ViewBag.UnreadCount > 0)
+        {
+            <button class="btn-mark-all-read" onclick="markAllAsRead()">
+                <i class="fa-solid fa-check-double"></i> Đánh dấu tất cả đã đọc
+            </button>
+        }
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-bell-slash"></i>
+            <p>Bạn chưa có thông báo nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="notifications-list">
+            @foreach (var notification in Model)
+            {
+                <div class="notification-item @(notification.IsRead ? "read" : "unread")" data-id="@notification.NotificationId">
+                    <div class="notification-icon">
+                        @switch (notification.Type)
+                        {
+                            case "NEW_ORDER":
+                                <i class="fa-solid fa-shopping-cart"></i>
+                                break;
+                            case "ORDER_APPROVED":
+                            case "ORDER_REJECTED":
+                                <i class="fa-solid fa-check-circle"></i>
+                                break;
+                            case "NEW_COMMENT":
+                                <i class="fa-solid fa-comment"></i>
+                                break;
+                            case "NEW_FOLLOW":
+                                <i class="fa-solid fa-user-plus"></i>
+                                break;
+                            case "COMMISSION_PAID":
+                                <i class="fa-solid fa-money-bill"></i>
+                                break;
+                            case "WITHDRAW_COMPLETED":
+                                <i class="fa-solid fa-wallet"></i>
+                                break;
+                            default:
+                                <i class="fa-solid fa-bell"></i>
+                                break;
+                        }
+                    </div>
+                    <div class="notification-content">
+                        <h3>@notification.Title</h3>
+                        <p>@notification.Message</p>
+                        <span class="notification-time">@notification.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(notification.Link))
+                    {
+                        <a href="@notification.Link" class="notification-link" onclick="markAsRead(@notification.NotificationId, event)">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    async function markAsRead(notificationId, event) {
+        try {
+            const response = await fetch(`/api/notifications/${notificationId}/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            });
+
+            if (response.ok) {
+                const item = document.querySelector(`[data-id="${notificationId}"]`);
+                if (item) {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                }
+                // Reload notification count
+                if (typeof loadNotificationCount === 'function') {
+                    loadNotificationCount();
+                }
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    }
+
+    async function markAllAsRead() {
+        try {
+            const response = await fetch('/api/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            });
+
+            if (response.ok) {
+                document.querySelectorAll('.notification-item.unread').forEach(item => {
+                    item.classList.remove('unread');
+                    item.classList.add('read');
+                });
+                document.querySelector('.btn-mark-all-read').style.display = 'none';
+                // Reload notification count
+                if (typeof loadNotificationCount === 'function') {
+                    loadNotificationCount();
+                }
+            }
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+</script>

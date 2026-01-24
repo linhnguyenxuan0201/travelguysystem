@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TripCompass.Application.Auth;
@@ -32,6 +32,8 @@ namespace TripCompass.Infrastructure
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddScoped<IUserAvatarRepository, UserAvatarRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IChatRepository, ChatRepository>();
 
             // 🔥 BẮT BUỘC – FIX LỖI 500 REVIEW
             services.AddScoped<IPostRepository, PostRepository>();
@@ -54,6 +56,7 @@ namespace TripCompass.Infrastructure
 
             // ================= SERVICES =================
             services.AddScoped<SentimentAnalysisService>();
+            services.AddScoped<TripCompass.Application.Services.NotificationService>();
 
             return services;
         }

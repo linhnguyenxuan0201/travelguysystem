@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TripCompass.Application.Auth;
 using TripCompass.Application.Interfaces.Repositories;
+using TripCompass.Application.Services;
 using TripCompass.Domain.Entities;
 using TripCompass.Infrastructure.Persistence;
 using TripCompass.WebUI.ViewModels.Partner;
@@ -20,12 +21,14 @@ namespace TripCompass.WebUI.Controllers
         private readonly AppDbContext _context;
         private readonly ICurrentUserService _currentUser;
         private readonly IEmailService _emailService;
+        private readonly NotificationService _notificationService;
 
-        public PartnerController(AppDbContext context, ICurrentUserService currentUser, IEmailService emailService)
+        public PartnerController(AppDbContext context, ICurrentUserService currentUser, IEmailService emailService, NotificationService notificationService)
         {
             _context = context;
             _currentUser = currentUser;
             _emailService = emailService;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
@@ -191,6 +194,19 @@ namespace TripCompass.WebUI.Controllers
             booking.Note = null;
             await _context.SaveChangesAsync();
 
+            // Gửi thông báo cho customer
+            try
+            {
+                await _notificationService.NotifyOrderApprovedAsync(
+                    booking.CustomerUserId,
+                    booking.BookingId
+                );
+            }
+            catch
+            {
+                // Ignore notification errors
+            }
+
             TempData["Message"] = $"Đã duyệt đơn #{booking.BookingId}.";
             return RedirectToAction(nameof(Orders));
         }
@@ -284,6 +300,20 @@ namespace TripCompass.WebUI.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Gửi thông báo cho customer
+            try
+            {
+                await _notificationService.NotifyOrderRejectedAsync(
+                    booking.CustomerUserId,
+                    booking.BookingId,
+                    reason
+                );
+            }
+            catch
+            {
+                // Ignore notification errors
+            }
 
             var customerEmail = await _context.Users
                 .AsNoTracking()

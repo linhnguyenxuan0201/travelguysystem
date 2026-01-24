@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using TripCompass.Application.Services;
 using TripCompass.Infrastructure.Persistence;
 using TripCompass.Domain.Entities;
 
@@ -18,13 +19,15 @@ namespace TripCompass.WebUI.Controllers
     public class PaymentWebhookController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly NotificationService _notificationService;
 
         // Shared secret cho HMAC (tối giản; bạn có thể đổi và cấu hình ở appsettings)
         private const string WebhookSecret = "CHANGE_ME_WEBHOOK_SECRET";
 
-        public PaymentWebhookController(AppDbContext context)
+        public PaymentWebhookController(AppDbContext context, NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         public class PaymentEvent
@@ -226,6 +229,21 @@ namespace TripCompass.WebUI.Controllers
                             booking.CommissionPaidAt = now;
                             booking.CommissionPaymentRef = payload.TransactionId ?? payload.Description;
                             await _context.SaveChangesAsync();
+
+                            // Gửi thông báo cho partner
+                            try
+                            {
+                                await _notificationService.NotifyCommissionPaidAsync(
+                                    booking.PartnerUserId,
+                                    booking.BookingId,
+                                    booking.CommissionAmount.Value
+                                );
+                            }
+                            catch
+                            {
+                                // Ignore notification errors
+                            }
+
                             return Ok(new { matched = true, type = "commission", bookingId = bid });
                         }
                     }

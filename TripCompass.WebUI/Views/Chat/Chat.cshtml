@@ -1,0 +1,383 @@
+@model TripCompass.WebUI.ViewModels.Chat.ChatViewModel
+@{
+    ViewData["Title"] = $"Chat - {Model.BookingTitle}";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/chat.css" />
+}
+
+<div class="chat-container">
+    <div class="chat-header">
+        <a href="/Chat" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                @if (!string.IsNullOrEmpty(Model.OtherUserAvatar))
+                {
+                    <img src="@Model.OtherUserAvatar" alt="@Model.OtherUserName" />
+                }
+                else
+                {
+                    <i class="fa-solid fa-user"></i>
+                }
+            </div>
+            <div>
+                <h2>@Model.OtherUserName</h2>
+                <p>@Model.BookingTitle</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        @foreach (var msg in Model.Messages)
+        {
+            <div class="message @(msg.IsMine ? "message-mine" : "message-other")" data-message-id="@msg.MessageId">
+                @if (!msg.IsMine)
+                {
+                    <div class="message-avatar">
+                        @if (!string.IsNullOrEmpty(msg.SenderAvatar))
+                        {
+                            <img src="@msg.SenderAvatar" alt="@msg.SenderName" />
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-user"></i>
+                        }
+                    </div>
+                }
+                <div class="message-content">
+                    @if (!msg.IsMine)
+                    {
+                        <span class="message-sender">@msg.SenderName</span>
+                    }
+                    <div class="message-bubble">
+                        @if (!string.IsNullOrEmpty(msg.ImageUrl) && msg.MessageType == "Image")
+                        {
+                            <div class="message-image">
+                                <img src="@msg.ImageUrl" alt="Ảnh" onclick="openImageModal('@msg.ImageUrl')" />
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(msg.Content))
+                        {
+                            <p>@Html.Raw(msg.Content)</p>
+                        }
+                        <span class="message-time">@msg.CreatedAt.ToString("HH:mm")</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator" style="display: none;">
+        <span>@Model.OtherUserName đang soạn tin...</span>
+    </div>
+
+    <div class="chat-input-container">
+        <form id="chatForm" onsubmit="sendMessage(event)" enctype="multipart/form-data">
+            <input type="file" 
+                   id="imageInput" 
+                   accept="image/*" 
+                   style="display: none;" />
+            <button type="button" class="emoji-btn" id="emojiBtn" title="Emoji">
+                <i class="fa-regular fa-face-smile"></i>
+            </button>
+            <button type="button" class="image-btn" id="imageBtn" title="Gửi ảnh">
+                <i class="fa-solid fa-image"></i>
+            </button>
+            <input type="text" 
+                   id="messageInput" 
+                   placeholder="Nhập tin nhắn..." 
+                   autocomplete="off"
+                   maxlength="2000" />
+            <button type="submit" class="send-btn" id="sendBtn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </form>
+        <div class="emoji-picker" id="emojiPicker" style="display: none;"></div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <span class="image-modal-close">&times;</span>
+        <img id="modalImage" src="" alt="Ảnh" />
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+<script>
+    const chatThreadId = @Model.ChatThreadId;
+    const currentUserId = '@ViewContext.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+
+    // Kết nối SignalR
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/chat")
+        .build();
+
+    connection.on("MessageReceived", function (chatThreadId, messageId, content, senderName, sentAt, imageUrl, messageType) {
+        if (chatThreadId === @Model.ChatThreadId) {
+            addMessageToUI(messageId, content, senderName, sentAt, false, imageUrl, messageType);
+            scrollToBottom();
+        }
+    });
+
+    connection.on("Typing", function (chatThreadId, senderName, isTyping) {
+        if (chatThreadId === @Model.ChatThreadId) {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (isTyping) {
+                typingIndicator.style.display = 'block';
+            } else {
+                typingIndicator.style.display = 'none';
+            }
+        }
+    });
+
+    connection.on("ChatUnreadCountUpdated", function (unreadCount) {
+        // Có thể cập nhật badge nếu cần
+        console.log("Chat unread count updated:", unreadCount);
+    });
+
+    connection.start().then(function () {
+        console.log("Chat hub connected");
+        scrollToBottom();
+    }).catch(function (err) {
+        console.error("Chat hub connection error:", err);
+    });
+
+    function addMessageToUI(messageId, content, senderName, sentAt, isMine, imageUrl = null, messageType = 'Text') {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isMine ? 'message-mine' : 'message-other'}`;
+        messageDiv.setAttribute('data-message-id', messageId);
+
+        const time = new Date(sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+        let imageHtml = '';
+        if (imageUrl && messageType === 'Image') {
+            imageHtml = `<div class="message-image"><img src="${escapeHtml(imageUrl)}" alt="Ảnh" onclick="openImageModal('${escapeHtml(imageUrl)}')" /></div>`;
+        }
+
+        let contentHtml = '';
+        if (content) {
+            contentHtml = `<p>${escapeHtml(content)}</p>`;
+        }
+
+        if (isMine) {
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-bubble">
+                        ${imageHtml}
+                        ${contentHtml}
+                        <span class="message-time">${time}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="message-content">
+                    <span class="message-sender">${escapeHtml(senderName)}</span>
+                    <div class="message-bubble">
+                        ${imageHtml}
+                        ${contentHtml}
+                        <span class="message-time">${time}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        messagesContainer.appendChild(messageDiv);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    let typingTimeout;
+    const typingDelay = 1000; // 1 second
+
+    function notifyTyping(isTyping) {
+        connection.invoke("NotifyTyping", chatThreadId, isTyping).catch(err => console.error(err));
+    }
+
+    messageInput.addEventListener('input', function() {
+        clearTimeout(typingTimeout);
+        notifyTyping(true);
+        
+        typingTimeout = setTimeout(() => {
+            notifyTyping(false);
+        }, typingDelay);
+    });
+
+    messageInput.addEventListener('blur', function() {
+        clearTimeout(typingTimeout);
+        notifyTyping(false);
+    });
+
+    // Emoji picker
+    const emojiBtn = document.getElementById('emojiBtn');
+    const emojiPicker = document.getElementById('emojiPicker');
+    const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
+
+    emojiBtn.addEventListener('click', function() {
+        if (emojiPicker.style.display === 'none') {
+            if (emojiPicker.innerHTML === '') {
+                emojis.forEach(emoji => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'emoji-item';
+                    btn.textContent = emoji;
+                    btn.onclick = () => {
+                        messageInput.value += emoji;
+                        messageInput.focus();
+                    };
+                    emojiPicker.appendChild(btn);
+                });
+            }
+            emojiPicker.style.display = 'grid';
+        } else {
+            emojiPicker.style.display = 'none';
+        }
+    });
+
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+            emojiPicker.style.display = 'none';
+        }
+    });
+
+    // Image upload
+    const imageBtn = document.getElementById('imageBtn');
+    const imageInput = document.getElementById('imageInput');
+
+    imageBtn.addEventListener('click', function() {
+        imageInput.click();
+    });
+
+    imageInput.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            sendMessageWithImage(e.target.files[0]);
+        }
+    });
+
+    async function sendMessageWithImage(file) {
+        const formData = new FormData();
+        formData.append('chatThreadId', chatThreadId);
+        formData.append('image', file);
+        formData.append('content', messageInput.value.trim());
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
+
+        try {
+            const response = await fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token || ''
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageInput.value = '';
+                imageInput.value = '';
+            } else {
+                alert(result.message || 'Gửi ảnh thất bại');
+            }
+        } catch (error) {
+            console.error('Error sending image:', error);
+            alert('Có lỗi xảy ra khi gửi ảnh');
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    async function sendMessage(event) {
+        event.preventDefault();
+        
+        const content = messageInput.value.trim();
+        const imageFile = imageInput.files[0];
+        
+        if (!content && !imageFile) return;
+
+        const formData = new FormData();
+        formData.append('chatThreadId', chatThreadId);
+        if (content) {
+            formData.append('content', content);
+        }
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
+        messageInput.disabled = true;
+
+        try {
+            const response = await fetch('/Chat/SendMessage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token || ''
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageInput.value = '';
+                imageInput.value = '';
+                clearTimeout(typingTimeout);
+                notifyTyping(false);
+            } else {
+                alert(result.message || 'Gửi tin nhắn thất bại');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Có lỗi xảy ra khi gửi tin nhắn');
+        } finally {
+            sendBtn.disabled = false;
+            messageInput.disabled = false;
+            messageInput.focus();
+        }
+    }
+
+    function openImageModal(imageUrl) {
+        const modal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        modalImage.src = imageUrl;
+        modal.style.display = 'flex';
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        modal.style.display = 'none';
+    }
+
+    // Auto scroll on load
+    window.addEventListener('load', scrollToBottom);
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage(e);
+        }
+    });
+</script>

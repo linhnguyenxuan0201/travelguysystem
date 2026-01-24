@@ -1,4 +1,5 @@
-﻿using MediatR;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TripCompass.Application.Common;
 using TripCompass.Application.Features.Comments.CreateComment;
 using TripCompass.Application.Interfaces;
@@ -14,17 +15,20 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         private readonly IUnitOfWork _uow;
         private readonly IApplicationDbContext _context;
         private readonly SentimentAnalysisService _sentimentService;
+        private readonly TripCompass.Application.Services.NotificationService _notificationService;
 
         public CreateCommentHandler(
             ICommentRepository repo, 
             IUnitOfWork uow, 
             IApplicationDbContext context,
-            SentimentAnalysisService sentimentService)
+            SentimentAnalysisService sentimentService,
+            TripCompass.Application.Services.NotificationService notificationService)
         {
             _repo = repo;
             _uow = uow;
             _context = context;
             _sentimentService = sentimentService;
+            _notificationService = notificationService;
         }
 
         public async Task Handle(CreateCommentCommand command, CancellationToken cancellationToken)
@@ -46,42 +50,54 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         // Phân tích sentiment
         var sentiment = _sentimentService.Analyze(command.Content);
 
-        // Tính coin và uy tín cho người comment (ít hơn người viết bài)
+        // Tính coin (ReputationScore) cho người comment (ít hơn người viết bài)
         // Người viết bài: 50-200 coin, người comment: 20-80 coin
+        // Lưu ý: Coin = ReputationScore (điểm thưởng ảo), Wallet = tiền thật (VND)
         int coinEarned;
-        int reputationEarned;
 
         if (sentiment.Sentiment == SentimentType.Positive)
         {
-            // Tích cực: cộng coin và uy tín
-            coinEarned = new Random().Next(20, 81); // 20-80 coin
-            reputationEarned = new Random().Next(10, 41); // 10-40 điểm uy tín
+            // Tích cực: cộng coin (20-80 coin)
+            coinEarned = new Random().Next(20, 81);
         }
         else if (sentiment.Sentiment == SentimentType.Negative)
         {
-            // Tiêu cực: trừ coin và uy tín (nhưng không quá nhiều)
-            coinEarned = -new Random().Next(5, 21); // -5 đến -20 coin
-            reputationEarned = -new Random().Next(5, 21); // -5 đến -20 điểm uy tín
+            // Tiêu cực: trừ coin (nhưng không quá nhiều) (-5 đến -20 coin)
+            coinEarned = -new Random().Next(5, 21);
         }
         else
         {
-            // Neutral: ít coin và uy tín
-            coinEarned = new Random().Next(5, 21); // 5-20 coin
-            reputationEarned = new Random().Next(5, 16); // 5-15 điểm uy tín
+            // Neutral: ít coin (5-20 coin)
+            coinEarned = new Random().Next(5, 21);
         }
 
-        // Cập nhật coin (nếu có wallet)
-        var wallet = await _uow.Wallets.GetByUserIdAsync(command.UserId);
-        if (wallet != null)
-        {
-            wallet.Balance = Math.Max(0, wallet.Balance + coinEarned); // Không cho âm
-        }
-
-        // Cập nhật uy tín
-        user.ReputationScore = Math.Max(0, user.ReputationScore + reputationEarned);
+        // Cập nhật coin (ReputationScore) - Coin là điểm thưởng ảo, KHÔNG phải tiền thật
+        user.ReputationScore = Math.Max(0, user.ReputationScore + coinEarned);
         user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
 
         await _uow.SaveChangesAsync();
+
+        // Gửi thông báo cho tác giả bài viết (nếu không phải là chính họ)
+        try
+        {
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PostId == command.PostId, cancellationToken);
+
+            if (post != null && post.UserId != command.UserId)
+            {
+                await _notificationService.NotifyNewCommentAsync(
+                    post.UserId,
+                    command.PostId,
+                    comment.Id,
+                    user.UserName
+                );
+            }
+        }
+        catch
+        {
+            // Ignore notification errors
+        }
 
         // Log activity
         await ActivityLogger.LogActivityAsync(

@@ -715,6 +715,31 @@ namespace TripCompass.WebUI.Controllers
         }
 
         /* =========================
+           NOTIFICATIONS
+        ========================= */
+
+        [HttpGet]
+        public async Task<IActionResult> Notifications(int page = 1)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null) return RedirectToAction("Login");
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null) return RedirectToAction("Login");
+
+            const int pageSize = 20;
+            var notificationRepo = HttpContext.RequestServices.GetRequiredService<TripCompass.Application.Interfaces.Repositories.INotificationRepository>();
+            var notifications = await notificationRepo.GetByUserIdAsync(user.UserId, page, pageSize);
+            var unreadCount = await notificationRepo.GetUnreadCountAsync(user.UserId);
+
+            ViewBag.UnreadCount = unreadCount;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+
+            return View(notifications);
+        }
+
+        /* =========================
            FORGOT PASSWORD
         ========================= */
 

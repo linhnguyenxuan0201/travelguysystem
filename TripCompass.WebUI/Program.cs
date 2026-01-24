@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
@@ -11,6 +11,8 @@ using TripCompass.Infrastructure.Persistence;
 using TripCompass.Infrastructure.Repositories;
 using TripCompass.Infrastructure.Security;
 using TripCompass.Infrastructure.Services;
+using TripCompass.WebUI.Hubs;
+using TripCompass.WebUI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // MVC
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 /* =========================
    DATABASE
@@ -68,6 +71,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // 👉 Application services (không thuộc Infrastructure)
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<TripCompass.Application.Interfaces.INotificationRealtimeService, SignalRNotificationRealtimeService>();
+builder.Services.AddScoped<TripCompass.Application.Interfaces.IChatRealtimeService, SignalRChatRealtimeService>();
 
 // ✅ MEDIATR
 builder.Services.AddMediatR(cfg => {
@@ -130,5 +135,8 @@ app.MapControllerRoute(
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

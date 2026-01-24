@@ -60,6 +60,12 @@
                             <span class="po-badge @payClass">@o.PaymentStatus</span>
                         </div>
 
+                        <div class="po-actions">
+                            <a href="/Chat/Chat?bookingId=@o.BookingId" class="po-btn" style="background: #3b82f6; color: white;">
+                                <i class="fa-solid fa-comments"></i> Chat
+                            </a>
+                        </div>
+
                         @if (canAction)
                         {
                             <div class="po-actions">

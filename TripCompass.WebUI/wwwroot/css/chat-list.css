@@ -1,0 +1,174 @@
+.chat-list-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.chat-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.chat-list-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.unread-badge {
+    background: var(--danger);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 18px;
+}
+
+.chat-threads {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-thread-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: var(--radius-md);
+    border: 2px solid var(--gray-200);
+    transition: all var(--transition-base);
+    text-decoration: none;
+    color: inherit;
+}
+
+.chat-thread-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.chat-thread-item.unread {
+    border-color: var(--primary);
+    background: var(--gray-50);
+}
+
+.thread-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.thread-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thread-avatar i {
+    font-size: 24px;
+    color: var(--gray-600);
+}
+
+.thread-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    border: 2px solid white;
+}
+
+.thread-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.thread-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.thread-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.thread-time {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.thread-booking {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin: 4px 0;
+}
+
+.thread-preview {
+    font-size: 14px;
+    color: var(--gray-700);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-thread-item.unread .thread-preview {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+@media (max-width: 768px) {
+    .chat-list-container {
+        padding: 0 16px;
+    }
+
+    .chat-thread-item {
+        padding: 12px;
+    }
+
+    .thread-avatar {
+        width: 48px;
+        height: 48px;
+    }
+}

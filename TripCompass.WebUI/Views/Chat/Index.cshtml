@@ -1,0 +1,62 @@
+@model TripCompass.WebUI.ViewModels.Chat.ChatListViewModel
+@{
+    ViewData["Title"] = "Tin nhắn";
+    Layout = "_Layout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/chat-list.css" />
+}
+
+<div class="chat-list-container">
+    <div class="chat-list-header">
+        <h1>Tin nhắn</h1>
+        @if (Model.UnreadCount > 0)
+        {
+            <span class="unread-badge">@Model.UnreadCount chưa đọc</span>
+        }
+    </div>
+
+    @if (Model.Threads == null || !Model.Threads.Any())
+    {
+        <div class="empty-state">
+            <i class="fa-solid fa-comments"></i>
+            <p>Bạn chưa có cuộc trò chuyện nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="chat-threads">
+            @foreach (var thread in Model.Threads)
+            {
+                <a href="/Chat/Chat?bookingId=@thread.BookingId" class="chat-thread-item @(thread.IsUnread ? "unread" : "")">
+                    <div class="thread-avatar">
+                        @if (!string.IsNullOrEmpty(thread.OtherUserAvatar))
+                        {
+                            <img src="@thread.OtherUserAvatar" alt="@thread.OtherUserName" />
+                        }
+                        else
+                        {
+                            <i class="fa-solid fa-user"></i>
+                        }
+                        @if (thread.UnreadCount > 0)
+                        {
+                            <span class="thread-unread-badge">@(thread.UnreadCount > 9 ? "9+" : thread.UnreadCount.ToString())</span>
+                        }
+                    </div>
+                    <div class="thread-content">
+                        <div class="thread-header">
+                            <h3>@thread.OtherUserName</h3>
+                            @if (thread.LastMessageAt.HasValue)
+                            {
+                                <span class="thread-time">@thread.LastMessageAt.Value.ToString("dd/MM HH:mm")</span>
+                            }
+                        </div>
+                        <p class="thread-booking">@thread.BookingTitle</p>
+                        <p class="thread-preview">@thread.LastMessage</p>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+</div>

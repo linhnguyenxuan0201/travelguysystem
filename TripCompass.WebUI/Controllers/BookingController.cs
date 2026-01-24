@@ -5,6 +5,7 @@ using System;
 using System.Globalization;
 using System.Threading.Tasks;
 using TripCompass.Application.Auth;
+using TripCompass.Application.Services;
 using TripCompass.Domain.Entities;
 using TripCompass.Infrastructure.Persistence;
 
@@ -15,15 +16,17 @@ namespace TripCompass.WebUI.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ICurrentUserService _currentUser;
+        private readonly NotificationService _notificationService;
 
         // MB Bank account for payment QR
         private const string QrBankCode = "MB";
         private const string QrAccountNumber = "68161397979";
 
-        public BookingController(AppDbContext context, ICurrentUserService currentUser)
+        public BookingController(AppDbContext context, ICurrentUserService currentUser, NotificationService notificationService)
         {
             _context = context;
             _currentUser = currentUser;
+            _notificationService = notificationService;
         }
 
         [HttpPost]
@@ -137,6 +140,21 @@ namespace TripCompass.WebUI.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Gửi thông báo cho partner về đơn hàng mới
+            try
+            {
+                await _notificationService.NotifyNewOrderAsync(
+                    booking.PartnerUserId,
+                    booking.BookingId,
+                    booking.CustomerName,
+                    booking.TotalAmount
+                );
+            }
+            catch
+            {
+                // Ignore notification errors
+            }
 
             // Payment QR using VietQR image (only for Online payment)
             string? qrImageUrl = null;

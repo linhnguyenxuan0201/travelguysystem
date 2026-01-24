@@ -39,6 +39,9 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<Partner> Partners => Set<Partner>();
         public DbSet<PartnerDiscountCode> PartnerDiscountCodes => Set<PartnerDiscountCode>();
         public DbSet<PostBooking> PostBookings => Set<PostBooking>();
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<ChatThread> ChatThreads => Set<ChatThread>();
+        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -320,10 +323,94 @@ namespace TripCompass.Infrastructure.Persistence
                 entity.Property(e => e.RefundAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.RefundReason).HasMaxLength(500);
 
+                entity.HasOne(e => e.Post)
+                      .WithMany()
+                      .HasForeignKey(e => e.PostId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
                 entity.HasIndex(e => e.PartnerUserId);
                 entity.HasIndex(e => e.PostId);
                 entity.HasIndex(e => e.CustomerUserId);
                 entity.HasIndex(e => e.PaymentStatus);
+            });
+
+            // ========================
+            // NOTIFICATION
+            // ========================
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.NotificationId);
+                
+                entity.Property(e => e.Type)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                
+                entity.Property(e => e.Message)
+                      .IsRequired()
+                      .HasMaxLength(1000);
+                
+                entity.Property(e => e.Link)
+                      .HasMaxLength(500);
+                
+                entity.Property(e => e.IsRead)
+                      .HasDefaultValue(false);
+                
+                entity.Property(e => e.CreatedAt)
+                      .HasDefaultValueSql("GETUTCDATE()");
+                
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasIndex(e => new { e.UserId, e.IsRead, e.CreatedAt });
+            });
+
+            // ========================
+            // CHAT
+            // ========================
+            modelBuilder.Entity<ChatThread>(entity =>
+            {
+                entity.HasKey(e => e.ChatThreadId);
+
+                entity.HasIndex(e => e.BookingId).IsUnique();
+                entity.HasIndex(e => new { e.CustomerUserId, e.LastMessageAt });
+                entity.HasIndex(e => new { e.PartnerUserId, e.LastMessageAt });
+
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.LastMessageAt).HasDefaultValueSql("GETUTCDATE()");
+                entity.Property(e => e.CustomerUnreadCount).HasDefaultValue(0);
+                entity.Property(e => e.PartnerUnreadCount).HasDefaultValue(0);
+
+                // Ignore LastMessage - it's not a database column, only used for temporary storage
+                entity.Ignore(e => e.LastMessage);
+            });
+
+            modelBuilder.Entity<ChatMessage>(entity =>
+            {
+                entity.HasKey(e => e.ChatMessageId);
+
+                entity.Property(e => e.Content)
+                      .IsRequired()
+                      .HasMaxLength(2000);
+
+                entity.Property(e => e.ImageUrl)
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.MessageType)
+                      .IsRequired()
+                      .HasMaxLength(20)
+                      .HasDefaultValue("Text");
+
+                entity.Property(e => e.IsRead).HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasIndex(e => new { e.ChatThreadId, e.CreatedAt });
+                entity.HasIndex(e => new { e.ReceiverUserId, e.IsRead, e.CreatedAt });
             });
 
             // ========================

@@ -21,17 +21,20 @@ namespace TripCompass.WebUI.Controllers
         private readonly ICurrentUserService _currentUser;
         private readonly AppDbContext _context;
         private readonly IMediator _mediator;
+        private readonly TripCompass.Application.Services.NotificationService _notificationService;
 
         public ReviewController(
             IPostRepository postRepository,
             ICurrentUserService currentUser,
             AppDbContext context,
-            IMediator mediator)
+            IMediator mediator,
+            TripCompass.Application.Services.NotificationService notificationService)
         {
             _postRepository = postRepository;
             _currentUser = currentUser;
             _context = context;
             _mediator = mediator;
+            _notificationService = notificationService;
         }
 
         // =========================
@@ -209,16 +212,17 @@ namespace TripCompass.WebUI.Controllers
                 }
             }
 
-            // ---------- REPUTATION ----------
+            // ---------- COIN & REPUTATION ----------
+            // Lưu ý: Coin = ReputationScore (điểm thưởng ảo), Wallet = tiền thật (VND)
             var user = await _context.Users.FirstAsync(u => u.UserId == userId);
-            int earnedScore = new Random().Next(50, 201);
+            int coinEarned = new Random().Next(50, 201); // 50-200 coin
 
-            user.ReputationScore += earnedScore;
+            user.ReputationScore += coinEarned;
             user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"🎉 Bạn nhận được +{earnedScore} điểm uy tín!";
+            TempData["Success"] = $"🎉 Bạn nhận được +{coinEarned} coin!";
             return RedirectToAction(nameof(MyReviews));
         }
 
@@ -730,7 +734,7 @@ namespace TripCompass.WebUI.Controllers
 
                 TempData["Success"] = parentCommentId.HasValue
                     ? "🎉 Phản hồi của bạn đã được gửi!"
-                    : "🎉 Đánh giá của bạn đã được gửi! Bạn đã nhận được coin và điểm uy tín.";
+                    : "🎉 Bình luận của bạn đã được gửi! Bạn đã nhận được coin.";
                 return RedirectToAction(nameof(Detail), new { id = postId });
             }
             catch (Exception ex)
@@ -935,6 +939,23 @@ namespace TripCompass.WebUI.Controllers
 
                 _context.UserFollows.Add(follow);
                 await _context.SaveChangesAsync();
+
+                // Gửi thông báo cho người được follow
+                try
+                {
+                    var follower = await _context.Users.FirstOrDefaultAsync(u => u.UserId == currentUserId);
+                    if (follower != null)
+                    {
+                        await _notificationService.NotifyNewFollowAsync(
+                            authorId,
+                            follower.UserName
+                        );
+                    }
+                }
+                catch
+                {
+                    // Ignore notification errors
+                }
 
                 // Log activity
                 var appDbContext = _context as IApplicationDbContext;
