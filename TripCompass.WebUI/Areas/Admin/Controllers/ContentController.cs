@@ -62,10 +62,13 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
             return View(command);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Edit(UpdatePostCommand command)
+        [HttpPost("Edit/{id}")]
+        public async Task<IActionResult> Edit(long id, UpdatePostCommand command)
         {
             if (!ModelState.IsValid) return View(command);
+
+            // Ensure PostId matches route id
+            command.PostId = id;
 
             var result = await _mediator.Send(command);
             if (!result) return NotFound();
@@ -74,7 +77,7 @@ namespace TripCompass.WebUI.Areas.Admin.Controllers
             return RedirectToAction(nameof(Details), new { id = command.PostId });
         }
 
-        [HttpPost]
+        [HttpPost("ChangeStatus")]
         public async Task<IActionResult> ChangeStatus(ChangePostStatusCommand command, string? returnUrl = null)
         {
             try

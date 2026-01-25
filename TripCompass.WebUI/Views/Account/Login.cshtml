@@ -21,16 +21,33 @@
                   method="post"
                   class="login-form">
 
+                @if (ViewBag.Success != null)
+                {
+                    <div class="alert alert-success" style="background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; margin-bottom: 16px; border: 1px solid #c3e6cb;">
+                        <strong>✓ @ViewBag.Success</strong>
+                        @if (ViewBag.AdminEmail != null && ViewBag.AdminPassword != null)
+                        {
+                            <div style="margin-top: 8px; font-size: 0.9em;">
+                                <strong>Thông tin đăng nhập:</strong><br>
+                                Email: <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">@ViewBag.AdminEmail</code><br>
+                                Password: <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">@ViewBag.AdminPassword</code>
+                            </div>
+                        }
+                    </div>
+                }
+
                 <label>Nhập email của bạn</label>
                 <input type="email"
                        name="email"
                        placeholder="Email"
+                       value="@ViewBag.AdminEmail"
                        required />
 
                 <label>Nhập mật khẩu của bạn</label>
                 <input type="password"
                        name="password"
                        placeholder="Mật khẩu"
+                       value="@ViewBag.AdminPassword"
                        required />
 
                 <div class="forgot">

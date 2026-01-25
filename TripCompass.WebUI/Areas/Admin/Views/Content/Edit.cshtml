@@ -13,7 +13,7 @@
     </a>
 </div>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" asp-route-id="@Model.PostId" method="post">
     <input type="hidden" asp-for="PostId" />
 
     <div class="row g-4">

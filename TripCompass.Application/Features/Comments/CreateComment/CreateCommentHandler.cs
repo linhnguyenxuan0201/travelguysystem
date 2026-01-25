@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using TripCompass.Application.Common;
 using TripCompass.Application.Features.Comments.CreateComment;
 using TripCompass.Application.Interfaces;

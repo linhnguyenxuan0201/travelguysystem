@@ -8,5 +8,6 @@ namespace TripCompass.Application.Auth
     {
         long UserId { get; }
         string? Email { get; }
+        bool IsConfigAdmin();
     }
 }
