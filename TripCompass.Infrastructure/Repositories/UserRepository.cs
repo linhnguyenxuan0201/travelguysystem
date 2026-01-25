@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TripCompass.Application.Interfaces;
 using TripCompass.Domain.Entities;
 using TripCompass.Infrastructure.Persistence;
@@ -66,6 +66,11 @@ namespace TripCompass.Infrastructure.Repositories
            GOOGLE LOGIN
         ========================= */
 
+        /// <summary>
+        /// Tạo user mới từ Google OAuth. 
+        /// ⚠️ LƯU Ý: Chỉ gán role "User", KHÔNG BAO GIỜ tạo Admin bằng Google.
+        /// Admin phải được tạo thủ công với email/password.
+        /// </summary>
         public async Task<User> CreateGoogleUserAsync(string email, string name)
         {
             var user = new User(
@@ -77,6 +82,7 @@ namespace TripCompass.Infrastructure.Repositories
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
+            // ✅ CHỈ gán role "User" - Admin không thể được tạo bằng Google
             await AssignRoleAsync(user, "User");
 
             return user;

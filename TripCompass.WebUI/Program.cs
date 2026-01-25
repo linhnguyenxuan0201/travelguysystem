@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
@@ -68,6 +68,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 // 👉 Application services (không thuộc Infrastructure)
 builder.Services.AddScoped<LoginService>();
+
+// 👉 Admin Config từ appsettings.json
+builder.Services.Configure<TripCompass.Application.Common.Security.AdminConfig>(
+    builder.Configuration.GetSection("Authentication:Admin"));
 
 // ✅ MEDIATR
 builder.Services.AddMediatR(cfg => {
