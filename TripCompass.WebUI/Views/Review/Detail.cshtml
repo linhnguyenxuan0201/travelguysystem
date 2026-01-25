@@ -966,7 +966,7 @@
                 }
             </div>
 
-            @if (Model.IsPartner)
+            @if (Model.IsPartner && !(User.Identity?.IsAuthenticated == true && User.IsInRole("Partner")))
             {
                 <div class="info-card">
                     <h3 class="info-card-title">Đặt chỗ đối tác</h3>

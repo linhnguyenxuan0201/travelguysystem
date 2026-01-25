@@ -623,14 +623,11 @@ namespace TripCompass.WebUI.Controllers
                 .ToList() ?? new List<string>();
             var authorHasPartnerRole = authorRoles.Any(role => role == "Partner");
 
-            // Kiểm tra nếu post có thông tin liên hệ (Phone hoặc OpeningHours)
-            var hasContactInfo = !string.IsNullOrEmpty(post.Phone) || !string.IsNullOrEmpty(post.OpeningHours);
-
             // IsPartner = true nếu:
             // 1. post.IsPartner = true, HOẶC
-            // 2. author có role Partner, HOẶC  
-            // 3. post có thông tin liên hệ (Phone hoặc OpeningHours) - để hiển thị phần đặt chỗ
-            var isPartner = post.IsPartner || authorHasPartnerRole || hasContactInfo;
+            // 2. author có role Partner
+            // CHỈ kiểm tra 2 điều kiện này, KHÔNG kiểm tra thông tin liên hệ
+            var isPartner = post.IsPartner || authorHasPartnerRole;
 
             var vm = new ReviewDetailViewModel
             {
