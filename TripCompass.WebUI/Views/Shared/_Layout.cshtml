@@ -71,12 +71,53 @@
 
             <!-- NAV -->
             <nav class="nav">
-                <a asp-controller="Home" asp-action="Index">Explore</a>
-                <a asp-controller="Review" asp-action="Reviews">Reviews</a>
-                <a href="#">Trips</a>
+                <a asp-controller="Home" asp-action="Index">Khám phá</a>
+                <a asp-controller="Review" asp-action="Reviews">Đánh giá</a>
+                <a href="#">Chuyến đi</a>
+            </nav>
 
+            <!-- RIGHT SIDE: Notifications, Chat, User -->
+            <div class="header-right">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
+                    <!-- NOTIFICATION BELL -->
+                    <div class="notification-bell" id="notificationBell">
+                        <button class="bell-link" onclick="toggleNotificationDropdown(event)">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+                            <div class="notification-dropdown-header">
+                                <h3>Thông báo</h3>
+                                <a href="/Account/Notifications" class="view-all-link">Xem tất cả</a>
+                            </div>
+                            <div class="notification-dropdown-content" id="notificationDropdownContent">
+                                <div class="notification-loading">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tải...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CHAT BELL -->
+                    <div class="chat-bell" id="chatBell">
+                        <button class="bell-link" onclick="toggleChatDropdown(event)">
+                            <i class="fa-solid fa-comments"></i>
+                            <span class="chat-badge" id="chatBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="chat-dropdown" id="chatDropdown" style="display: none;">
+                            <div class="chat-dropdown-header">
+                                <h3>Tin nhắn</h3>
+                                <a href="/Chat" class="view-all-link">Xem tất cả</a>
+                            </div>
+                            <div class="chat-dropdown-content" id="chatDropdownContent">
+                                <div class="chat-loading">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tải...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="user-dropdown">
                         <a href="#" class="user-toggle">
                             <img src="@(userDropdown?.AvatarUrl ?? "/images/avatar-default.png")"
@@ -110,19 +151,31 @@
 
                             <li>
                                 <a asp-controller="Account" asp-action="Profile">
-                                    <i class="fa-regular fa-user"></i> View Profile
+                                    <i class="fa-regular fa-user"></i> Xem hồ sơ
                                 </a>
                             </li>
 
                             <li>
                                 <a asp-controller="Account" asp-action="ChangePassword">
-                                    <i class="fa-solid fa-lock"></i> Change Password
+                                    <i class="fa-solid fa-lock"></i> Đổi mật khẩu
                                 </a>
                             </li>
 
                             <li>
                                 <a asp-controller="Review" asp-action="MyReviews">
-                                    <i class="fa-solid fa-star"></i> Your Reviews
+                                    <i class="fa-solid fa-star"></i> Đánh giá của bạn
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Account" asp-action="Wallet">
+                                    <i class="fa-solid fa-wallet"></i> Ví tiền
+                                </a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Chat" asp-action="Index">
+                                    <i class="fa-solid fa-comments"></i> Tin nhắn
                                 </a>
                             </li>
 
@@ -148,7 +201,7 @@
 
                             <li>
                                 <a asp-controller="Account" asp-action="Logout" class="logout">
-                                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
                                 </a>
                             </li>
                         </ul>
@@ -159,10 +212,10 @@
                     <a asp-controller="Account"
                        asp-action="Login"
                        class="login-btn">
-                        Log in
+                        Đăng nhập
                     </a>
                 }
-            </nav>
+            </div>
 
         </div>
     </header>
@@ -776,6 +829,652 @@
     </div>
 
     @Html.AntiForgeryToken()
+    
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+        <script>
+            // ==================== SIGNALR CONNECTIONS ====================
+            let usePolling = false;
+            let notificationPollingInterval = null;
+            let chatPollingInterval = null;
+
+            // Notification Hub
+            const notificationConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/notifications")
+                .build();
+
+            notificationConnection.on("NotificationReceived", function (notification, unreadCount) {
+                updateNotificationBadge(unreadCount);
+                
+                // Reload dropdown if it's open
+                if (notificationDropdownOpen) {
+                    loadNotificationDropdown();
+                }
+            });
+
+            notificationConnection.on("UnreadCountUpdated", function (unreadCount) {
+                updateNotificationBadge(unreadCount);
+            });
+
+            notificationConnection.start()
+                .then(function () {
+                    console.log("Notification hub connected");
+                    loadNotificationCount();
+                })
+                .catch(function (err) {
+                    console.error("Notification hub connection error:", err);
+                    enablePolling();
+                });
+
+            // Chat Hub
+            const chatConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/hubs/chat")
+                .build();
+
+            chatConnection.on("ChatUnreadCountUpdated", function (unreadCount) {
+                updateChatBadge(unreadCount);
+            });
+
+            chatConnection.on("MessageReceived", function (threadId, messageId, content, senderName, sentAt, imageUrl, messageType) {
+                // If chat modal is open for this thread, add message
+                if (currentChatThreadId && currentChatThreadId === threadId) {
+                    const currentUserId = '@ViewContext.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+                    const isMine = senderName === '@User.Identity.Name';
+                    addChatModalMessage(messageId, content, senderName, sentAt, isMine, imageUrl, messageType);
+                    scrollChatModalToBottom();
+                }
+                
+                // Reload dropdown if it's open
+                if (chatDropdownOpen) {
+                    loadChatDropdown();
+                }
+                
+                // Update unread count
+                loadChatUnreadCount();
+            });
+
+            chatConnection.start()
+                .then(function () {
+                    console.log("Chat hub connected");
+                    loadChatUnreadCount();
+                })
+                .catch(function (err) {
+                    console.error("Chat hub connection error:", err);
+                    enablePolling();
+                });
+
+            // ==================== POLLING (FALLBACK) ====================
+            function enablePolling() {
+                if (usePolling) return;
+                usePolling = true;
+                console.log("Falling back to polling mode");
+
+                notificationPollingInterval = setInterval(loadNotificationCount, 30000);
+                chatPollingInterval = setInterval(loadChatUnreadCount, 30000);
+            }
+
+            function disablePolling() {
+                if (!usePolling) return;
+                usePolling = false;
+                
+                if (notificationPollingInterval) {
+                    clearInterval(notificationPollingInterval);
+                    notificationPollingInterval = null;
+                }
+                
+                if (chatPollingInterval) {
+                    clearInterval(chatPollingInterval);
+                    chatPollingInterval = null;
+                }
+            }
+
+            // Reconnect handlers
+            notificationConnection.onclose(function () {
+                console.log("Notification hub disconnected, enabling polling");
+                enablePolling();
+            });
+
+            chatConnection.onclose(function () {
+                console.log("Chat hub disconnected, enabling polling");
+                enablePolling();
+            });
+
+            // ==================== NOTIFICATION DROPDOWN ====================
+            let notificationDropdownOpen = false;
+
+            function closeNotificationDropdown() {
+                const dropdown = document.getElementById('notificationDropdown');
+                if (dropdown) dropdown.style.display = 'none';
+                notificationDropdownOpen = false;
+            }
+
+            function closeChatDropdown() {
+                const dropdown = document.getElementById('chatDropdown');
+                if (dropdown) dropdown.style.display = 'none';
+                chatDropdownOpen = false;
+            }
+
+            function closeUserMenu() {
+                const menu = document.querySelector('.user-menu');
+                if (menu) menu.classList.remove('show');
+            }
+
+            function toggleNotificationDropdown(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Close other dropdowns
+                closeChatDropdown();
+                closeUserMenu();
+                
+                const dropdown = document.getElementById('notificationDropdown');
+                if (!dropdown) return;
+
+                notificationDropdownOpen = !notificationDropdownOpen;
+                
+                if (notificationDropdownOpen) {
+                    dropdown.style.display = 'flex';
+                    loadNotificationDropdown();
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const bell = document.getElementById('notificationBell');
+                const dropdown = document.getElementById('notificationDropdown');
+                
+                if (bell && dropdown && !bell.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                    notificationDropdownOpen = false;
+                }
+            });
+
+            async function loadNotificationDropdown() {
+                const content = document.getElementById('notificationDropdownContent');
+                if (!content) return;
+
+                content.innerHTML = '<div class="notification-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
+
+                try {
+                    const response = await fetch('/api/notifications?page=1&pageSize=10');
+                    if (response.ok) {
+                        const notifications = await response.json();
+                        renderNotificationDropdown(notifications);
+                    } else {
+                        content.innerHTML = '<div class="notification-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải thông báo</p></div>';
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                    content.innerHTML = '<div class="notification-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải thông báo</p></div>';
+                }
+            }
+
+            function renderNotificationDropdown(notifications) {
+                const content = document.getElementById('notificationDropdownContent');
+                if (!content) return;
+
+                if (!notifications || notifications.length === 0) {
+                    content.innerHTML = `
+                        <div class="notification-dropdown-empty">
+                            <i class="fa-solid fa-bell-slash"></i>
+                            <p>Bạn chưa có thông báo nào</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const iconMap = {
+                    'NEW_ORDER': 'fa-shopping-cart',
+                    'ORDER_APPROVED': 'fa-check-circle',
+                    'ORDER_REJECTED': 'fa-times-circle',
+                    'NEW_COMMENT': 'fa-comment',
+                    'NEW_FOLLOW': 'fa-user-plus',
+                    'COMMISSION_PAID': 'fa-money-bill',
+                    'WITHDRAW_COMPLETED': 'fa-wallet',
+                    'NEW_MESSAGE': 'fa-envelope'
+                };
+
+                const itemsHtml = notifications.map(notif => {
+                    const icon = iconMap[notif.type] || 'fa-bell';
+                    const isUnread = !notif.isRead;
+                    const timeAgo = getTimeAgo(notif.createdAt);
+                    const link = notif.link || '#';
+                    
+                    return `
+                        <a href="${link}" class="notification-dropdown-item ${isUnread ? 'unread' : ''}" 
+                           onclick="markNotificationAsRead(${notif.notificationId}, event)">
+                            <div class="notification-dropdown-item-icon">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
+                            <div class="notification-dropdown-item-content">
+                                <div class="notification-dropdown-item-title">${escapeHtml(notif.title)}</div>
+                                <div class="notification-dropdown-item-message">${escapeHtml(notif.message)}</div>
+                                <div class="notification-dropdown-item-time">${timeAgo}</div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+
+                content.innerHTML = itemsHtml;
+            }
+
+            async function markNotificationAsRead(notificationId, event) {
+                try {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const response = await fetch(`/api/notifications/${notificationId}/mark-read`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token || ''
+                        }
+                    });
+
+                    if (response.ok) {
+                        const item = event.currentTarget;
+                        item.classList.remove('unread');
+                        loadNotificationCount();
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+            }
+
+            async function loadNotificationCount() {
+                try {
+                    const response = await fetch('/api/notifications/unread-count');
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateNotificationBadge(data.count);
+                    }
+                } catch (error) {
+                    console.error('Error loading notification count:', error);
+                }
+            }
+
+            function updateNotificationBadge(count) {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+
+            // ==================== CHAT DROPDOWN ====================
+            let chatDropdownOpen = false;
+            let currentChatThreadId = null;
+
+            function toggleChatDropdown(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Close other dropdowns
+                closeNotificationDropdown();
+                closeUserMenu();
+                
+                const dropdown = document.getElementById('chatDropdown');
+                if (!dropdown) return;
+
+                chatDropdownOpen = !chatDropdownOpen;
+                
+                if (chatDropdownOpen) {
+                    dropdown.style.display = 'flex';
+                    loadChatDropdown();
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const bell = document.getElementById('chatBell');
+                const dropdown = document.getElementById('chatDropdown');
+                
+                if (bell && dropdown && !bell.contains(event.target)) {
+                    dropdown.style.display = 'none';
+                    chatDropdownOpen = false;
+                }
+            });
+
+            async function loadChatDropdown() {
+                const content = document.getElementById('chatDropdownContent');
+                if (!content) return;
+
+                content.innerHTML = '<div class="chat-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
+
+                try {
+                    const response = await fetch('/api/chat/threads?page=1&pageSize=10');
+                    if (response.ok) {
+                        const threads = await response.json();
+                        renderChatDropdown(threads);
+                    } else {
+                        content.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                    }
+                } catch (error) {
+                    console.error('Error loading chat threads:', error);
+                    content.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                }
+            }
+
+            function renderChatDropdown(threads) {
+                const content = document.getElementById('chatDropdownContent');
+                if (!content) return;
+
+                if (!threads || threads.length === 0) {
+                    content.innerHTML = `
+                        <div class="chat-dropdown-empty">
+                            <i class="fa-solid fa-comments"></i>
+                            <p>Bạn chưa có tin nhắn nào</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const itemsHtml = threads.map(thread => {
+                    const timeAgo = getTimeAgo(thread.lastMessageAt);
+                    const avatarHtml = thread.otherUserAvatar 
+                        ? `<img src="${escapeHtml(thread.otherUserAvatar)}" alt="${escapeHtml(thread.otherUserName)}" />`
+                        : `<i class="fa-solid fa-user"></i>`;
+                    const unreadBadge = thread.unreadCount > 0 
+                        ? `<span class="chat-dropdown-item-unread-badge">${thread.unreadCount > 99 ? '99+' : thread.unreadCount}</span>`
+                        : '';
+                    
+                    return `
+                        <div class="chat-dropdown-item ${thread.isUnread ? 'unread' : ''}" 
+                             onclick="openChatModal(${thread.chatThreadId}, ${thread.bookingId}, '${escapeHtml(thread.otherUserName)}', ${thread.otherUserAvatar ? `'${escapeHtml(thread.otherUserAvatar)}'` : 'null'}, '${escapeHtml(thread.bookingTitle)}')">
+                            <div class="chat-dropdown-item-avatar">
+                                ${avatarHtml}
+                            </div>
+                            <div class="chat-dropdown-item-content">
+                                <div class="chat-dropdown-item-header">
+                                    <span class="chat-dropdown-item-name">${escapeHtml(thread.otherUserName)}${unreadBadge}</span>
+                                    <span class="chat-dropdown-item-time">${timeAgo}</span>
+                                </div>
+                                <div class="chat-dropdown-item-message">${escapeHtml(thread.lastMessage || '')}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                content.innerHTML = itemsHtml;
+            }
+
+            async function loadChatUnreadCount() {
+                try {
+                    const response = await fetch('/api/chat/unread-count');
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateChatBadge(data.count);
+                    }
+                } catch (error) {
+                    console.error('Error loading chat unread count:', error);
+                }
+            }
+
+            function updateChatBadge(count) {
+                const badge = document.getElementById('chatBadge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+
+            // ==================== UTILITY FUNCTIONS ====================
+            function getTimeAgo(dateString) {
+                const now = new Date();
+                const date = new Date(dateString);
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+
+                if (diffMins < 1) return 'Vừa xong';
+                if (diffMins < 60) return `${diffMins} phút trước`;
+                if (diffHours < 24) return `${diffHours} giờ trước`;
+                if (diffDays < 7) return `${diffDays} ngày trước`;
+                
+                return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // ==================== CHAT MODAL ====================
+            function openChatModal(chatThreadId, bookingId, otherUserName, otherUserAvatar, bookingTitle) {
+                currentChatThreadId = chatThreadId;
+                const modal = document.getElementById('chatModal');
+                const modalName = document.getElementById('chatModalName');
+                const modalTitle = document.getElementById('chatModalTitle');
+                const modalAvatar = document.getElementById('chatModalAvatar');
+                const modalMessages = document.getElementById('chatModalMessages');
+
+                modalName.textContent = otherUserName;
+                modalTitle.textContent = bookingTitle;
+                
+                if (otherUserAvatar) {
+                    modalAvatar.innerHTML = `<img src="${escapeHtml(otherUserAvatar)}" alt="${escapeHtml(otherUserName)}" />`;
+                } else {
+                    modalAvatar.innerHTML = '<i class="fa-solid fa-user"></i>';
+                }
+
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                modalMessages.innerHTML = '<div class="chat-loading"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải tin nhắn...</div>';
+                
+                fetch(`/Chat/GetMessages?chatThreadId=${chatThreadId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        renderChatModalMessages(data.messages || []);
+                    })
+                    .catch(error => {
+                        console.error('Error loading messages:', error);
+                        modalMessages.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                    });
+
+                // Reload chat dropdown to update unread count
+                if (chatDropdownOpen) {
+                    loadChatDropdown();
+                }
+                
+                closeChatDropdown();
+            }
+
+            function closeChatModal() {
+                const modal = document.getElementById('chatModal');
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+                currentChatThreadId = null;
+            }
+
+            function renderChatModalMessages(messages) {
+                const container = document.getElementById('chatModalMessages');
+                if (!container) return;
+
+                const currentUserId = '@ViewContext.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+                
+                const messagesHtml = messages.map(msg => {
+                    const isMine = msg.senderUserId.toString() === currentUserId;
+                    const time = new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    
+                    let imageHtml = '';
+                    if (msg.imageUrl && msg.messageType === 'Image') {
+                        imageHtml = `<div class="message-image"><img src="${escapeHtml(msg.imageUrl)}" alt="Ảnh" onclick="openImageModal('${escapeHtml(msg.imageUrl)}')" /></div>`;
+                    }
+
+                    let contentHtml = '';
+                    if (msg.content) {
+                        contentHtml = `<p>${escapeHtml(msg.content)}</p>`;
+                    }
+                    
+                    return `
+                        <div class="chat-modal-message ${isMine ? 'mine' : 'other'}" data-message-id="${msg.messageId}">
+                            ${!isMine ? `<div class="chat-modal-message-avatar"><i class="fa-solid fa-user"></i></div>` : ''}
+                            <div class="chat-modal-message-bubble">
+                                ${imageHtml}
+                                ${contentHtml}
+                                <span style="font-size: 10px; opacity: 0.7; display: block; margin-top: 4px;">${time}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = messagesHtml;
+                scrollChatModalToBottom();
+            }
+
+            function addChatModalMessage(messageId, content, senderName, sentAt, isMine, imageUrl = null, messageType = 'Text') {
+                const container = document.getElementById('chatModalMessages');
+                if (!container) return;
+
+                const time = new Date(sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                
+                let imageHtml = '';
+                if (imageUrl && messageType === 'Image') {
+                    imageHtml = `<div class="message-image"><img src="${escapeHtml(imageUrl)}" alt="Ảnh" onclick="openImageModal('${escapeHtml(imageUrl)}')" /></div>`;
+                }
+
+                let contentHtml = '';
+                if (content) {
+                    contentHtml = `<p>${escapeHtml(content)}</p>`;
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-modal-message ${isMine ? 'mine' : 'other'}`;
+                messageDiv.setAttribute('data-message-id', messageId);
+                messageDiv.innerHTML = `
+                    ${!isMine ? `<div class="chat-modal-message-avatar"><i class="fa-solid fa-user"></i></div>` : ''}
+                    <div class="chat-modal-message-bubble">
+                        ${imageHtml}
+                        ${contentHtml}
+                        <span style="font-size: 10px; opacity: 0.7; display: block; margin-top: 4px;">${time}</span>
+                    </div>
+                `;
+
+                container.appendChild(messageDiv);
+            }
+
+            function openImageModal(imageUrl) {
+                // Simple image modal - can be enhanced later
+                window.open(imageUrl, '_blank');
+            }
+
+            function scrollChatModalToBottom() {
+                const container = document.getElementById('chatModalMessages');
+                if (container) {
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+
+            async function sendChatModalMessage(event) {
+                event.preventDefault();
+                
+                if (!currentChatThreadId) return;
+
+                const input = document.getElementById('chatModalInput');
+                const sendBtn = document.getElementById('chatModalSendBtn');
+                const content = input.value.trim();
+                if (!content) return;
+
+                const formData = new FormData();
+                formData.append('chatThreadId', currentChatThreadId);
+                formData.append('content', content);
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                sendBtn.disabled = true;
+                input.disabled = true;
+
+                try {
+                    const response = await fetch('/Chat/SendMessage', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': token || ''
+                        },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        input.value = '';
+                        // Message will be added via SignalR
+                    } else {
+                        alert(result.message || 'Gửi tin nhắn thất bại');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    alert('Có lỗi xảy ra khi gửi tin nhắn');
+                } finally {
+                    sendBtn.disabled = false;
+                    input.disabled = false;
+                    input.focus();
+                }
+            }
+
+            // Close modal when clicking outside
+            document.getElementById('chatModal')?.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeChatModal();
+                }
+            });
+
+            // ==================== INITIAL LOAD ====================
+            loadNotificationCount();
+            loadChatUnreadCount();
+        </script>
+
+        <!-- CHAT MODAL -->
+        <div class="chat-modal" id="chatModal">
+            <div class="chat-modal-header">
+                <div class="chat-modal-header-info" id="chatModalHeaderInfo">
+                    <div class="chat-modal-header-avatar" id="chatModalAvatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="chat-modal-header-text">
+                        <h4 id="chatModalName">Loading...</h4>
+                        <p id="chatModalTitle">Loading...</p>
+                    </div>
+                </div>
+                <button class="chat-modal-close" onclick="closeChatModal()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            <div class="chat-modal-messages" id="chatModalMessages">
+                <div class="chat-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Đang tải tin nhắn...
+                </div>
+            </div>
+            <div class="chat-modal-input-container">
+                <form id="chatModalForm" onsubmit="sendChatModalMessage(event)">
+                    <div class="chat-modal-input-form">
+                        <input type="text" 
+                               id="chatModalInput" 
+                               class="chat-modal-input"
+                               placeholder="Nhập tin nhắn..." 
+                               autocomplete="off"
+                               maxlength="2000" />
+                        <button type="submit" class="chat-modal-send-btn" id="chatModalSendBtn">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>
