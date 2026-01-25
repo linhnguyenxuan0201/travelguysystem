@@ -1,0 +1,199 @@
+@model TripCompass.WebUI.ViewModels.Partner.CommissionViewModel
+
+@{
+    ViewData["Title"] = "Quản lý hoa hồng";
+    Layout = "_PartnerDashboardLayout";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/commission.css" />
+}
+
+<div class="cm-header">
+    <h2>Quản lý hoa hồng</h2>
+    <p>Xem tất cả các khoản phí hoa hồng 3% đã được trừ tự động từ ví của bạn</p>
+</div>
+
+<div class="cm-summary">
+    <h3>Tổng phí hoa hồng đã trừ</h3>
+    <div class="amount">@Model.TotalCommission.ToString("N0")₫</div>
+</div>
+
+@if (Model.UnpaidCommission > 0)
+{
+    <div class="cm-unpaid">
+        <div class="left">
+            <h3>Chưa thanh toán</h3>
+            <div class="amount">@Model.UnpaidCommission.ToString("N0")₫</div>
+        </div>
+        <button class="btn-pay-all" onclick="payAllCommission()">💳 Thanh toán tất cả</button>
+    </div>
+}
+
+<div class="cm-table">
+    @if (Model.Bookings.Count == 0)
+    {
+        <div class="cm-empty">
+            <i class="fa-solid fa-receipt"></i>
+            <div class="cm-empty-title">Chưa có giao dịch hoa hồng</div>
+            <div class="cm-empty-desc">Phí hoa hồng sẽ được trừ tự động khi có đơn hàng</div>
+        </div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Đơn hàng</th>
+                    <th>Tổng tiền</th>
+                    <th>Phí hoa hồng (3%)</th>
+                    <th>Phương thức</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày đặt</th>
+                    <th>Thanh toán</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Bookings)
+                {
+                    <tr>
+                        <td>
+                            <div class="cm-table-booking-id">#@b.BookingId</div>
+                            <div class="cm-table-post-title">@b.PostTitle</div>
+                        </td>
+                        <td class="cm-table-amount">@b.TotalAmount.ToString("N0")₫</td>
+                        <td class="cm-table-commission">-@b.CommissionAmount.ToString("N0")₫</td>
+                        <td>
+                            <span class="cm-badge @(b.PaymentMethod == "Cash" ? "cm-badge-cash" : "cm-badge-online")">
+                                @(b.PaymentMethod == "Cash" ? "💵 Tiền mặt" : "💳 Online")
+                            </span>
+                        </td>
+                        <td>
+                            @if (b.CommissionPaid)
+                            {
+                                <span class="cm-badge cm-badge-paid">✅ Đã trả</span>
+                                @if (b.CommissionPaidAt.HasValue)
+                                {
+                                    <div class="cm-table-paid-date">@b.CommissionPaidAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="cm-badge cm-badge-pending">⏳ Chưa trả</span>
+                            }
+                        </td>
+                        <td class="cm-table-date">@b.BookedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (!b.CommissionPaid)
+                            {
+                                <button class="cm-btn-pay" onclick="payCommission(@b.BookingId, @b.CommissionAmount)">Thanh toán</button>
+                            }
+                            else
+                            {
+                                <span class="cm-table-paid-text">Đã thanh toán</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- QR Payment Modal -->
+<div class="cm-qr-modal" id="qrModal">
+    <div class="cm-qr-box">
+        <div class="cm-qr-header">
+            <h3>Thanh toán hoa hồng</h3>
+            <button class="cm-qr-close" onclick="closeQrModal()">&times;</button>
+        </div>
+        <div id="qrContent">
+            <img id="qrImage" class="cm-qr-img" alt="QR thanh toán" />
+            <div class="cm-qr-info" id="qrInfo"></div>
+            <div class="cm-qr-footer">
+                Quét QR để thanh toán vào <strong>MB Bank - 68161397979</strong>.<br />
+                Hệ thống sẽ tự động xác nhận sau khi nhận được thanh toán.
+            </div>
+        </div>
+    </div>
+</div>
+
+@Html.AntiForgeryToken()
+
+<script>
+    function payCommission(bookingId, amount) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const formData = new FormData();
+        formData.append('__RequestVerificationToken', token);
+        
+        fetch('/Partner/GenerateCommissionPaymentQr?bookingId=' + bookingId, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('qrImage').src = data.qrImageUrl;
+                document.getElementById('qrInfo').textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
+                document.getElementById('qrModal').classList.add('active');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra.');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        });
+    }
+
+    function payAllCommission() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const formData = new FormData();
+        formData.append('__RequestVerificationToken', token);
+        
+        fetch('/Partner/GenerateCommissionPaymentQr', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('qrImage').src = data.qrImageUrl;
+                document.getElementById('qrInfo').textContent = `Thanh toán tất cả • Số tiền: ${data.amount.toLocaleString('vi-VN')}₫`;
+                document.getElementById('qrModal').classList.add('active');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra.');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        });
+    }
+
+    function closeQrModal() {
+        document.getElementById('qrModal').classList.remove('active');
+    }
+
+    document.getElementById('qrModal').addEventListener('click', function(e) {
+        if (e.target === this) closeQrModal();
+    });
+</script>

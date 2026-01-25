@@ -56,6 +56,7 @@
     <link rel="stylesheet" href="~/css/layout.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/profile.css" />
 
+    @RenderSection("Styles", required: false)
 </head>
 <body>
 
@@ -141,7 +142,7 @@
                                             ⭐ Reputation Lv. @userDropdown.ReputationLevel
                                         </div>
                                         <div class="coin">
-                                            🪙 @userDropdown.WalletBalance.ToString("N0") Coins
+                                            🪙 @userDropdown.ReputationScore.ToString("N0") Coins
                                         </div>
                                     }
                                 </div>

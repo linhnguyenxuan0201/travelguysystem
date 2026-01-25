@@ -1,28 +1,28 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace TripCompass.WebUI.ViewModels
 {
     public class ChangePasswordViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "Mật khẩu hiện tại là bắt buộc")]
         [DataType(DataType.Password)]
-        [Display(Name = "Current Password")]
+        [Display(Name = "Mật khẩu hiện tại")]
         public string CurrentPassword { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Mật khẩu mới là bắt buộc")]
         [DataType(DataType.Password)]
-        [Display(Name = "New Password")]
-        [MinLength(6, ErrorMessage = "Password must be at least 6 characters.")]
+        [Display(Name = "Mật khẩu mới")]
+        [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự.")]
         [RegularExpression(
             @"^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{6,}$",
-            ErrorMessage = "Password must contain uppercase, lowercase, and special character."
+            ErrorMessage = "Mật khẩu phải chứa chữ hoa, chữ thường và ký tự đặc biệt."
         )]
         public string NewPassword { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Xác nhận mật khẩu là bắt buộc")]
         [DataType(DataType.Password)]
-        [Compare("NewPassword", ErrorMessage = "Confirm password does not match.")]
-        [Display(Name = "Confirm New Password")]
+        [Compare("NewPassword", ErrorMessage = "Mật khẩu xác nhận không khớp.")]
+        [Display(Name = "Xác nhận mật khẩu mới")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

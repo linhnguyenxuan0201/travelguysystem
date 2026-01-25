@@ -28,7 +28,7 @@ namespace TripCompass.WebUI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateForPost(long postId, string customerName, string customerPhone, int quantity, string arrivalTime, string? promoCode)
+        public async Task<IActionResult> CreateForPost(long postId, string customerName, string customerPhone, int quantity, string arrivalTime, string? promoCode, string paymentMethod = "Cash")
         {
             var userId = _currentUser.UserId;
             if (userId <= 0) return Json(new { success = false, message = "Bạn cần đăng nhập để đặt chỗ." });
@@ -71,6 +71,12 @@ namespace TripCompass.WebUI.Controllers
             var price = post.Price ?? 0m;
             var totalAmount = price * quantity;
 
+            paymentMethod = (paymentMethod ?? "Cash").Trim();
+            if (paymentMethod != "Cash" && paymentMethod != "Online")
+            {
+                paymentMethod = "Cash";
+            }
+
             var booking = new PostBooking
             {
                 PostId = post.PostId,
@@ -83,19 +89,63 @@ namespace TripCompass.WebUI.Controllers
                 PromoCode = promoCode,
                 TotalAmount = totalAmount,
                 Status = "Processing",
-                Note = null
+                Note = null,
+                PaymentMethod = paymentMethod,
+                PaymentStatus = paymentMethod == "Cash" ? "Pending" : "Pending"
             };
 
             _context.PostBookings.Add(booking);
             await _context.SaveChangesAsync();
 
-            // Payment QR using VietQR image (works as a simple <img src=...>)
-            // addInfo includes booking id so partner can reconcile
-            var addInfo = Uri.EscapeDataString($"TripCompass BOOKING-{booking.BookingId}");
+            // Auto-deduct 3% commission for cash orders immediately
+            // For online orders: deduct when unpaid (treat as cash), or when webhook confirms payment
+            var commissionRate = 0.03m;
+            var commissionAmount = Math.Round(totalAmount * commissionRate, 2, MidpointRounding.AwayFromZero);
+            var commissionAmountInt = (int)Math.Round(commissionAmount, MidpointRounding.AwayFromZero);
+            var now = DateTime.UtcNow;
 
-            // If totalAmount == 0, still generate QR (no amount param)
-            var amountPart = totalAmount > 0 ? $"?amount={(long)decimal.Round(totalAmount, 0)}&addInfo={addInfo}" : $"?addInfo={addInfo}";
-            var qrImageUrl = $"https://img.vietqr.io/image/{QrBankCode}-{QrAccountNumber}-compact2.png{amountPart}";
+            // Trừ phí ngay nếu: tiền mặt HOẶC online nhưng chưa thanh toán (tính như tiền mặt)
+            if (paymentMethod == "Cash" || (paymentMethod == "Online" && booking.PaymentStatus != "Paid"))
+            {
+                booking.CommissionDeducted = true;
+                booking.CommissionAmount = commissionAmount;
+
+                var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == booking.PartnerUserId);
+                if (wallet == null)
+                {
+                    wallet = new Wallet
+                    {
+                        UserId = booking.PartnerUserId,
+                        Balance = 0,
+                        UpdatedAt = now
+                    };
+                    _context.Wallets.Add(wallet);
+                }
+
+                // Trừ phí từ ví (âm)
+                wallet.Balance -= commissionAmountInt;
+                wallet.UpdatedAt = now;
+
+                _context.CoinTransactions.Add(new CoinTransaction
+                {
+                    UserId = booking.PartnerUserId,
+                    Amount = -commissionAmountInt,
+                    Type = "Commission fee",
+                    ReferenceId = booking.BookingId,
+                    CreatedAt = now
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Payment QR using VietQR image (only for Online payment)
+            string? qrImageUrl = null;
+            if (paymentMethod == "Online")
+            {
+                var addInfo = Uri.EscapeDataString($"TripCompass BOOKING-{booking.BookingId}");
+                var amountPart = totalAmount > 0 ? $"?amount={(long)decimal.Round(totalAmount, 0)}&addInfo={addInfo}" : $"?addInfo={addInfo}";
+                qrImageUrl = $"https://img.vietqr.io/image/{QrBankCode}-{QrAccountNumber}-compact2.png{amountPart}";
+            }
 
             return Json(new
             {

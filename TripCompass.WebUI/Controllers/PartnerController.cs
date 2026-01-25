@@ -61,10 +61,17 @@ namespace TripCompass.WebUI.Controllers
                 .ToListAsync();
 
             var now = DateTime.UtcNow;
-            var startYear = new DateTime(now.Year, 1, 1);
+            var selectedYear = now.Year;
+            if (Request.Query.ContainsKey("year") && int.TryParse(Request.Query["year"], out var year) && year >= 2000 && year <= 2100)
+            {
+                selectedYear = year;
+            }
+            ViewBag.SelectedYear = selectedYear;
+            var startYear = new DateTime(selectedYear, 1, 1);
+            var endYear = new DateTime(selectedYear, 12, 31, 23, 59, 59);
             var yearlyBookings = await _context.PostBookings
                 .AsNoTracking()
-                .Where(b => b.PartnerUserId == userId && b.BookedAt >= startYear)
+                .Where(b => b.PartnerUserId == userId && b.BookedAt >= startYear && b.BookedAt <= endYear)
                 .ToListAsync();
 
             var totalRevenue = yearlyBookings.Sum(b => b.TotalAmount);
@@ -212,6 +219,70 @@ namespace TripCompass.WebUI.Controllers
 
             booking.Status = "Cancelled";
             booking.Note = reason;
+            
+            var now = DateTime.UtcNow;
+            var refundMessage = "";
+
+            // Nếu đơn đã thanh toán online → hoàn tiền tự động
+            if (booking.PaymentMethod == "Online" && booking.PaymentStatus == "Paid" && booking.AmountPaid.HasValue && !booking.Refunded)
+            {
+                var refundAmount = booking.AmountPaid.Value;
+                booking.Refunded = true;
+                booking.RefundAmount = refundAmount;
+                booking.RefundedAt = now;
+                booking.RefundReason = $"Từ chối bởi shop: {reason}";
+
+                // Hoàn tiền vào ví khách (tự động tạo ví nếu chưa có)
+                var customerWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == booking.CustomerUserId);
+                if (customerWallet == null)
+                {
+                    customerWallet = new Wallet
+                    {
+                        UserId = booking.CustomerUserId,
+                        Balance = 0,
+                        UpdatedAt = now
+                    };
+                    _context.Wallets.Add(customerWallet);
+                }
+
+                // Cộng tiền hoàn lại vào ví khách
+                customerWallet.Balance += (int)Math.Round(refundAmount, MidpointRounding.AwayFromZero);
+                customerWallet.UpdatedAt = now;
+
+                _context.CoinTransactions.Add(new CoinTransaction
+                {
+                    UserId = booking.CustomerUserId,
+                    Amount = (int)Math.Round(refundAmount, MidpointRounding.AwayFromZero),
+                    Type = "Booking refund",
+                    ReferenceId = booking.BookingId,
+                    CreatedAt = now
+                });
+
+                // Nếu đã cộng tiền vào ví shop (từ webhook), trừ lại
+                if (booking.CommissionDeducted && booking.CommissionAmount.HasValue)
+                {
+                    var partnerWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == booking.PartnerUserId);
+                    if (partnerWallet != null)
+                    {
+                        // Trừ lại số tiền đã cộng (netForPartner = TotalAmount - CommissionAmount)
+                        var netForPartner = booking.TotalAmount - booking.CommissionAmount.Value;
+                        partnerWallet.Balance -= (int)Math.Round(netForPartner, MidpointRounding.AwayFromZero);
+                        partnerWallet.UpdatedAt = now;
+
+                        _context.CoinTransactions.Add(new CoinTransaction
+                        {
+                            UserId = booking.PartnerUserId,
+                            Amount = -(int)Math.Round(netForPartner, MidpointRounding.AwayFromZero),
+                            Type = "Booking refund (reversed)",
+                            ReferenceId = booking.BookingId,
+                            CreatedAt = now
+                        });
+                    }
+                }
+
+                refundMessage = $" Đã hoàn tiền {refundAmount:N0}₫ vào ví của khách.";
+            }
+
             await _context.SaveChangesAsync();
 
             var customerEmail = await _context.Users
@@ -222,19 +293,20 @@ namespace TripCompass.WebUI.Controllers
 
             if (!string.IsNullOrWhiteSpace(customerEmail))
             {
+                var refundNote = booking.Refunded ? $"\n\nĐã hoàn tiền {booking.RefundAmount:N0}₫ vào ví của bạn." : "";
                 var subject = $"TripCompass - Đơn đặt chỗ #{booking.BookingId} đã bị từ chối";
                 var body =
 $@"Xin chào {booking.CustomerName},
 
 Đơn đặt chỗ #{booking.BookingId} của bạn đã bị shop từ chối.
-Lý do: {reason}
+Lý do: {reason}{refundNote}
 
 Trân trọng,
 TripCompass";
                 await _emailService.SendEmailAsync(customerEmail, subject, body);
             }
 
-            TempData["Message"] = $"Đã từ chối đơn #{booking.BookingId} và gửi email cho khách.";
+            TempData["Message"] = $"Đã từ chối đơn #{booking.BookingId} và gửi email cho khách.{refundMessage}";
             return RedirectToAction(nameof(Orders));
         }
 
@@ -344,7 +416,7 @@ TripCompass";
 
                 return View("DiscountCodes", vm);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log error và trả về view với model rỗng
                 var emptyVm = new DiscountCodesListViewModel
@@ -388,6 +460,106 @@ TripCompass";
 
             TempData["Message"] = $"Đã gửi yêu cầu rút {amount:N0}. Admin sẽ chuyển tiền thủ công.";
             return RedirectToAction(nameof(Dashboard));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Commission()
+        {
+            var userId = _currentUser.UserId;
+            if (userId <= 0) return RedirectToAction("Login", "Account");
+
+            var bookings = await _context.PostBookings
+                .AsNoTracking()
+                .Where(b => b.PartnerUserId == userId && b.CommissionDeducted == true)
+                .OrderByDescending(b => b.BookedAt)
+                .ToListAsync();
+
+            var unpaidCommission = bookings
+                .Where(b => !b.CommissionPaid && b.CommissionAmount.HasValue)
+                .Sum(b => b.CommissionAmount.Value);
+
+            var postTitles = await _context.Posts
+                .AsNoTracking()
+                .Where(p => p.UserId == userId)
+                .ToDictionaryAsync(p => p.PostId, p => p.Title);
+
+            var totalCommission = (int)Math.Round(bookings
+                .Where(b => b.CommissionAmount.HasValue)
+                .Sum(b => b.CommissionAmount.Value), MidpointRounding.AwayFromZero);
+
+            var vm = new CommissionViewModel
+            {
+                Bookings = bookings.Select(b => new CommissionBookingItem
+                {
+                    BookingId = b.BookingId,
+                    PostId = b.PostId,
+                    PostTitle = postTitles.TryGetValue(b.PostId, out var t) ? t : $"Post #{b.PostId}",
+                    TotalAmount = b.TotalAmount,
+                    CommissionAmount = (int)Math.Round(b.CommissionAmount ?? 0, MidpointRounding.AwayFromZero),
+                    PaymentMethod = b.PaymentMethod,
+                    PaymentStatus = b.PaymentStatus,
+                    BookedAt = b.BookedAt,
+                    CommissionPaid = b.CommissionPaid,
+                    CommissionPaidAt = b.CommissionPaidAt
+                }).ToList(),
+                TotalCommission = totalCommission,
+                UnpaidCommission = (int)Math.Round(unpaidCommission, MidpointRounding.AwayFromZero)
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult GenerateCommissionPaymentQr(long? bookingId = null)
+        {
+            var userId = _currentUser.UserId;
+            if (userId <= 0) return Json(new { success = false, message = "Bạn cần đăng nhập." });
+
+            var bookings = _context.PostBookings
+                .Where(b => b.PartnerUserId == userId && b.CommissionDeducted == true && !b.CommissionPaid && b.CommissionAmount.HasValue)
+                .ToList();
+
+            if (bookings.Count == 0)
+            {
+                return Json(new { success = false, message = "Không có phí hoa hồng nào cần thanh toán." });
+            }
+
+            decimal totalAmount = 0;
+            string addInfo;
+
+            if (bookingId.HasValue)
+            {
+                // Thanh toán từng đơn
+                var booking = bookings.FirstOrDefault(b => b.BookingId == bookingId.Value);
+                if (booking == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng hoặc đã thanh toán." });
+                }
+                totalAmount = booking.CommissionAmount.Value;
+                addInfo = Uri.EscapeDataString($"TripCompass COMMISSION-{booking.BookingId}");
+            }
+            else
+            {
+                // Thanh toán tất cả
+                totalAmount = bookings.Sum(b => b.CommissionAmount.Value);
+                addInfo = Uri.EscapeDataString($"TripCompass COMMISSION-ALL-{userId}");
+            }
+
+            // MB Bank account for payment QR
+            const string QrBankCode = "MB";
+            const string QrAccountNumber = "68161397979";
+            var amountPart = totalAmount > 0 ? $"?amount={(long)decimal.Round(totalAmount, 0)}&addInfo={addInfo}" : $"?addInfo={addInfo}";
+            var qrImageUrl = $"https://img.vietqr.io/image/{QrBankCode}-{QrAccountNumber}-compact2.png{amountPart}";
+
+            return Json(new
+            {
+                success = true,
+                qrImageUrl,
+                amount = totalAmount,
+                bookingId = bookingId,
+                isAll = !bookingId.HasValue
+            });
         }
     }
 }

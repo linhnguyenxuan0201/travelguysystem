@@ -601,6 +601,220 @@ namespace TripCompass.WebUI.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [Authorize, HttpGet]
+        public async Task<IActionResult> Wallet()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null) return RedirectToAction("Login");
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null) return RedirectToAction("Login");
+
+            var wallet = await _db.Wallets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(w => w.UserId == user.UserId);
+
+            var balance = wallet?.Balance ?? 0;
+
+            var transactions = await _db.CoinTransactions
+                .AsNoTracking()
+                .Where(t => t.UserId == user.UserId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            var vm = new WalletViewModel
+            {
+                Balance = balance,
+                Transactions = transactions.Select(t => new WalletTransactionItem
+                {
+                    Type = t.Type,
+                    Amount = t.Amount,
+                    CreatedAt = t.CreatedAt,
+                    ReferenceId = t.ReferenceId
+                }).ToList()
+            };
+
+            return View(vm);
+        }
+
+        [Authorize, HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Withdraw()
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null) return RedirectToAction("Login");
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null) return RedirectToAction("Login");
+
+            var wallet = await _db.Wallets.FirstOrDefaultAsync(w => w.UserId == user.UserId);
+            if (wallet == null || wallet.Balance <= 0)
+            {
+                TempData["Message"] = "Không có số dư khả dụng để rút.";
+                return RedirectToAction(nameof(Wallet));
+            }
+
+            var now = DateTime.UtcNow;
+            var amount = wallet.Balance;
+
+            wallet.Balance = 0;
+            wallet.UpdatedAt = now;
+
+            _db.CoinTransactions.Add(new CoinTransaction
+            {
+                UserId = user.UserId,
+                Amount = -amount,
+                Type = "Withdraw request",
+                ReferenceId = wallet.WalletId,
+                CreatedAt = now
+            });
+
+            await _db.SaveChangesAsync();
+
+            TempData["Message"] = $"Đã gửi yêu cầu rút {amount:N0}₫. Admin sẽ chuyển tiền thủ công.";
+            return RedirectToAction(nameof(Wallet));
+        }
+
+        /* =========================
+           FORGOT PASSWORD
+        ========================= */
+
+        [HttpGet, AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost, AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Check if user exists
+            var user = await _userRepository.GetByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal if email exists or not for security
+                TempData["Message"] = "Nếu email tồn tại, mã OTP đã được gửi.";
+                return RedirectToAction(nameof(VerifyForgotOtp));
+            }
+
+            // Generate OTP
+            var otp = new Random().Next(100000, 999999).ToString();
+
+            // Save OTP to database
+            _db.EmailOtps.Add(new EmailOtp
+            {
+                Email = model.Email,
+                OtpCode = otp,
+                ExpiredAt = DateTime.UtcNow.AddMinutes(5),
+                IsUsed = false
+            });
+
+            await _db.SaveChangesAsync();
+            await _emailService.SendOtpAsync(model.Email, otp);
+
+            TempData["ForgotPasswordEmail"] = model.Email;
+            TempData["Message"] = "Mã OTP đã được gửi đến email của bạn.";
+
+            return RedirectToAction(nameof(VerifyForgotOtp));
+        }
+
+        [HttpGet, AllowAnonymous]
+        public IActionResult VerifyForgotOtp()
+        {
+            var email = TempData["ForgotPasswordEmail"] as string;
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var model = new VerifyForgotOtpViewModel
+            {
+                Email = email
+            };
+
+            TempData.Keep("ForgotPasswordEmail");
+
+            return View(model);
+        }
+
+        [HttpPost, AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyForgotOtp(VerifyForgotOtpViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var email = model.Email;
+            var otp = model.OtpCode;
+
+            // Verify OTP
+            var emailOtp = await _db.EmailOtps.FirstOrDefaultAsync(x =>
+                x.Email == email &&
+                x.OtpCode == otp &&
+                !x.IsUsed &&
+                x.ExpiredAt > DateTime.UtcNow);
+
+            if (emailOtp == null)
+            {
+                ModelState.AddModelError("OtpCode", "Mã OTP không hợp lệ hoặc đã hết hạn.");
+                return View(model);
+            }
+
+            // Mark OTP as used
+            emailOtp.IsUsed = true;
+            await _db.SaveChangesAsync();
+
+            TempData["ResetPasswordEmail"] = email;
+            return RedirectToAction(nameof(ResetPassword));
+        }
+
+        [HttpGet, AllowAnonymous]
+        public IActionResult ResetPassword()
+        {
+            var email = TempData["ResetPasswordEmail"] as string;
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Email = email
+            };
+
+            TempData.Keep("ResetPasswordEmail");
+
+            return View(model);
+        }
+
+        [HttpPost, AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userRepository.GetByEmailAsync(model.Email);
+            if (user == null)
+            {
+                TempData["Error"] = "Không tìm thấy tài khoản.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            // Update password
+            var newHash = _passwordHasher.Hash(model.NewPassword);
+            user.ChangePassword(newHash);
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.";
+            return RedirectToAction(nameof(Login));
+        }
 
     }
 }

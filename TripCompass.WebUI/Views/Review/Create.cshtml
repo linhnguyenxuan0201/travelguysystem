@@ -1,312 +1,13 @@
-<!-- LEAFLET MAP -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 @model TripCompass.WebUI.ViewModels.ReviewFormViewModel
 @{
     ViewData["Title"] = "Viết đánh giá";
     Layout = "_Layout";
 }
 
-<style>
-    .review-create-page {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-
-    .reward-banner {
-        background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        border-radius: 12px;
-        padding: 20px 28px;
-        color: white;
-        margin-bottom: 32px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .reward-banner h3 {
-        margin: 0 0 8px 0;
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .reward-banner p {
-        margin: 0;
-        font-size: 14px;
-        opacity: 0.95;
-    }
-
-    .review-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-    }
-
-    .card {
-        background: #fff;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        padding: 32px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 28px;
-        color: #111827;
-    }
-
-    .form-group {
-        margin-bottom: 24px;
-    }
-
-    label {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        display: block;
-        color: #374151;
-    }
-
-    input[type="text"],
-    input[type="file"],
-    textarea,
-    select {
-        width: 100%;
-        padding: 12px 16px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        font-size: 14px;
-        transition: border-color 0.2s, box-shadow 0.2s;
-        font-family: inherit;
-    }
-
-    input[type="text"]:focus,
-    textarea:focus,
-    select:focus {
-        outline: none;
-        border-color: #4F46E5;
-        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-    }
-
-    textarea {
-        min-height: 150px;
-        resize: vertical;
-        line-height: 1.6;
-    }
-
-    .location-input {
-        position: relative;
-    }
-
-        .location-input i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 18px;
-        }
-
-        .location-input input {
-            padding-left: 42px;
-        }
-
-    .location-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-top: 6px;
-        max-height: 260px;
-        overflow-y: auto;
-        z-index: 999;
-        display: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-        .location-dropdown div {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-            .location-dropdown div:hover {
-                background: #f9fafb;
-            }
-
-    #map {
-        margin-top: 14px;
-        height: 260px;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        display: none;
-    }
-
-    .rating {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .rating span[data-value] {
-        font-size: 32px;
-        cursor: pointer;
-        color: #d1d5db;
-        transition: color 0.2s, transform 0.2s;
-        user-select: none;
-    }
-
-        .rating span[data-value]:hover {
-            transform: scale(1.1);
-        }
-
-        .rating span[data-value].active {
-            color: #fbbf24;
-        }
-
-    .rating-text {
-        font-size: 16px;
-        font-weight: 600;
-        color: #6b7280;
-        margin-left: 8px;
-    }
-
-    .upload-box {
-        border: 2px dashed #d1d5db;
-        border-radius: 12px;
-        padding: 40px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: border-color 0.2s, background 0.2s;
-        background: #f9fafb;
-    }
-
-        .upload-box:hover {
-            border-color: #4F46E5;
-            background: #f3f4f6;
-        }
-
-        .upload-box::before {
-            content: "📷";
-            font-size: 32px;
-            display: block;
-            margin-bottom: 12px;
-        }
-
-    .upload-preview {
-        margin-top: 16px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 12px;
-    }
-
-    .preview-item {
-        position: relative;
-        aspect-ratio: 1;
-    }
-
-        .preview-item img {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid #e5e7eb;
-            transition: transform 0.2s;
-        }
-
-        .preview-item:hover img {
-            transform: scale(1.05);
-        }
-
-        .preview-item button {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid white;
-            background: #ef4444;
-            color: white;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            transition: background 0.2s, transform 0.2s;
-        }
-
-        .preview-item button:hover {
-            background: #dc2626;
-            transform: scale(1.1);
-        }
-
-    .existing-image-item {
-        position: relative;
-        aspect-ratio: 1;
-    }
-
-        .existing-image-item img {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 2px solid #e5e7eb;
-        }
-
-        .existing-image-item label {
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .existing-image-item input[type="checkbox"] {
-            width: auto;
-        }
-
-    .btn-primary {
-        background: #4F46E5;
-        color: white;
-        padding: 14px 24px;
-        border-radius: 8px;
-        border: none;
-        width: 100%;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.1s;
-        margin-top: 8px;
-    }
-
-        .btn-primary:hover {
-            background: #4338CA;
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
-    .required-star {
-        color: #ef4444;
-        margin-left: 4px;
-    }
-</style>
+@section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="~/css/review-create.css" />
+}
 
 <div class="review-create-page">
     <div class="reward-banner">
@@ -395,7 +96,7 @@
                     <label>Ảnh (tối đa 5)</label>
                     <div class="upload-box" id="uploadBox">
                         <div>Click để chọn ảnh</div>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">Tối đa 5 ảnh</div>
+                        <div class="upload-box-hint">Tối đa 5 ảnh</div>
                     </div>
                     <input type="file"
                            id="imageInput"
@@ -420,9 +121,9 @@
                     </select>
                 </div>
 
-                <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
+                <hr class="review-divider" />
 
-                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #111827;">Thông tin chi tiết (Tùy chọn)</h3>
+                <h3 class="review-section-title">Thông tin chi tiết (Tùy chọn)</h3>
 
                 <div class="form-group">
                     <label>Giờ mở cửa</label>
@@ -609,3 +310,7 @@
         imageInput.files = dt.files;
     });
 </script>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+}

@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Đăng nhập";
 }
 
 <section class="login-page">
@@ -9,35 +9,35 @@
         <div class="login-left">
             <img src="~/images/logo.png" class="login-logo" />
             <h2>TRIPCOMPASS</h2>
-            <p class="login-slogan">DISCOVER MORE. PLAN LESS.</p>
+            <p class="login-slogan">KHÁM PHÁ NHIỀU HƠN, LÊN KẾ HOẠCH ÍT HƠN</p>
         </div>
 
         <!-- RIGHT -->
         <div class="login-right">
-            <h1>Log in</h1>
+            <h1>Đăng nhập</h1>
 
             <form asp-controller="Account"
                   asp-action="Login"
                   method="post"
                   class="login-form">
 
-                <label>Email</label>
+                <label>Nhập email của bạn</label>
                 <input type="email"
                        name="email"
-                       placeholder="Enter your email"
+                       placeholder="Email"
                        required />
 
-                <label>Password</label>
+                <label>Nhập mật khẩu của bạn</label>
                 <input type="password"
                        name="password"
-                       placeholder="Enter your password"
+                       placeholder="Mật khẩu"
                        required />
 
                 <div class="forgot">
                     <a asp-controller="Account"
                        asp-action="ForgotPassword"
                        class="forgot-link">
-                        Forgot password?
+                        Quên mật khẩu
                     </a>
 
                 </div>
@@ -51,16 +51,16 @@
                     <a asp-controller="Account"
                        asp-action="Register"
                        class="btn-outline">
-                        Sign up
+                        Đăng ký
                     </a>
 
                     <button type="submit" class="btn-primary">
-                        Log in
+                        Đăng nhập
                     </button>
                 </div>
 
                 <div class="divider">
-                    <span>or</span>
+                    <span>hoặc</span>
                 </div>
 
                 <!-- GOOGLE LOGIN -->
@@ -68,7 +68,7 @@
                    asp-action="GoogleLogin"
                    class="btn-google">
                     <i class="fab fa-google"></i>
-                    Continue with Google
+                    Tiếp tục với Google
                 </a>
             </form>
         </div>

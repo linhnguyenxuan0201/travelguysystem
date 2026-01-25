@@ -1,4 +1,4 @@
-﻿@model TripCompass.WebUI.ViewModels.MyReviewsViewModel
+@model TripCompass.WebUI.ViewModels.MyReviewsViewModel
 @using TripCompass.Domain.Enums
 
 @{
@@ -6,308 +6,9 @@
     Layout = "_ReviewManagerLayout";
 }
 
-<style>
-    .reviews-simple-layout {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-
-    /* HEADER */
-    .simple-header {
-        margin-bottom: 24px;
-    }
-
-        .simple-header h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #111827;
-        }
-
-        .simple-header .subtitle {
-            color: #6b7280; 
-            font-size: 14px;
-        }
-
-    /* ACTION BAR */
-    .action-bar {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 28px;
-    }
-
-    .btn-create {
-        background: #4F46E5;
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-        .btn-create:hover {
-            background: #4338CA;
-        }
-
-    .filter-form {
-        display: flex;
-        gap: 12px;
-        flex: 1;
-    }
-
-    .search-input {
-        flex: 1;
-        min-width: 420px; /* 🔥 DÀI NGANG CARD */
-        padding: 10px 16px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        font-size: 14px;
-    }
-
-    .filter-select,
-    .btn-filter {
-        padding: 10px 16px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        background: #fff;
-        font-size: 14px;
-        cursor: pointer;
-    }
-
-        .btn-filter:hover {
-            background: #f9fafb;
-        }
-
-    /* STATS */
-    .stats-simple {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 36px;
-    }
-
-    .stat-box {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 20px 22px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .stat-left .label {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 6px;
-    }
-
-    .stat-left .value {
-        font-size: 30px;
-        font-weight: 600;
-        color: #111827;
-    }
-
-    .stat-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
-
-        .stat-icon.blue {
-            background: #eef2ff;
-            color: #4f46e5;
-        }
-
-        .stat-icon.orange {
-            background: #fff7ed;
-            color: #f97316;
-        }
-
-        .stat-icon.purple {
-            background: #f5f3ff;
-            color: #8b5cf6;
-        }
-
-        .stat-icon.green {
-            background: #ecfdf5;
-            color: #10b981;
-        }
-
-    /* REVIEWS */
-    .reviews-section h2 {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 20px;
-        color: #111827;
-    }
-
-    .empty-message {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 48px 20px;
-        text-align: center;
-    }
-
-        .empty-message h3 {
-            font-size: 18px;
-            margin-bottom: 6px;
-            color: #111827;
-        }
-
-        .empty-message p {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-    .review-item {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 20px;
-        display: flex;
-        gap: 16px;
-        align-items: flex-start;
-        margin-bottom: 16px;
-    }
-
-    .review-thumb {
-        width: 80px;
-        height: 80px;
-        border-radius: 8px;
-        object-fit: cover;
-    }
-
-    .review-details {
-        flex: 1;
-    }
-
-    .review-tags {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        margin-bottom: 6px;
-    }
-
-    .tag {
-        background: #f3f4f6;
-        color: #374151;
-        font-size: 12px;
-        padding: 4px 10px;
-        border-radius: 999px;
-    }
-
-    .stars {
-        color: #facc15;
-        font-size: 14px;
-    }
-
-    .review-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 6px;
-    }
-
-    .review-meta {
-        display: flex;
-        gap: 16px;
-        font-size: 13px;
-        color: #6b7280;
-    }
-
-    .review-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .icon-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        background: #fff;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-    }
-
-        .icon-btn:hover {
-            background: #f9fafb;
-        }
-
-        .icon-btn.delete {
-            color: #dc2626;
-            border-color: #fecaca;
-        }
-
-            .icon-btn.delete:hover {
-                background: #fef2f2;
-            }
-
-    /* PAGINATION */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 32px;
-    }
-
-    .page {
-        padding: 8px 14px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        text-decoration: none;
-        color: #374151;
-        background: #fff;
-    }
-
-        .page:hover {
-            background: #f9fafb;
-        }
-
-        .page.active {
-            background: #4F46E5;
-            color: #fff;
-            border-color: #4F46E5;
-        }
-    /* ===== STATUS BADGE ===== */
-    .status-badge {
-        font-size: 12px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-
-    .status-approved {
-        background: #ecfdf5;
-        color: #059669;
-    }
-
-    .status-pending {
-        background: #fff7ed;
-        color: #d97706;
-    }
-
-    .status-rejected {
-        background: #fef2f2;
-        color: #dc2626;
-    }
-
-</style>
-
+@section Styles {
+    <link rel="stylesheet" href="~/css/myreviews.css" />
+}
 
 <div class="reviews-simple-layout">
 
@@ -383,13 +84,13 @@
     </div>
 
     <div class="reviews-section">
-        <h2>Your Reviews</h2>
+        <h2>Đánh giá của bạn</h2>
 
         @if (!Model.Reviews.Any())
         {
             <div class="empty-message">
-                <h3>No reviews yet</h3>
-                <p>Start writing your first review to earn reputation.</p>
+                <h3>Chưa có đánh giá nào</h3>
+                <p>Bắt đầu viết đánh giá đầu tiên để kiếm điểm uy tín.</p>
             </div>
         }
         else
@@ -434,7 +135,7 @@
                         </div>
 
                         <h4 class="review-title">
-                            <a href="/Review/Detail/@r.PostId" style="text-decoration: none; color: inherit;">@r.Title</a>
+                            <a href="/Review/Detail/@r.PostId">@r.Title</a>
                         </h4>
 
                         <div class="review-meta">

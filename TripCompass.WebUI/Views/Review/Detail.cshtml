@@ -6,6 +6,10 @@
     Layout = "_Layout";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/review-detail.css" />
+}
+
 <style>
     .detail-container {
         max-width: 1400px;
@@ -880,7 +884,7 @@
             </div>
 
             <!-- Description -->
-            <div style="font-size: 14px; color: #111827; margin-bottom: 12px; font-weight: 700; margin-top: 24px;">
+            <div class="review-detail-section-title">
                 Mô tả chi tiết
             </div>
             <div class="description">
@@ -971,54 +975,67 @@
                         <span class="info-text">Sản phẩm do đối tác cung cấp</span>
                     </div>
 
-                    <form id="partnerBookingForm" style="margin-top: 12px;">
+                    <form id="partnerBookingForm" class="partner-booking-form">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="postId" value="@Model.PostId" />
 
-                        <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="partner-booking-form-fields">
                             <div>
-                                <label style="display:block; font-weight:600; font-size:13px; margin-bottom:6px;">Tên</label>
+                                <label class="partner-booking-field">Tên</label>
                                 <input name="customerName" type="text" maxlength="120" required
-                                       style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;"
+                                       class="partner-booking-input"
                                        placeholder="Nhập họ tên" />
                             </div>
                             <div>
-                                <label style="display:block; font-weight:600; font-size:13px; margin-bottom:6px;">Số điện thoại</label>
+                                <label class="partner-booking-field">Số điện thoại</label>
                                 <input name="customerPhone" type="tel" maxlength="30" required
-                                       style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;"
+                                       class="partner-booking-input"
                                        placeholder="VD: 09xxxxxxxx" />
                             </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div class="partner-booking-grid">
                                 <div>
-                                    <label style="display:block; font-weight:600; font-size:13px; margin-bottom:6px;">Số người</label>
+                                    <label class="partner-booking-field">Số người</label>
                                     <input name="quantity" type="number" min="1" max="100" value="1" required
-                                           style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;" />
+                                           class="partner-booking-input" />
                                 </div>
                                 <div>
-                                    <label style="display:block; font-weight:600; font-size:13px; margin-bottom:6px;">Thời gian đến</label>
+                                    <label class="partner-booking-field">Thời gian đến</label>
                                     <input name="arrivalTime" type="datetime-local" required
-                                           style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;" />
+                                           class="partner-booking-input" />
                                 </div>
                             </div>
                             <div>
-                                <label style="display:block; font-weight:600; font-size:13px; margin-bottom:6px;">Ưu đãi (mã giảm giá)</label>
+                                <label class="partner-booking-field">Ưu đãi (mã giảm giá)</label>
                                 <input name="promoCode" type="text" maxlength="30"
-                                       style="width:100%; padding:10px; border:2px solid #e5e7eb; border-radius:10px; outline:none;"
+                                       class="partner-booking-input"
                                        placeholder="VD: SUMMER2026 (nếu có)" />
                             </div>
+                            
+                            <div>
+                                <label class="partner-booking-payment-label">Phương thức thanh toán<span class="required">*</span></label>
+                                <div class="partner-booking-payment-options">
+                                    <label class="partner-booking-payment-option" id="paymentCashLabel">
+                                        <input type="radio" name="paymentMethod" value="Cash" checked />
+                                        <span>💵 Tiền mặt</span>
+                                    </label>
+                                    <label class="partner-booking-payment-option" id="paymentOnlineLabel">
+                                        <input type="radio" name="paymentMethod" value="Online" />
+                                        <span>💳 Online</span>
+                                    </label>
+                                </div>
+                            </div>
 
-                            <button id="partnerBookingSubmit" type="submit"
-                                    style="height:44px; border:none; border-radius:12px; background:#4f46e5; color:#fff; font-weight:800; cursor:pointer;">
+                            <button id="partnerBookingSubmit" type="submit" class="partner-booking-submit">
                                 Đặt chỗ
                             </button>
 
-                            <div id="partnerBookingQrBox" style="display:none; margin-top: 8px; border:1px solid #e5e7eb; border-radius:12px; padding:12px; background:#fff;">
-                                <div style="font-weight:800; color:#111827; margin-bottom:6px;">Thanh toán bằng QR</div>
-                                <div id="partnerBookingQrMeta" style="font-size:13px; color:#6b7280; margin-bottom:10px;"></div>
-                                <div style="display:flex; justify-content:center;">
-                                    <img id="partnerBookingQrImg" alt="QR thanh toán" style="width:100%; max-width:260px; border-radius:12px; border:1px solid #f3f4f6;" />
+                            <div id="partnerBookingQrBox" class="partner-booking-qr-box">
+                                <div class="partner-booking-qr-title">Thanh toán bằng QR</div>
+                                <div id="partnerBookingQrMeta" class="partner-booking-qr-meta"></div>
+                                <div class="partner-booking-qr-img-wrapper">
+                                    <img id="partnerBookingQrImg" alt="QR thanh toán" class="partner-booking-qr-img" />
                                 </div>
-                                <div style="font-size:12px; color:#6b7280; margin-top:10px;">
+                                <div class="partner-booking-qr-footer">
                                     Quét QR để thanh toán vào <strong>MB Bank - 68161397979</strong>.
                                 </div>
                             </div>
@@ -1088,13 +1105,35 @@
         const qrBox = document.getElementById('partnerBookingQrBox');
         const qrImg = document.getElementById('partnerBookingQrImg');
         const qrMeta = document.getElementById('partnerBookingQrMeta');
+        const paymentCashLabel = document.getElementById('paymentCashLabel');
+        const paymentOnlineLabel = document.getElementById('paymentOnlineLabel');
+        const paymentMethodInputs = form.querySelectorAll('input[name="paymentMethod"]');
+
+        // Style payment method labels on selection
+        paymentMethodInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'Cash') {
+                    paymentCashLabel.style.borderColor = '#4f46e5';
+                    paymentCashLabel.style.background = '#eff6ff';
+                    paymentOnlineLabel.style.borderColor = '#e5e7eb';
+                    paymentOnlineLabel.style.background = '#fff';
+                } else {
+                    paymentOnlineLabel.style.borderColor = '#4f46e5';
+                    paymentOnlineLabel.style.background = '#eff6ff';
+                    paymentCashLabel.style.borderColor = '#e5e7eb';
+                    paymentCashLabel.style.background = '#fff';
+                }
+            });
+        });
 
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             const formData = new FormData(form);
+            const paymentMethod = formData.get('paymentMethod') || 'Cash';
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Đang tạo đơn...';
+            qrBox.style.display = 'none';
 
             try {
                 const res = await fetch('/Booking/CreateForPost', {
@@ -1113,11 +1152,19 @@
 
                 const amount = data.amount || 0;
                 const bookingId = data.bookingId;
-                qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
-                qrImg.src = data.qrImageUrl;
-                qrBox.style.display = 'block';
-
-                submitBtn.textContent = 'Đã tạo QR';
+                
+                if (paymentMethod === 'Online' && data.qrImageUrl) {
+                    qrMeta.textContent = `Đơn #${bookingId} • Số tiền: ${amount.toLocaleString('vi-VN')}₫`;
+                    qrImg.src = data.qrImageUrl;
+                    qrBox.style.display = 'block';
+                    submitBtn.textContent = 'Đã tạo đơn - Quét QR để thanh toán';
+                } else {
+                    submitBtn.textContent = 'Đã tạo đơn thành công!';
+                    setTimeout(() => {
+                        submitBtn.textContent = 'Đặt chỗ';
+                        submitBtn.disabled = false;
+                    }, 2000);
+                }
             } catch (err) {
                 alert('Có lỗi xảy ra. Vui lòng thử lại.');
                 submitBtn.disabled = false;
