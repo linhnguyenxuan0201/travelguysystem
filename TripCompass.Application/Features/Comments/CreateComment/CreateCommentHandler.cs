@@ -1,5 +1,7 @@
-﻿using MediatR;
+using MediatR;
+using TripCompass.Application.Common;
 using TripCompass.Application.Features.Comments.CreateComment;
+using TripCompass.Application.Interfaces;
 using TripCompass.Application.Interfaces.Repositories;
 using TripCompass.Application.Services;
 using TripCompass.Domain.Entities;
@@ -10,12 +12,18 @@ namespace TripCompass.Application.Features.Comments.CreateComment
     {
         private readonly ICommentRepository _repo;
         private readonly IUnitOfWork _uow;
+        private readonly IApplicationDbContext _context;
         private readonly SentimentAnalysisService _sentimentService;
 
-        public CreateCommentHandler(ICommentRepository repo, IUnitOfWork uow, SentimentAnalysisService sentimentService)
+        public CreateCommentHandler(
+            ICommentRepository repo, 
+            IUnitOfWork uow, 
+            IApplicationDbContext context,
+            SentimentAnalysisService sentimentService)
         {
             _repo = repo;
             _uow = uow;
+            _context = context;
             _sentimentService = sentimentService;
         }
 
@@ -74,6 +82,15 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
 
         await _uow.SaveChangesAsync();
+
+        // Log activity
+        await ActivityLogger.LogActivityAsync(
+            _context,
+            command.UserId,
+            "CREATE_COMMENT",
+            "PostComments",
+            comment.Id,
+            $"Commented on post ID: {command.PostId}. Sentiment: {sentiment.Sentiment}");
         }
 
         private int CalculateReputationLevel(int score)

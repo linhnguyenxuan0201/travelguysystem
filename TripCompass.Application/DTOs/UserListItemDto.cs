@@ -7,6 +7,8 @@ namespace TripCompass.Application.DTOs
         public long UserId { get; set; }
         public string UserName { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string Role { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
         public int ReputationScore { get; set; }
         public bool IsBanned { get; set; }
         public DateTime CreatedAt { get; set; }

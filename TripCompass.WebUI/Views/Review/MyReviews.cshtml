@@ -26,9 +26,14 @@
                 <option value="">All Categories</option>
                 @foreach (var c in ViewBag.Categories)
                 {
-                    <option value="@c.CategoryId" selected="@(Model.CategoryId == c.CategoryId)">
-                        @c.Name
-                    </option>
+                    @if (Model.CategoryId == c.CategoryId)
+                    {
+                        <option value="@c.CategoryId" selected>@c.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@c.CategoryId">@c.Name</option>
+                    }
                 }
             </select>
 
@@ -36,12 +41,24 @@
                 <option value="">All Ratings</option>
                 @for (int i = 5; i >= 1; i--)
                 {
-                    <option value="@i" selected="@(Model.Rating == i)">
-                        @{
-                            var stars = new string('★', i);
-                        }
-                        @stars
-                    </option>
+                    @if (Model.Rating == i)
+                    {
+                        <option value="@i" selected>
+                            @{
+                                var stars = new string('★', i);
+                            }
+                            @stars
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="@i">
+                            @{
+                                var stars = new string('★', i);
+                            }
+                            @stars
+                        </option>
+                    }
                 }
             </select>
 

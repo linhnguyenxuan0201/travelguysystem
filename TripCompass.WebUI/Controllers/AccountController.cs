@@ -41,10 +41,30 @@ namespace TripCompass.WebUI.Controllers
         ========================= */
 
         [HttpGet, AllowAnonymous]
-        public IActionResult Login()
+        public async Task<IActionResult> Login(int? banned = null)
         {
+            if (banned == 1)
+            {
+                TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+            }
+
             if (User.Identity?.IsAuthenticated == true)
+            {
+                // Nếu user đã đăng nhập nhưng bị ban (cookie còn sống) -> đá ra ngay và báo lỗi
+                var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (long.TryParse(userIdStr, out var userId))
+                {
+                    var dbUser = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+                    if (dbUser == null || dbUser.IsBanned)
+                    {
+                        await HttpContext.SignOutAsync("TripCompassCookie");
+                        TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                        return RedirectToAction(nameof(Login));
+                    }
+                }
+
                 return RedirectToAction("Index", "Home");
+            }
 
             // Mặc định không hiển thị lỗi
             ViewBag.Error = null;
@@ -53,6 +73,31 @@ namespace TripCompass.WebUI.Controllers
             if (TempData["Error"] is string errorMessage)
             {
                 ViewBag.Error = errorMessage;
+            }
+
+            // Hiển thị thông báo thành công và thông tin admin (nếu có)
+            if (TempData["Success"] is string successMessage)
+            {
+                ViewBag.Success = successMessage;
+                ViewBag.AdminEmail = TempData["AdminEmail"] as string;
+                ViewBag.AdminPassword = TempData["AdminPassword"] as string;
+            }
+
+            return View();
+        }
+
+        [HttpGet, AllowAnonymous]
+        public async Task<IActionResult> Banned(int? b = null)
+        {
+            if (b == 1)
+            {
+                ViewBag.Error = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+            }
+
+            // Nếu vẫn còn cookie đăng nhập, sign-out để tránh tiếp tục sử dụng
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                await HttpContext.SignOutAsync("TripCompassCookie");
             }
 
             return View();
@@ -68,7 +113,15 @@ namespace TripCompass.WebUI.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            // Reload user with UserRoles to ensure they're loaded
+            // Check if admin from config (PasswordHash = "CONFIG_ADMIN", không lưu trong database)
+            if (user.PasswordHash == "CONFIG_ADMIN")
+            {
+                // Admin từ config - sign in trực tiếp, không cần reload từ database
+                await SignInUser(user, isConfigAdmin: true);
+                return RedirectToAction("Index", "Portal", new { area = "Admin" });
+            }
+
+            // Reload user with UserRoles to ensure they're loaded (chỉ cho users từ database)
             user = await _db.Users
                 .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
@@ -208,6 +261,107 @@ namespace TripCompass.WebUI.Controllers
             return Json(new { 
                 success = true, 
                 message = $"User {user.UserName} ({user.Email}) already has Admin role.{passwordMessage}" 
+            });
+        }
+
+        /* =========================
+           DEBUG: Test Password Verification
+           Access: /Account/TestPassword?email=admin@tripcompass.com&password=Admin@123
+        ========================= */
+        
+        [HttpGet, AllowAnonymous]
+        public async Task<IActionResult> TestPassword(string email = "admin@tripcompass.com", string password = "Admin@123")
+        {
+            var user = await _userRepository.GetByEmailAsync(email);
+            
+            if (user == null)
+            {
+                return Json(new { 
+                    success = false, 
+                    message = $"User not found: {email}",
+                    email = email
+                });
+            }
+
+            var result = new
+            {
+                success = false,
+                email = user.Email,
+                username = user.UserName,
+                userId = user.UserId,
+                passwordHash = user.PasswordHash != null ? user.PasswordHash.Substring(0, Math.Min(50, user.PasswordHash.Length)) + "..." : "NULL",
+                hashLength = user.PasswordHash?.Length ?? 0,
+                hashFormat = user.PasswordHash?.StartsWith("AQAAAA") == true ? "VALID" : "INVALID",
+                isPlaceholder = user.PasswordHash == "HASH_ADMIN" || 
+                               user.PasswordHash == "HASH_ADMIN_PLACEHOLDER" ||
+                               user.PasswordHash == "HASH_MOD" ||
+                               user.PasswordHash == "HASH_USER1" ||
+                               user.PasswordHash == "HASH_USER2" ||
+                               user.PasswordHash == "GOOGLE",
+                verificationResult = "NOT_TESTED"
+            };
+
+            // Test password verification
+            if (!string.IsNullOrEmpty(user.PasswordHash) && 
+                user.PasswordHash != "HASH_ADMIN" && 
+                user.PasswordHash != "HASH_ADMIN_PLACEHOLDER" &&
+                user.PasswordHash != "HASH_MOD" &&
+                user.PasswordHash != "HASH_USER1" &&
+                user.PasswordHash != "HASH_USER2" &&
+                user.PasswordHash != "GOOGLE")
+            {
+                try
+                {
+                    var isValid = _passwordHasher.Verify(user.PasswordHash, password);
+                    return Json(new
+                    {
+                        success = isValid,
+                        message = isValid 
+                            ? $"✓ Password verification SUCCESS! You can login with email: {email}, password: {password}"
+                            : $"✗ Password verification FAILED! Hash does not match password '{password}'. You need to update the password hash.",
+                        email = user.Email,
+                        username = user.UserName,
+                        userId = user.UserId,
+                        passwordHash = user.PasswordHash != null ? user.PasswordHash.Substring(0, Math.Min(50, user.PasswordHash.Length)) + "..." : "NULL",
+                        hashLength = user.PasswordHash?.Length ?? 0,
+                        hashFormat = user.PasswordHash?.StartsWith("AQAAAA") == true ? "VALID" : "INVALID",
+                        verificationResult = isValid ? "SUCCESS" : "FAILED",
+                        testPassword = password
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = $"✗ Password verification ERROR: {ex.Message}. Hash format may be corrupted.",
+                        email = user.Email,
+                        username = user.UserName,
+                        userId = user.UserId,
+                        passwordHash = user.PasswordHash != null ? user.PasswordHash.Substring(0, Math.Min(50, user.PasswordHash.Length)) + "..." : "NULL",
+                        hashLength = user.PasswordHash?.Length ?? 0,
+                        hashFormat = "ERROR",
+                        verificationResult = "ERROR",
+                        error = ex.Message,
+                        testPassword = password
+                    });
+                }
+            }
+
+            return Json(new
+            {
+                success = false,
+                message = $"✗ Password hash is placeholder or invalid. You need to update it using /Setup/GenerateHash?password={password}",
+                email = user.Email,
+                username = user.UserName,
+                userId = user.UserId,
+                passwordHash = user.PasswordHash ?? "NULL",
+                hashLength = 0,
+                hashFormat = "INVALID",
+                isPlaceholder = true,
+                verificationResult = "NOT_TESTED",
+                testPassword = password,
+                fixUrl = $"/Setup/GenerateHash?password={password}"
             });
         }
 
@@ -354,7 +508,7 @@ namespace TripCompass.WebUI.Controllers
            HELPER
         ========================= */
 
-        private async Task SignInUser(User user)
+        private async Task SignInUser(User user, bool isConfigAdmin = false)
         {
             var claims = new List<Claim>
             {
@@ -363,8 +517,20 @@ namespace TripCompass.WebUI.Controllers
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
-            foreach (var r in user.UserRoles)
-                claims.Add(new Claim(ClaimTypes.Role, r.Role.RoleName));
+            // Admin từ config - thêm role Admin trực tiếp
+            if (isConfigAdmin || user.PasswordHash == "CONFIG_ADMIN")
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
+            else
+            {
+                // Users từ database - lấy roles từ UserRoles
+                if (user.UserRoles != null)
+                {
+                    foreach (var r in user.UserRoles)
+                        claims.Add(new Claim(ClaimTypes.Role, r.Role.RoleName));
+                }
+            }
 
             var identity = new ClaimsIdentity(claims, "TripCompassCookie");
 
@@ -450,11 +616,12 @@ namespace TripCompass.WebUI.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            // Check if user already exists and is Admin - Admin cannot login with Google
+            // ✅ KIỂM TRA 1: Nếu user đã tồn tại và là Admin - KHÔNG cho phép đăng nhập bằng Google
+            // Admin phải đăng nhập bằng email/password để đảm bảo bảo mật
             var existingUser = await _userRepository.GetByEmailAsync(email);
             if (existingUser != null)
             {
-                // Reload with roles
+                // Reload với roles để kiểm tra
                 existingUser = await _db.Users
                     .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
@@ -471,26 +638,33 @@ namespace TripCompass.WebUI.Controllers
             var user = await _loginService.LoginWithGoogleAsync(email, name ?? email.Split('@')[0]);
 
             // Reload user with UserRoles to ensure they're loaded
-            user = await _userRepository.GetByEmailAsync(email);
+            user = await _db.Users
+                .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Email == email);
+            
             if (user == null)
             {
                 TempData["Error"] = "Không xác thực được với Google. Vui lòng thử lại.";
                 return RedirectToAction(nameof(Login));
             }
 
-            // Check if user is banned
-            if (user.IsBanned)
+            // ✅ DOUBLE CHECK: Admin cannot login with Google (safety check after user creation/retrieval)
+            if (user.UserRoles.Any(r => r.Role.RoleName == "Admin"))
             {
-                TempData["Error"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                TempData["Error"] = "Tài khoản Admin không thể đăng nhập bằng Google. Vui lòng sử dụng email và mật khẩu.";
                 return RedirectToAction(nameof(Login));
             }
 
+            // Check if user is banned
+            if (user.IsBanned)
+            {
+                // Cho đăng nhập nhưng sẽ hiển thị banner "bị khóa" trong layout
+                await SignInUser(user);
+                return LocalRedirect(returnUrl);
+            }
+
             await SignInUser(user);
-
-            // Redirect based on role (Admin should not reach here via Google, but just in case)
-            if (user.UserRoles.Any(r => r.Role.RoleName == "Admin"))
-                return RedirectToAction("Index", "Portal", new { area = "Admin" });
-
             return LocalRedirect(returnUrl);
         }
         /* =========================

@@ -47,7 +47,14 @@
                             <option value="">Tất cả tỉnh thành</option>
                             @foreach (var prov in Model.Provinces)
                             {
-                                <option value="@prov" selected="@(Model.SelectedProvince == prov)">@prov</option>
+                                @if (Model.SelectedProvince == prov)
+                                {
+                                    <option value="@prov" selected>@prov</option>
+                                }
+                                else
+                                {
+                                    <option value="@prov">@prov</option>
+                                }
                             }
                         </select>
                     </div>
@@ -56,21 +63,21 @@
                         <label>Giá</label>
                         <select name="priceRange" class="filter-select">
                             <option value="">Tất cả mức giá</option>
-                            <option value="under-1m" selected="@(Model.SelectedPriceRange == "under-1m")">Dưới 1 triệu</option>
-                            <option value="1m-3m" selected="@(Model.SelectedPriceRange == "1m-3m")">1 - 3 triệu</option>
-                            <option value="3m-5m" selected="@(Model.SelectedPriceRange == "3m-5m")">3 - 5 triệu</option>
-                            <option value="over-5m" selected="@(Model.SelectedPriceRange == "over-5m")">Trên 5 triệu</option>
+                            @if (Model.SelectedPriceRange == "under-1m") { <option value="under-1m" selected>Dưới 1 triệu</option> } else { <option value="under-1m">Dưới 1 triệu</option> }
+                            @if (Model.SelectedPriceRange == "1m-3m") { <option value="1m-3m" selected>1 - 3 triệu</option> } else { <option value="1m-3m">1 - 3 triệu</option> }
+                            @if (Model.SelectedPriceRange == "3m-5m") { <option value="3m-5m" selected>3 - 5 triệu</option> } else { <option value="3m-5m">3 - 5 triệu</option> }
+                            @if (Model.SelectedPriceRange == "over-5m") { <option value="over-5m" selected>Trên 5 triệu</option> } else { <option value="over-5m">Trên 5 triệu</option> }
                         </select>
                     </div>
 
                     <div class="filter-item">
                         <label>Sắp xếp:</label>
                         <select name="sortBy" class="filter-select">
-                            <option value="popular" selected="@(Model.SortBy == "popular")">Phổ biến nhất</option>
-                            <option value="rating" selected="@(Model.SortBy == "rating")">Đánh giá cao nhất</option>
-                            <option value="price-low" selected="@(Model.SortBy == "price-low")">Giá thấp đến cao</option>
-                            <option value="price-high" selected="@(Model.SortBy == "price-high")">Giá cao đến thấp</option>
-                            <option value="newest" selected="@(Model.SortBy == "newest")">Mới nhất</option>
+                            @if (Model.SortBy == "popular") { <option value="popular" selected>Phổ biến nhất</option> } else { <option value="popular">Phổ biến nhất</option> }
+                            @if (Model.SortBy == "rating") { <option value="rating" selected>Đánh giá cao nhất</option> } else { <option value="rating">Đánh giá cao nhất</option> }
+                            @if (Model.SortBy == "price-low") { <option value="price-low" selected>Giá thấp đến cao</option> } else { <option value="price-low">Giá thấp đến cao</option> }
+                            @if (Model.SortBy == "price-high") { <option value="price-high" selected>Giá cao đến thấp</option> } else { <option value="price-high">Giá cao đến thấp</option> }
+                            @if (Model.SortBy == "newest") { <option value="newest" selected>Mới nhất</option> } else { <option value="newest">Mới nhất</option> }
                         </select>
                     </div>
                 </div>

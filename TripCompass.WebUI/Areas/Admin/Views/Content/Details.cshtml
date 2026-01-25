@@ -9,192 +9,358 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<!-- PAGE HEADER -->
-<div class="mb-4 pb-3 border-bottom">
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <h1 class="h4 fw-semibold mb-1">@Model.Title</h1>
-            <div class="text-muted small">
-                Author: <strong>@Model.AuthorName</strong> • Created @Model.CreatedAt.ToString("dd/MM/yyyy")
-                @if ( Model.PublishedAt.HasValue )
-                {
-                    <span> • Published @Model.PublishedAt.Value.ToString("dd/MM/yyyy")</span>
-                }
-                @if (Model.IsDeleted)
-                {
-                    <span class="text-danger"> • Deleted</span>
-                }
-            </div>
-        </div>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-        <div class="d-flex gap-2 align-items-center">
-            @if (Model.IsDeleted)
-            {
-                <span class="badge bg-danger fs-6">🗑️ Deleted</span>
-            }
-            <span class="badge fs-6
-                @( Model.Status == PostStatus.Published ? "bg-success" :
-                                Model.Status == PostStatus.Pending ? "bg-warning text-dark" :
-                                Model.Status == PostStatus.Rejected ? "bg-danger" :
-                                Model.Status == PostStatus.Draft ? "bg-secondary" :
-                                Model.Status == PostStatus.Archived ? "bg-dark" : "bg-secondary" )">
-                @Model.Status
-            </span>
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --card-border-radius: 12px;
+    }
+
+    body {
+        background-color: #f9f9fc;
+    }
+
+    /* Custom Card Styling */
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        border-radius: var(--card-border-radius);
+        background: #fff;
+    }
+
+    .card-header-clean {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 1.75rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .card-title-clean {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #3f4254;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Content Preview Styling (Prose) */
+    .post-content-preview {
+        font-family: 'Inter', sans-serif;
+        color: #3f4254;
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+        .post-content-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .post-content-preview h1, .post-content-preview h2, .post-content-preview h3 {
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+    /* Soft Badges */
+    .badge-soft {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .badge-soft-success {
+        background: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .badge-soft-warning {
+        background: rgba(255, 193, 7, 0.1);
+        color: #b58900;
+    }
+
+    .badge-soft-danger {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .badge-soft-secondary {
+        background: #f1f1f4;
+        color: #7e8299;
+    }
+
+    .badge-soft-dark {
+        background: #3f4254;
+        color: #fff;
+    }
+
+    /* Metadata Icons */
+    .meta-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px dashed #eff2f5;
+    }
+
+        .meta-item:last-child {
+            border-bottom: none;
+        }
+
+    .meta-icon {
+        width: 36px;
+        height: 36px;
+        background: #f5f8fa;
+        color: #7e8299;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+
+    /* Danger Zone */
+    .bg-light-danger-custom {
+        background-color: #fff5f8;
+        border: 1px dashed #f1416c;
+    }
+
+    .bg-light-success-custom {
+        background-color: #e8fff3;
+        border: 1px dashed #50cd89;
+    }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center">
+        <a href="@Url.Action("Index", "Content", new { area = "Admin" })" class="btn btn-sm btn-light me-3">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 fw-bold text-dark mb-0">Post Review</h1>
+            <span class="text-muted small">ID: #@Model.PostId</span>
         </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        @if ( Model.IsDeleted )
+        {
+            <span class="badge badge-soft badge-soft-danger"><i class="fas fa-trash me-1"></i> Deleted</span>
+        }
+
+        @if ( Model.Status == PostStatus.Published )
+        {
+            <span class="badge badge-soft badge-soft-success">Published</span>
+        }
+        else if ( Model.Status == PostStatus.Pending )
+        {
+            <span class="badge badge-soft badge-soft-warning">Pending Approval</span>
+        }
+        else if ( Model.Status == PostStatus.Rejected )
+        {
+            <span class="badge badge-soft badge-soft-danger">Rejected</span>
+        }
+        else if ( Model.Status == PostStatus.Archived )
+        {
+            <span class="badge badge-soft badge-soft-dark">Archived</span>
+        }
+        else
+        {
+            <span class="badge badge-soft badge-soft-secondary">Draft</span>
+        }
     </div>
 </div>
 
-@if (TempData["Error"] != null)
+@if ( TempData["Error"] != null )
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <strong>Error:</strong> @TempData["Error"]
+    <div class="alert alert-dismissible bg-light-danger border border-danger border-dashed d-flex flex-column flex-sm-row w-100 p-5 mb-5">
+        <i class="fas fa-exclamation-circle text-danger fs-2 me-4 mb-5 mb-sm-0"></i>
+        <div class="d-flex flex-column pe-0 pe-sm-10">
+            <h5 class="mb-1">Error</h5>
+            <span>@TempData["Error"]</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-@if (TempData["Success"] != null)
+@if ( TempData["Success"] != null )
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["Success"]
+    <div class="alert alert-dismissible bg-light-success border border-success border-dashed d-flex flex-column flex-sm-row w-100 p-5 mb-5">
+        <i class="fas fa-check-circle text-success fs-2 me-4 mb-5 mb-sm-0"></i>
+        <div class="d-flex flex-column pe-0 pe-sm-10">
+            <h5 class="mb-1">Success</h5>
+            <span>@TempData["Success"]</span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-<div class="row g-4">
-    <!-- CONTENT -->
-    <div class="col-lg-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h6 class="fw-semibold mb-0">
-                    <i class="fas fa-file-alt me-2"></i>Content Preview
-                </h6>
+<div class="row g-5">
+    <div class="col-xl-8">
+        <div class="card card-flush h-100">
+            <div class="card-header-clean">
+                <h3 class="card-title-clean">
+                    <i class="fas fa-file-invoice text-muted me-2"></i> Content Preview
+                </h3>
+                <div class="d-flex align-items-center">
+                    <div class="symbol symbol-35px me-2">
+                        <div class="bg-light-primary text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width:35px; height:35px;">
+                            @Model.AuthorName.Substring(0, 1).ToUpper()
+                        </div>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark fs-7">@Model.AuthorName</div>
+                        <div class="text-muted fs-8">Created: @Model.CreatedAt.ToString("MMM dd, yyyy")</div>
+                    </div>
+                </div>
             </div>
+
             <div class="card-body">
+                <h1 class="fw-bold text-dark mb-4">@Model.Title</h1>
+
                 @if ( Model.Images.Any() )
                 {
-                    <img src="@Model.Images.First()" class="img-fluid rounded mb-4" />
+                    <div class="mb-4 position-relative">
+                        <img src="@Model.Images.First()" class="img-fluid rounded shadow-sm w-100" style="max-height: 400px; object-fit: cover;" alt="Featured Image" />
+                    </div>
                 }
 
-                <article class="post-content">
+                <div class="post-content-preview p-3 border rounded bg-light">
                     @Html.Raw(Model.Content)
-                </article>
+                </div>
             </div>
         </div>
 
         @if ( !string.IsNullOrWhiteSpace(Model.ModerationNote) )
         {
-            <div class="alert alert-warning mt-4">
-                <strong>Moderation Note:</strong><br />
-                @Model.ModerationNote
+            <div class="alert alert-warning mt-4 d-flex align-items-start border-0 shadow-sm">
+                <i class="fas fa-sticky-note fs-4 me-3 mt-1 text-warning"></i>
+                <div>
+                    <strong class="d-block mb-1">Previous Moderation Note:</strong>
+                    @Model.ModerationNote
+                </div>
             </div>
         }
     </div>
 
-    <!-- SIDEBAR -->
-    <div class="col-lg-4">
-        <!-- ACTIONS -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white">
-                <h6 class="fw-semibold mb-0">
-                    <i class="fas fa-gavel me-2"></i>Moderation Actions
-                </h6>
-            </div>
-            <div class="card-body">
-                <form asp-action="ChangeStatus" method="post">
-                    <input type="hidden" name="PostId" value="@Model.PostId" />
+    <div class="col-xl-4">
+        <form asp-action="ChangeStatus" method="post">
+            <input type="hidden" name="PostId" value="@Model.PostId" />
 
-                    <div class="mb-3">
-                        <label for="NewStatus" class="form-label fw-semibold">
-                            <i class="fas fa-tag me-2"></i>Change Status
-                        </label>
-                        <select name="NewStatus" id="NewStatus" class="form-select form-select-lg">
-                            <option value="">-- Select New Status --</option>
+            <div class="card card-flush mb-4">
+                <div class="card-header-clean">
+                    <h3 class="card-title-clean">
+                        <i class="fas fa-tasks text-muted me-2"></i> Workflow
+                    </h3>
+                </div>
+                <div class="card-body pt-3">
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Change Status</label>
+                        <select name="NewStatus" class="form-select form-select-solid bg-light fw-bold">
+                            <option value="">Select Action...</option>
                             @{
                                 var validStatuses = PostStatusWorkflow.GetValidNextStatuses(Model.Status);
                             }
-                            @foreach (var status in validStatuses)
+                            @foreach ( var status in validStatuses )
                             {
-                                var statusLabel = status switch
+                                var label = status switch
                                 {
-                                    PostStatus.Draft => "📝 Draft",
-                                    PostStatus.Pending => "🟡 Pending Approval",
-                                    PostStatus.Published => "🟢 Published",
-                                    PostStatus.Rejected => "🔴 Rejected",
-                                    PostStatus.Archived => "📦 Archived",
+                                    PostStatus.Draft => "Draft",
+                                    PostStatus.Pending => "Pending Approval",
+                                    PostStatus.Published => "Publish Post",
+                                    PostStatus.Rejected => "Reject Post",
+                                    PostStatus.Archived => "Archive",
                                     _ => status.ToString()
                                 };
-                                <option value="@((int)status)">@statusLabel</option>
+                                <option value="@((int)status)">@label</option>
                             }
                         </select>
-                        <small class="form-text text-muted">
-                            Current status: <strong>@Model.Status</strong>
-                            @if (validStatuses != null && validStatuses.Any())
-                            {
-                                <text>
-                                <br />Valid transitions: @string.Join(", ", validStatuses.Select(s => s.ToString()))
-                                </text>
-                            }
-                        </small>
+                        <div class="form-text text-muted small mt-2">
+                            Current: <strong class="text-dark">@Model.Status</strong>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        @if (!Model.IsDeleted)
-                        {
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="IsDeleted" id="IsDeleted" value="true" />
-                                <label class="form-check-label text-danger" for="IsDeleted">
-                                    <i class="fas fa-trash me-2"></i>Soft Delete (can be restored)
-                                </label>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="IsDeleted" id="RestoreDeleted" value="false" />
-                                <label class="form-check-label text-success" for="RestoreDeleted">
-                                    <i class="fas fa-undo me-2"></i>Restore from Deleted
-                                </label>
-                            </div>
-                            <small class="text-muted">Post is currently deleted. Check to restore.</small>
-                        }
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Internal Note</label>
+                        <textarea name="ModerationNote" class="form-control bg-light" rows="3" placeholder="Reason for rejection or approval notes..."></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="ModerationNote" class="form-label fw-semibold">
-                            <i class="fas fa-sticky-note me-2"></i>Moderation Note (Optional)
-                        </label>
-                        <textarea name="ModerationNote" id="ModerationNote" class="form-control"
-                                  rows="3" placeholder="Reason / internal note..."></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-save me-2"></i>Update Status
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="fas fa-check-circle me-2"></i> Update Status
                     </button>
-                </form>
+                </div>
             </div>
-        </div>
 
-        <!-- METADATA -->
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h6 class="fw-semibold mb-0">
-                    <i class="fas fa-info-circle me-2"></i>Metadata
-                </h6>
+            <div class="card card-flush mb-4 @(Model.IsDeleted ? "bg-light-success-custom" : "bg-light-danger-custom")">
+                <div class="card-body p-4">
+                    @if ( !Model.IsDeleted )
+                    {
+                        <div class="form-check form-switch d-flex align-items-center">
+                            <input class="form-check-input me-3 h-25px w-45px" type="checkbox" name="IsDeleted" value="true" id="softDeleteSwitch">
+                            <label class="form-check-label" for="softDeleteSwitch">
+                                <span class="fw-bold text-danger d-block">Soft Delete</span>
+                                <span class="small text-muted">Post will be hidden but recoverable.</span>
+                            </label>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="form-check form-switch d-flex align-items-center">
+                            <input class="form-check-input me-3 h-25px w-45px" type="checkbox" name="IsDeleted" value="false" id="restoreSwitch">
+                            <label class="form-check-label" for="restoreSwitch">
+                                <span class="fw-bold text-success d-block">Restore Post</span>
+                                <span class="small text-muted">Recover this post from trash.</span>
+                            </label>
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="card-body small">
-                <dl class="row mb-0">
-                    <dt class="col-5">Views</dt>
-                    <dd class="col-7">@Model.ViewCount</dd>
+        </form>
 
-                    <dt class="col-5">Likes</dt>
-                    <dd class="col-7">@Model.LikeCount</dd>
+        <div class="card card-flush">
+            <div class="card-header-clean">
+                <h3 class="card-title-clean">Post Metadata</h3>
+            </div>
+            <div class="card-body pt-2">
+                <div class="meta-item">
+                    <div class="meta-icon"><i class="fas fa-eye"></i></div>
+                    <div class="d-flex flex-column">
+                        <span class="text-muted fs-8 fw-bold text-uppercase">Total Views</span>
+                        <span class="text-dark fw-bold fs-6">@Model.ViewCount.ToString("N0")</span>
+                    </div>
+                </div>
 
-                    <dt class="col-5">SEO Title</dt>
-                    <dd class="col-7">@Model.SeoTitle ?? "—"</dd>
+                <div class="meta-item">
+                    <div class="meta-icon"><i class="fas fa-heart"></i></div>
+                    <div class="d-flex flex-column">
+                        <span class="text-muted fs-8 fw-bold text-uppercase">Likes</span>
+                        <span class="text-dark fw-bold fs-6">@Model.LikeCount.ToString("N0")</span>
+                    </div>
+                </div>
 
-                    <dt class="col-5">Slug</dt>
-                    <dd class="col-7">@Model.Slug ?? "—"</dd>
-                </dl>
+                <div class="meta-item">
+                    <div class="meta-icon"><i class="fas fa-link"></i></div>
+                    <div class="d-flex flex-column" style="overflow: hidden;">
+                        <span class="text-muted fs-8 fw-bold text-uppercase">Slug</span>
+                        <span class="text-dark fw-bold fs-7 text-truncate" title="@Model.Slug">@Model.Slug</span>
+                    </div>
+                </div>
+
+                <div class="meta-item">
+                    <div class="meta-icon"><i class="fas fa-globe"></i></div>
+                    <div class="d-flex flex-column">
+                        <span class="text-muted fs-8 fw-bold text-uppercase">Published At</span>
+                        <span class="text-dark fw-bold fs-7">
+                            @(Model.PublishedAt.HasValue? Model.PublishedAt.Value.ToString("dd MMM yyyy HH:mm") : "Not Published")
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

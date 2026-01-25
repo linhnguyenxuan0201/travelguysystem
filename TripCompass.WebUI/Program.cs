@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 using TripCompass.Application.Auth;
 using TripCompass.Application.Common.Security;
 using TripCompass.Application.Interfaces;
@@ -41,6 +44,9 @@ builder.Services
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/Login";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
+
+        // Lưu ý: Không revoke cookie khi user bị ban, vì yêu cầu là vẫn cho đăng nhập
+        // và hiển thị banner "tài khoản bị khóa" trong UI.
     })
     .AddGoogle("Google", options =>
     {
@@ -63,10 +69,15 @@ builder.Services.AddInfrastructure(builder.Configuration);
 // 👉 Application services (không thuộc Infrastructure)
 builder.Services.AddScoped<LoginService>();
 
+// 👉 Admin Config từ appsettings.json
+builder.Services.Configure<TripCompass.Application.Common.Security.AdminConfig>(
+    builder.Configuration.GetSection("Authentication:Admin"));
+
 // ✅ MEDIATR
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Dashboard.GetDashboardStats.GetDashboardStatsHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Users.GetUsers.GetUsersHandler).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.ActivityHistory.GetActivityHistory.GetActivityHistoryHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Posts.CreatePost.CreatePostHandler).Assembly);
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Comments.CreateComment.CreateCommentHandler).Assembly);
 });
@@ -112,6 +123,9 @@ app.UseRouting();
 // ⚠️ BẮT BUỘC
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Lưu ý: Không sign-out/redirect khi user bị ban, vì yêu cầu là vẫn cho đăng nhập
+// và hiển thị banner "tài khoản bị khóa" trong UI.
 
 app.MapControllerRoute(
     name: "areas",

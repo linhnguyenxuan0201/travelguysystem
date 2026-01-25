@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml"; // Đảm bảo dùng Layout chung
+
     int currentPage = ViewBag.CurrentPage;
     int totalPages = ViewBag.TotalPages;
     string searchTerm = ViewBag.SearchTerm;
@@ -9,165 +11,249 @@
     string selectedRole = ViewBag.Role;
 }
 
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
 
 <style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-bg: #f9f9fc;
+    }
+
     body {
-        background-color: #f4f6f9;
+        background-color: var(--bs-body-bg);
+        color: #3f4254;
     }
 
-    .page-header h3 {
-        margin-bottom: 4px;
-    }
-
-    .card {
-        border-radius: 14px;
+    /* Card Styling */
+    .card-flush {
         border: none;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
     }
 
-    table th {
-        font-size: 0.75rem;
+    /* Table Styling */
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #6c757d;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
     }
 
-    table td {
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
         vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
     }
 
-    .user-name {
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+
+    /* User Avatar Symbol */
+    .symbol-circle {
+        width: 40px;
+        height: 40px;
+        background-color: #f3f6f9;
+        color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-right: 12px;
+        text-transform: uppercase;
+    }
+
+    /* Form Controls embedded in table */
+    .form-select-table {
+        background-color: #fff;
+        border: 1px solid #e4e6ef;
+        color: #5e6278;
+        font-weight: 500;
+        font-size: 0.85rem;
+        padding: 0.4rem 2rem 0.4rem 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .form-select-table:focus {
+            border-color: #b5b5c3;
+            box-shadow: none;
+            background-color: #f9f9fc;
+        }
+
+    /* Specific Colors for Roles/Status in Select */
+    .role-admin {
+        color: #7239ea;
         font-weight: 600;
     }
 
-    .badge-role {
-        background-color: #e9ecef;
-        color: #495057;
+    .role-mod {
+        color: #009ef7;
+        font-weight: 600;
     }
 
-    .pagination .page-item.active .page-link {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
+    .role-staff {
+        color: #50cd89;
+        font-weight: 600;
+    }
+
+    .status-banned {
+        color: #f1416c;
+        font-weight: 600;
     }
 </style>
 
-<div class="container-fluid p-4">
-
-    <!-- HEADER -->
-    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light me-3 text-muted">
+            <i class="fas fa-arrow-left"></i>
+        </a>
         <div>
-            <h3 class="fw-bold">User Management</h3>
-            <small class="text-muted">Manage users, roles and account status</small>
+            <h1 class="fw-bold text-dark fs-3 mb-1">User Management</h1>
+            <span class="text-muted fw-semibold fs-7">Manage accounts, roles, and permissions</span>
         </div>
+    </div>
+</div>
 
-        <!-- FILTER -->
-        <form method="get" class="d-flex gap-2">
-            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                <option value="">All Status</option>
-                <option value="active" @(status == "active" ? "selected" : "")>Active</option>
-                <option value="banned" @(status == "banned" ? "selected" : "")>Banned</option>
-            </select>
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fs-7 fw-bold text-gray-700">Search User</label>
+                    <div class="position-relative">
+                        <span class="position-absolute top-50 translate-middle-y ms-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" name="searchTerm"
+                               class="form-control form-control-solid bg-light border-0 ps-5"
+                               placeholder="Name, Email or ID..."
+                               value="@searchTerm" />
+                    </div>
+                </div>
 
-            <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
-                <option value="">All Roles</option>
-                <option value="Admin" @(selectedRole == "Admin" ? "selected" : "")>Admin</option>
-                <option value="Moderator" @(selectedRole == "Moderator" ? "selected" : "")>Moderator</option>
-                <option value="User" @(selectedRole == "User" ? "selected" : "")>User</option>
-            </select>
+                <div class="col-md-3">
+                    <label class="form-label fs-7 fw-bold text-gray-700">Role</label>
+                    <select name="role" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Roles</option>
+                        <option value="Admin" selected="@(selectedRole == "Admin")">🛡️ Admin</option>
+                        <option value="Moderator" selected="@(selectedRole == "Moderator")">⚖️ Moderator</option>
+                        <option value="Staff" selected="@(selectedRole == "Staff")">💼 Staff</option>
+                        <option value="User" selected="@(selectedRole == "User")">👤 User</option>
+                    </select>
+                </div>
 
-            <input type="text"
-                   name="searchTerm"
-                   class="form-control form-control-sm"
-                   placeholder="Search user..."
-                   value="@searchTerm" />
+                <div class="col-md-3">
+                    <label class="form-label fs-7 fw-bold text-gray-700">Status</label>
+                    <select name="status" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="Active" selected="@(status == "Active")">🟢 Active</option>
+                        <option value="Banned" selected="@(status == "Banned")">🔴 Banned</option>
+                    </select>
+                </div>
 
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-search me-1"></i>Search
-            </button>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        Filter
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
-    <!-- TABLE -->
-    <div class="card">
-        <div class="card-body p-0">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
                     <tr>
-                        <th class="ps-3">ID</th>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Roles</th>
+                        <th style="min-width: 250px;">User Profile</th>
+                        <th style="min-width: 150px;">Role</th>
+                        <th style="min-width: 150px;">Status</th>
                         <th>Reputation</th>
-                        <th>Status</th>
-                        <th>Joined</th>
-                        <th class="text-end pe-3">Actions</th>
+                        <th class="text-end">Joined Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ( var user in Model )
+                    @if ( Model.Any() )
+                    {
+                        @foreach ( var user in Model )
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol-circle bg-light-primary text-primary">
+                                            @(string.IsNullOrEmpty(user.UserName) ? "?" : user.UserName.Substring(0, 1))
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-dark fw-bold mb-1">@user.UserName</span>
+                                            <span class="text-muted fs-8">@user.Email</span>
+                                            <span class="text-muted fs-9 text-uppercase mt-1">ID: @user.UserId</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <form asp-action="ChangeRole" method="post">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        @Html.AntiForgeryToken()
+                                        <select name="role" class="form-select form-select-table form-select-sm @(user.Role == "Admin" ? "role-admin" : user.Role == "Moderator" ? "role-mod" : user.Role == "Staff" ? "role-staff" : "")" onchange="confirmChange(this, 'role')">
+                                            <option value="Admin" selected="@(user.Role == "Admin")">Admin</option>
+                                            <option value="Moderator" selected="@(user.Role == "Moderator")">Moderator</option>
+                                            <option value="Staff" selected="@(user.Role == "Staff")">Staff</option>
+                                            <option value="User" selected="@(user.Role == "User")">User</option>
+                                        </select>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <form asp-action="ChangeStatus" method="post">
+                                        <input type="hidden" name="userId" value="@user.UserId" />
+                                        @Html.AntiForgeryToken()
+                                        <select name="status" class="form-select form-select-table form-select-sm @(user.Status == "Banned" ? "status-banned" : "text-success")" onchange="confirmChange(this, 'status')">
+                                            <option value="Active" selected="@(user.Status == "Active")">Active</option>
+                                            <option value="Banned" selected="@(user.Status == "Banned")">Banned</option>
+                                        </select>
+                                    </form>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-star text-warning me-2 fs-6"></i>
+                                        <span class="fw-bold text-dark fs-6">@user.ReputationScore</span>
+                                    </div>
+                                </td>
+
+                                <td class="text-end">
+                                    <span class="text-muted fw-bold fs-7">@user.CreatedAt.ToString("dd MMM yyyy")</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
                     {
                         <tr>
-                            <td class="ps-3">@user.UserId</td>
-
-                            <td>
-                                <div class="user-name">@user.UserName</div>
-                            </td>
-
-                            <td>@user.Email</td>
-
-                            <td>
-                                @foreach ( var roleName in user.Roles.Split(',') )
-                                {
-                                    if ( !string.IsNullOrWhiteSpace(roleName) )
+                            <td colspan="5" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-25 display-3">
+                                        <i class="fas fa-users-slash"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No users found matching your search.</h5>
+                                    @if ( !string.IsNullOrEmpty(searchTerm) || !string.IsNullOrEmpty(status) || !string.IsNullOrEmpty(selectedRole) )
                                     {
-                                        <span class="badge badge-role me-1">@roleName.Trim()</span>
+                                        <a href="@Url.Action("Index")" class="btn btn-sm btn-light-primary mt-2">Clear Filters</a>
                                     }
-                                }
-                            </td>
-
-                            <td>
-                                <span class="fw-semibold">@user.ReputationScore</span>
-                            </td>
-
-                            <td>
-                                @if ( user.IsBanned )
-                                {
-                                    <span class="badge bg-danger">Banned</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success">Active</span>
-                                }
-                            </td>
-
-                            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
-
-                            <td class="text-end pe-3">
-                                @if ( user.IsBanned )
-                                {
-                                    <form asp-action="Unban"
-                                          asp-route-id="@user.UserId"
-                                          method="post"
-                                          class="d-inline">
-                                        <button type="submit"
-                                                class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('Unban this user?')">
-                                            <i class="fas fa-unlock me-1"></i>Unban
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <button type="button"
-                                            class="btn btn-sm btn-outline-danger"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#banModal"
-                                            onclick="setBanUserId(@user.UserId, '@user.UserName')">
-                                        <i class="fas fa-ban me-1"></i>Ban
-                                    </button>
-                                }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -175,75 +261,40 @@
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="card-footer bg-white">
-            <nav>
-                <ul class="pagination justify-content-center mb-0">
+        @if ( totalPages > 1 )
+        {
+            <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 pb-2">
+                <div class="text-muted small fw-semibold">
+                    Page <span class="text-dark fw-bold">@currentPage</span> of <span class="text-dark fw-bold">@totalPages</span>
+                </div>
+                <ul class="pagination pagination-sm m-0">
                     @for ( int i = 1; i <= totalPages; i++ )
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link"
-                               href="?page=@i&searchTerm=@searchTerm&status=@status&role=@selectedRole">
-                                @i
-                            </a>
+                            <a class="page-link" href="?page=@i&searchTerm=@searchTerm&status=@status&role=@selectedRole">@i</a>
                         </li>
                     }
                 </ul>
-            </nav>
-        </div>
-    </div>
-</div>
-
-<!-- BACK TO PORTAL -->
-<div class="container-fluid px-4 mb-4">
-    <a href="/Admin/Portal" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Quay lại Portal
-    </a>
-</div>
-
-<!-- BAN MODAL -->
-<div class="modal fade" id="banModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="post" asp-action="Ban" id="banForm">
-                <div class="modal-header">
-                    <h5 class="modal-title">Ban User</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <p>
-                        Are you sure you want to ban
-                        <strong id="banUserName"></strong>?
-                    </p>
-
-                    <div class="mb-3">
-                        <label class="form-label">Reason</label>
-                        <textarea class="form-control"
-                                  name="reason"
-                                  rows="3"
-                                  required></textarea>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
-                        Cancel
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        Ban User
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+        }
     </div>
 </div>
 
 <script>
-    function setBanUserId(id, name) {
-        document.getElementById('banForm').action = '/Admin/User/Ban/' + id;
-        document.getElementById('banUserName').innerText = name;
+    function confirmChange(selectElement, type) {
+        const value = selectElement.options[selectElement.selectedIndex].text;
+        const message = type === 'role'
+            ? `Are you sure you want to change this user's role to "${value}"?`
+            : `Are you sure you want to change this user's status to "${value}"?`;
+
+        if (confirm(message)) {
+            // Hiển thị trạng thái loading (optional)
+            selectElement.style.opacity = '0.5';
+            selectElement.style.pointerEvents = 'none';
+            selectElement.form.submit();
+        } else {
+            // Reset lại giá trị cũ nếu user cancel
+            location.reload();
+        }
     }
 </script>
