@@ -39,6 +39,8 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<Partner> Partners => Set<Partner>();
         public DbSet<PartnerDiscountCode> PartnerDiscountCodes => Set<PartnerDiscountCode>();
         public DbSet<PostBooking> PostBookings => Set<PostBooking>();
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<PremiumOrder> PremiumOrders => Set<PremiumOrder>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -324,6 +326,47 @@ namespace TripCompass.Infrastructure.Persistence
                 entity.HasIndex(e => e.PostId);
                 entity.HasIndex(e => e.CustomerUserId);
                 entity.HasIndex(e => e.PaymentStatus);
+            });
+
+            // ========================
+            // NOTIFICATION
+            // ========================
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasKey(e => e.NotificationId);
+                
+                entity.Property(e => e.Type)
+                      .IsRequired()
+                      .HasMaxLength(50);
+                
+                entity.Property(e => e.Title)
+                      .IsRequired()
+                      .HasMaxLength(200);
+                
+                entity.Property(e => e.Message)
+                      .IsRequired()
+                      .HasMaxLength(1000);
+                
+                entity.Property(e => e.Link)
+                      .HasMaxLength(500);
+                
+                entity.Property(e => e.ReferenceId)
+                      .IsRequired(false);
+                
+                entity.Property(e => e.IsRead)
+                      .HasDefaultValue(false);
+                
+                entity.Property(e => e.CreatedAt)
+                      .HasDefaultValueSql("GETUTCDATE()");
+                
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                
+                // Index for performance
+                entity.HasIndex(e => new { e.UserId, e.IsRead });
+                entity.HasIndex(e => e.CreatedAt);
             });
 
             // ========================

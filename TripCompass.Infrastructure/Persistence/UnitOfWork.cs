@@ -1,4 +1,6 @@
-﻿using TripCompass.Application.Interfaces;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using TripCompass.Application.Interfaces;
 using TripCompass.Application.Interfaces.Repositories;
 
 namespace TripCompass.Infrastructure.Persistence
@@ -28,9 +30,9 @@ namespace TripCompass.Infrastructure.Persistence
             UserAvatars = userAvatars;
         }
 
-        public async Task SaveChangesAsync()
+        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(cancellationToken);
         }
     }
 }

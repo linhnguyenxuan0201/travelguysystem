@@ -11,6 +11,7 @@ using TripCompass.Infrastructure.Persistence;
 using TripCompass.Infrastructure.Repositories;
 using TripCompass.Infrastructure.Security;
 using TripCompass.Infrastructure.Services;
+using TripCompass.WebUI.Services.Gemini;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,13 +22,26 @@ var builder = WebApplication.CreateBuilder(args);
 // MVC
 builder.Services.AddControllersWithViews();
 
+// Gemini (LLM)
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddHttpClient<IGeminiClient, GeminiClient>();
+
 /* =========================
    DATABASE
 ========================= */
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql =>
+        {
+            // Tránh lỗi timeout/temporary network issues khi SQL Server phản hồi chậm
+            sql.CommandTimeout(60);
+            sql.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null);
+        }));
 
 /* =========================
    AUTHENTICATION + AUTHORIZATION

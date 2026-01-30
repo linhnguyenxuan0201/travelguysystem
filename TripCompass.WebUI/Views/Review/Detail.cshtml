@@ -791,6 +791,254 @@
     .btn-directions:active {
         transform: scale(0.98);
     }
+
+    /* CHAT MODAL */
+    .chat-modal {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 380px;
+        height: 600px;
+        background: #18191a;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        z-index: 10000;
+        flex-direction: column;
+        overflow: hidden;
+        animation: slideUp 0.3s ease-out;
+    }
+
+    .chat-modal.active {
+        display: flex;
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .chat-header {
+        background: #242526;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #3a3b3c;
+    }
+
+    .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-header-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .chat-header-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-header-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #e4e6eb;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chat-header-status {
+        font-size: 12px;
+        color: #b0b3b8;
+    }
+
+    .chat-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chat-header-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: #b0b3b8;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: background 0.2s;
+    }
+
+    .chat-header-btn:hover {
+        background: #3a3b3c;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        background: #18191a;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: #242526;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #3a3b3c;
+        border-radius: 4px;
+    }
+
+    .chat-message {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .chat-message.sent {
+        flex-direction: row-reverse;
+    }
+
+    .chat-message-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .chat-message-bubble {
+        max-width: 70%;
+        padding: 8px 12px;
+        border-radius: 18px;
+        font-size: 14px;
+        line-height: 1.4;
+        word-wrap: break-word;
+    }
+
+    .chat-message.received .chat-message-bubble {
+        background: #242526;
+        color: #e4e6eb;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-message.sent .chat-message-bubble {
+        background: #0084ff;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .chat-input-container {
+        background: #242526;
+        padding: 12px;
+        border-top: 1px solid #3a3b3c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chat-input-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        color: #b0b3b8;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+
+    .chat-input-btn:hover {
+        background: #3a3b3c;
+    }
+
+    .chat-input-field {
+        flex: 1;
+        background: #3a3b3c;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 16px;
+        color: #e4e6eb;
+        font-size: 14px;
+        outline: none;
+        min-height: 36px;
+        max-height: 100px;
+        resize: none;
+        font-family: inherit;
+    }
+
+    .chat-input-field::placeholder {
+        color: #b0b3b8;
+    }
+
+    .btn-chat-partner {
+        width: 100%;
+        background: #0084ff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-chat-partner:hover {
+        background: #0066cc;
+    }
+
+    .btn-chat-partner:active {
+        transform: scale(0.98);
+    }
+
+    .chat-empty {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #b0b3b8;
+        font-size: 14px;
+        text-align: center;
+        padding: 20px;
+    }
 </style>
 
 @Html.AntiForgeryToken()
@@ -974,6 +1222,13 @@
                         <span class="info-icon">🤝</span>
                         <span class="info-text">Sản phẩm do đối tác cung cấp</span>
                     </div>
+                    
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <button type="button" class="btn-chat-partner" onclick="openPartnerChat(@Model.AuthorId, '@Model.AuthorName')">
+                            💬 Chat với đối tác
+                        </button>
+                    }
 
                     <form id="partnerBookingForm" class="partner-booking-form">
                         @Html.AntiForgeryToken()
@@ -1085,6 +1340,36 @@
         <span id="currentImage">1</span> / <span id="totalImages">1</span>
     </div>
     <div class="gallery-thumbnails" id="galleryThumbnails"></div>
+</div>
+
+<!-- Chat Modal -->
+<div class="chat-modal" id="partnerChatModal">
+    <div class="chat-header">
+        <div class="chat-header-left">
+            <img id="chatPartnerAvatar" src="" alt="" class="chat-header-avatar" />
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="chatPartnerName"></div>
+                <div class="chat-header-status">Đang hoạt động</div>
+            </div>
+        </div>
+        <div class="chat-header-actions">
+            <button class="chat-header-btn" title="Gọi thoại">📞</button>
+            <button class="chat-header-btn" title="Gọi video">📹</button>
+            <button class="chat-header-btn" onclick="closePartnerChat()" title="Đóng">✕</button>
+        </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>
+    </div>
+    <div class="chat-input-container">
+        <button class="chat-input-btn" title="Ghi âm">🎤</button>
+        <button class="chat-input-btn" title="Gửi ảnh">🖼️</button>
+        <button class="chat-input-btn" title="Gửi sticker">😊</button>
+        <button class="chat-input-btn" title="Gửi GIF">GIF</button>
+        <textarea id="chatInput" class="chat-input-field" placeholder="Aa" rows="1"></textarea>
+        <button class="chat-input-btn" title="Emoji">😀</button>
+        <button class="chat-input-btn" id="chatSendBtn" title="Gửi" onclick="sendChatMessage()">👍</button>
+    </div>
 </div>
 
 <script>
@@ -1562,4 +1847,162 @@
             }
         }
     }
+
+    // Partner Chat Functions
+    let currentChatPartnerId = null;
+    let currentChatPartnerName = null;
+    let currentChatPartnerAvatar = null;
+    const currentUserAvatar = '@(User.Identity?.IsAuthenticated == true ? (ViewData["CurrentUserAvatar"]?.ToString() ?? "/images/default-avatar.png") : "/images/default-avatar.png")';
+
+    function openPartnerChat(partnerId, partnerName) {
+        currentChatPartnerId = partnerId;
+        currentChatPartnerName = partnerName;
+        currentChatPartnerAvatar = '@Model.AuthorAvatar';
+        
+        document.getElementById('chatPartnerName').textContent = partnerName;
+        document.getElementById('chatPartnerAvatar').src = currentChatPartnerAvatar;
+        document.getElementById('chatPartnerAvatar').alt = partnerName;
+        
+        document.getElementById('partnerChatModal').classList.add('active');
+        document.getElementById('chatInput').focus();
+        
+        // Load chat messages
+        loadChatMessages(partnerId);
+    }
+
+    function closePartnerChat() {
+        document.getElementById('partnerChatModal').classList.remove('active');
+        currentChatPartnerId = null;
+    }
+
+    async function loadChatMessages(partnerId) {
+        const messagesContainer = document.getElementById('chatMessages');
+        
+        try {
+            const response = await fetch(`/Chat/GetMessages?partnerId=${partnerId}`);
+            if (response.ok) {
+                const messages = await response.json();
+                renderChatMessages(messages);
+            } else {
+                // If API not ready, show empty state
+                messagesContainer.innerHTML = '<div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>';
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            messagesContainer.innerHTML = '<div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>';
+        }
+    }
+
+    function renderChatMessages(messages) {
+        const messagesContainer = document.getElementById('chatMessages');
+        
+        if (!messages || messages.length === 0) {
+            messagesContainer.innerHTML = '<div class="chat-empty">Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</div>';
+            return;
+        }
+        
+        messagesContainer.innerHTML = '';
+        
+        messages.forEach(msg => {
+            const isSent = msg.isSent || false;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isSent ? 'sent' : 'received'}`;
+            
+            messageDiv.innerHTML = `
+                <img src="${isSent ? currentUserAvatar : currentChatPartnerAvatar}" 
+                     alt="" class="chat-message-avatar" />
+                <div class="chat-message-bubble">${escapeHtml(msg.content)}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+        });
+        
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendChatMessage() {
+        if (!currentChatPartnerId) return;
+        
+        const input = document.getElementById('chatInput');
+        const content = input.value.trim();
+        
+        if (!content) return;
+        
+        const sendBtn = document.getElementById('chatSendBtn');
+        sendBtn.disabled = true;
+        
+        try {
+            const formData = new FormData();
+            formData.append('partnerId', currentChatPartnerId);
+            formData.append('content', content);
+            formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+            
+            const response = await fetch('/Chat/SendMessage', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                input.value = '';
+                input.style.height = 'auto';
+                
+                // Add message to UI immediately
+                const messagesContainer = document.getElementById('chatMessages');
+                const emptyDiv = messagesContainer.querySelector('.chat-empty');
+                if (emptyDiv) {
+                    emptyDiv.remove();
+                }
+                
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message sent';
+                messageDiv.innerHTML = `
+                    <img src="${currentUserAvatar}" 
+                         alt="" class="chat-message-avatar" />
+                    <div class="chat-message-bubble">${escapeHtml(content)}</div>
+                `;
+                messagesContainer.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                alert('Không thể gửi tin nhắn. Vui lòng thử lại.');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Có lỗi xảy ra khi gửi tin nhắn.');
+        } finally {
+            sendBtn.disabled = false;
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Auto-resize textarea
+    document.getElementById('chatInput')?.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    // Send message on Enter (Shift+Enter for new line)
+    document.getElementById('chatInput')?.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendChatMessage();
+        }
+    });
+
+    // Close chat on Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const chatModal = document.getElementById('partnerChatModal');
+            if (chatModal && chatModal.classList.contains('active')) {
+                closePartnerChat();
+            }
+        }
+    });
 </script>

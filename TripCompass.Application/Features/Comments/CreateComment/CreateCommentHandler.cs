@@ -14,17 +14,20 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         private readonly IUnitOfWork _uow;
         private readonly IApplicationDbContext _context;
         private readonly SentimentAnalysisService _sentimentService;
+        private readonly NotificationService _notificationService;
 
         public CreateCommentHandler(
             ICommentRepository repo, 
             IUnitOfWork uow, 
             IApplicationDbContext context,
-            SentimentAnalysisService sentimentService)
+            SentimentAnalysisService sentimentService,
+            NotificationService notificationService)
         {
             _repo = repo;
             _uow = uow;
             _context = context;
             _sentimentService = sentimentService;
+            _notificationService = notificationService;
         }
 
         public async Task Handle(CreateCommentCommand command, CancellationToken cancellationToken)
@@ -41,7 +44,25 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         );
 
         await _repo.AddAsync(comment);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
+
+        // Lấy thông tin post để thông báo cho author
+        var post = await _context.Posts.FindAsync(new object[] { command.PostId }, cancellationToken);
+        if (post != null && post.UserId != command.UserId) // Không thông báo nếu tự comment
+        {
+            var commenter = await _uow.Users.GetByIdAsync(command.UserId);
+            var commenterName = commenter?.UserName ?? "Ai đó";
+            
+            await _notificationService.CreateNotificationAsync(
+                post.UserId,
+                "NEW_COMMENT",
+                "Có bình luận mới",
+                $"{commenterName} đã bình luận vào bài viết \"{post.Title}\" của bạn",
+                $"/Review/Detail/{post.PostId}#comment-{comment.Id}",
+                comment.Id, // ReferenceId = CommentId
+                cancellationToken
+            );
+        }
 
         // Phân tích sentiment
         var sentiment = _sentimentService.Analyze(command.Content);
@@ -72,16 +93,27 @@ namespace TripCompass.Application.Features.Comments.CreateComment
 
         // Cập nhật coin (nếu có wallet)
         var wallet = await _uow.Wallets.GetByUserIdAsync(command.UserId);
-        if (wallet != null)
+        if (wallet != null && coinEarned > 0)
         {
             wallet.Balance = Math.Max(0, wallet.Balance + coinEarned); // Không cho âm
+            
+            // Thông báo cộng coin
+            await _notificationService.CreateNotificationAsync(
+                command.UserId,
+                "COIN_EARNED",
+                "Bạn đã nhận được coin!",
+                $"Bạn nhận được +{coinEarned} coin từ bình luận của bạn",
+                $"/Review/Detail/{command.PostId}#comment-{comment.Id}",
+                comment.Id, // ReferenceId = CommentId
+                cancellationToken
+            );
         }
 
         // Cập nhật uy tín
         user.ReputationScore = Math.Max(0, user.ReputationScore + reputationEarned);
         user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
 
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // Log activity
         await ActivityLogger.LogActivityAsync(

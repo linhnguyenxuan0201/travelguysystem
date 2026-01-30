@@ -21,17 +21,20 @@ namespace TripCompass.WebUI.Controllers
         private readonly ICurrentUserService _currentUser;
         private readonly AppDbContext _context;
         private readonly IMediator _mediator;
+        private readonly TripCompass.Application.Services.NotificationService _notificationService;
 
         public ReviewController(
             IPostRepository postRepository,
             ICurrentUserService currentUser,
             AppDbContext context,
-            IMediator mediator)
+            IMediator mediator,
+            TripCompass.Application.Services.NotificationService notificationService)
         {
             _postRepository = postRepository;
             _currentUser = currentUser;
             _context = context;
             _mediator = mediator;
+            _notificationService = notificationService;
         }
 
         // =========================
@@ -147,6 +150,19 @@ namespace TripCompass.WebUI.Controllers
 
             var userId = _currentUser.UserId;
 
+            // Load user with UserRoles to check if user has Partner role
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (user == null) return NotFound();
+
+            // Check if user has Partner role (case-insensitive)
+            var hasPartnerRole = user.UserRoles?
+                .Where(ur => ur.Role != null && !string.IsNullOrWhiteSpace(ur.Role.RoleName))
+                .Any(ur => string.Equals(ur.Role.RoleName, "Partner", StringComparison.OrdinalIgnoreCase)) ?? false;
+
             var post = new Domain.Entities.Post
             {
                 UserId = userId,
@@ -162,7 +178,8 @@ namespace TripCompass.WebUI.Controllers
                 ViewCount = 0,
                 LikeCount = 0,
                 IsDeleted = false,
-                Status = model.Status
+                Status = model.Status,
+                IsPartner = hasPartnerRole // Set IsPartner based on user's role
             };
 
             _context.Posts.Add(post);
@@ -209,16 +226,8 @@ namespace TripCompass.WebUI.Controllers
                 }
             }
 
-            // ---------- REPUTATION ----------
-            var user = await _context.Users.FirstAsync(u => u.UserId == userId);
-            int earnedScore = new Random().Next(50, 201);
-
-            user.ReputationScore += earnedScore;
-            user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
-
-            await _context.SaveChangesAsync();
-
-            TempData["Success"] = $"🎉 Bạn nhận được +{earnedScore} điểm uy tín!";
+            // Note: Reputation và coin sẽ được cộng khi bài viết được publish (trong ChangePostStatusHandler)
+            TempData["Success"] = "✅ Bài viết đã được tạo thành công! Bạn sẽ nhận được coin và điểm uy tín khi bài viết được duyệt.";
             return RedirectToAction(nameof(MyReviews));
         }
 
@@ -284,9 +293,17 @@ namespace TripCompass.WebUI.Controllers
             var post = await _context.Posts
                 .Include(p => p.PostCategories)
                 .Include(p => p.PostImages)
+                .Include(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(p => p.PostId == model.PostId && !p.IsDeleted);
 
             if (post == null) return NotFound();
+
+            // Check if author has Partner role (case-insensitive)
+            var authorHasPartnerRole = post.User?.UserRoles?
+                .Where(ur => ur.Role != null && !string.IsNullOrWhiteSpace(ur.Role.RoleName))
+                .Any(ur => string.Equals(ur.Role.RoleName, "Partner", StringComparison.OrdinalIgnoreCase)) ?? false;
 
             /* ===== UPDATE POST ===== */
             post.Title = model.Title;
@@ -297,6 +314,8 @@ namespace TripCompass.WebUI.Controllers
             post.Phone = model.Phone;
             post.ParkingInfo = model.ParkingInfo;
             post.Price = model.Price;
+            // Update IsPartner based on author's role
+            post.IsPartner = authorHasPartnerRole;
 
             /* ===== UPDATE CATEGORY ===== */
             _context.PostCategories.RemoveRange(post.PostCategories);
@@ -702,6 +721,27 @@ namespace TripCompass.WebUI.Controllers
                 SimilarPosts = similarPosts
             };
 
+            // Lấy avatar của user hiện tại (nếu đã đăng nhập) để dùng trong chat
+            string? currentUserAvatar = null;
+            try
+            {
+                var currentUserId = _currentUser.UserId;
+                if (currentUserId > 0)
+                {
+                    currentUserAvatar = await _context.UserAvatars
+                        .Where(a => a.UserId == currentUserId && a.IsActive)
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.AvatarUrl)
+                        .FirstOrDefaultAsync();
+                }
+            }
+            catch
+            {
+                // User chưa đăng nhập hoặc có lỗi
+            }
+            
+            ViewData["CurrentUserAvatar"] = currentUserAvatar ?? "/images/default-avatar.png";
+
             return View(vm);
         }
 
@@ -959,6 +999,79 @@ namespace TripCompass.WebUI.Controllers
             }
         }
 
+        // Helper method to extract province/city from full address
+        private string? ExtractProvince(string? location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+                return null;
+
+            // Try to find "Thành phố" (City) or "Tỉnh" (Province)
+            var cityIndex = location.IndexOf("Thành phố", StringComparison.OrdinalIgnoreCase);
+            var provinceIndex = location.IndexOf("Tỉnh", StringComparison.OrdinalIgnoreCase);
+
+            if (cityIndex >= 0)
+            {
+                // Extract "Thành phố [Name]" - get everything from "Thành phố" until the next comma
+                var startIndex = cityIndex;
+                var afterCity = location.Substring(startIndex);
+                var commaIndex = afterCity.IndexOf(',');
+                if (commaIndex > 0)
+                {
+                    return afterCity.Substring(0, commaIndex).Trim();
+                }
+                else
+                {
+                    // No comma found, get until postal code or end
+                    var cityPostalMatch = System.Text.RegularExpressions.Regex.Match(afterCity, @"\b\d{5}\b");
+                    if (cityPostalMatch.Success)
+                    {
+                        return afterCity.Substring(0, cityPostalMatch.Index).Trim();
+                    }
+                    return afterCity.Trim();
+                }
+            }
+            else if (provinceIndex >= 0)
+            {
+                // Extract "Tỉnh [Name]" - get everything from "Tỉnh" until the next comma
+                var startIndex = provinceIndex;
+                var afterProvince = location.Substring(startIndex);
+                var commaIndex = afterProvince.IndexOf(',');
+                if (commaIndex > 0)
+                {
+                    return afterProvince.Substring(0, commaIndex).Trim();
+                }
+                else
+                {
+                    // No comma found, get until postal code or end
+                    var provincePostalMatch = System.Text.RegularExpressions.Regex.Match(afterProvince, @"\b\d{5}\b");
+                    if (provincePostalMatch.Success)
+                    {
+                        return afterProvince.Substring(0, provincePostalMatch.Index).Trim();
+                    }
+                    return afterProvince.Trim();
+                }
+            }
+
+            // Fallback: try to extract the part before postal code (5 digits)
+            var postalCodeMatch = System.Text.RegularExpressions.Regex.Match(location, @"\b\d{5}\b");
+            if (postalCodeMatch.Success)
+            {
+                var beforePostal = location.Substring(0, postalCodeMatch.Index).Trim();
+                var parts = beforePostal.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    // Get the last part before postal code (usually province/city)
+                    var lastPart = parts[parts.Length - 1].Trim();
+                    // Remove common prefixes
+                    lastPart = lastPart.Replace("Phường", "").Replace("Quận", "").Replace("Huyện", "").Trim();
+                    if (!string.IsNullOrWhiteSpace(lastPart))
+                        return lastPart;
+                }
+            }
+
+            return null;
+        }
+
         // =========================
         // REVIEWS PAGE (PUBLIC)
         // =========================
@@ -979,13 +1092,20 @@ namespace TripCompass.WebUI.Controllers
             var categories = await _context.Categories.ToListAsync();
             vm.Categories = categories;
 
-            // Lấy tất cả provinces từ Location của posts
-            var provinces = await _context.Posts
+            // Lấy tất cả provinces từ Location của posts (chỉ lấy tỉnh/thành phố, không phải toàn bộ địa chỉ)
+            var allLocations = await _context.Posts
                 .Where(p => !p.IsDeleted && p.Status == PostStatus.Published && !string.IsNullOrEmpty(p.Location))
                 .Select(p => p.Location!)
                 .Distinct()
-                .OrderBy(l => l)
                 .ToListAsync();
+
+            var provinces = allLocations
+                .Select(loc => ExtractProvince(loc))
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Distinct()
+                .OrderBy(p => p)
+                .ToList()!;
+            
             vm.Provinces = provinces;
 
             // Tính stats
@@ -1023,11 +1143,10 @@ namespace TripCompass.WebUI.Controllers
                     p.Location != null && p.Location.Contains(search));
             }
 
-            // Apply province filter - exact match or starts with
+            // Apply province filter - check if Location contains the province
             if (!string.IsNullOrWhiteSpace(province))
             {
-                baseQuery = baseQuery.Where(p => p.Location != null &&
-                    (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
+                baseQuery = baseQuery.Where(p => p.Location != null && p.Location.Contains(province));
             }
 
             // Apply price range filter
@@ -1129,11 +1248,10 @@ namespace TripCompass.WebUI.Controllers
                     p.Location != null && p.Location.Contains(search));
             }
 
-            // Apply province filter to featured - exact match or starts with
+            // Apply province filter to featured - check if Location contains the province
             if (!string.IsNullOrWhiteSpace(province))
             {
-                featuredBaseQuery = featuredBaseQuery.Where(p => p.Location != null &&
-                    (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
+                featuredBaseQuery = featuredBaseQuery.Where(p => p.Location != null && p.Location.Contains(province));
             }
 
             // Apply price filter to featured
@@ -1185,8 +1303,7 @@ namespace TripCompass.WebUI.Controllers
                 // Apply province filter
                 if (!string.IsNullOrWhiteSpace(province))
                 {
-                    allFeaturedQuery = allFeaturedQuery.Where(p => p.Location != null &&
-                        (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
+                    allFeaturedQuery = allFeaturedQuery.Where(p => p.Location != null && p.Location.Contains(province));
                 }
 
                 // Apply price filter
@@ -1220,8 +1337,7 @@ namespace TripCompass.WebUI.Controllers
 
             // =========================
             // PARTNER POSTS
-            // Nếu category = null: lấy posts đối tác không có category
-            // Nếu category có giá trị: lấy posts đối tác thuộc category đó
+            // Luôn lấy posts đối tác, chỉ filter theo category nếu có
             // =========================
             var partnerBaseQuery = _context.Posts
                 .Include(p => p.PostCategories)
@@ -1231,53 +1347,19 @@ namespace TripCompass.WebUI.Controllers
                 .Where(p => !p.IsDeleted && p.Status == PostStatus.Published)
                 .Where(p => p.IsPartner);
 
-            // Apply category filter
-            if (string.IsNullOrWhiteSpace(category))
+            // Apply category filter (chỉ khi có category cụ thể)
+            if (!string.IsNullOrWhiteSpace(category))
             {
-                // "Tất cả": Lấy posts đối tác không có category
-                partnerBaseQuery = partnerBaseQuery.Where(p => !p.PostCategories.Any());
-            }
-            else
-            {
-                // Category cụ thể: Lấy posts đối tác thuộc category đó
                 var selectedCategory = categories.FirstOrDefault(c => c.Slug == category);
                 if (selectedCategory != null)
                 {
                     partnerBaseQuery = partnerBaseQuery.Where(p => p.PostCategories.Any(pc => pc.CategoryId == selectedCategory.CategoryId));
                 }
             }
+            // "Tất cả": Lấy TẤT CẢ posts đối tác (có hoặc không có category)
 
-            // Apply filters to partner
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                partnerBaseQuery = partnerBaseQuery.Where(p =>
-                    p.Title.Contains(search) ||
-                    p.Content.Contains(search) ||
-                    p.Location != null && p.Location.Contains(search));
-            }
-            if (!string.IsNullOrWhiteSpace(province))
-            {
-                partnerBaseQuery = partnerBaseQuery.Where(p => p.Location != null &&
-                    (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
-            }
-            if (!string.IsNullOrWhiteSpace(priceRange))
-            {
-                switch (priceRange)
-                {
-                    case "under-1m":
-                        partnerBaseQuery = partnerBaseQuery.Where(p => p.Price.HasValue && p.Price < 1000000);
-                        break;
-                    case "1m-3m":
-                        partnerBaseQuery = partnerBaseQuery.Where(p => p.Price.HasValue && p.Price >= 1000000 && p.Price < 3000000);
-                        break;
-                    case "3m-5m":
-                        partnerBaseQuery = partnerBaseQuery.Where(p => p.Price.HasValue && p.Price >= 3000000 && p.Price < 5000000);
-                        break;
-                    case "over-5m":
-                        partnerBaseQuery = partnerBaseQuery.Where(p => p.Price.HasValue && p.Price >= 5000000);
-                        break;
-                }
-            }
+            // KHÔNG áp dụng search/province/priceRange filter cho partner posts section
+            // Vì section này nên hiển thị tất cả posts đối tác để user dễ tìm thấy
 
             var partnerPosts = await partnerBaseQuery
                 .OrderByDescending(p => p.ReputationImpact)
@@ -1285,61 +1367,10 @@ namespace TripCompass.WebUI.Controllers
                 .Take(10)
                 .ToListAsync();
 
-            // Nếu "Tất cả" và không có posts đối tác không có category, lấy tất cả posts đối tác (có category cũng được)
-            if (string.IsNullOrWhiteSpace(category) && !partnerPosts.Any())
-            {
-                var allPartnerQuery = _context.Posts
-                    .Include(p => p.PostCategories)
-                        .ThenInclude(pc => pc.Category)
-                    .Include(p => p.PostImages)
-                    .Include(p => p.User)
-                    .Where(p => !p.IsDeleted && p.Status == PostStatus.Published)
-                    .Where(p => p.IsPartner);
-
-                // Apply search filter
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    allPartnerQuery = allPartnerQuery.Where(p =>
-                        p.Title.Contains(search) ||
-                        p.Content.Contains(search) ||
-                        p.Location != null && p.Location.Contains(search));
-                }
-
-                // Apply province filter
-                if (!string.IsNullOrWhiteSpace(province))
-                {
-                    allPartnerQuery = allPartnerQuery.Where(p => p.Location != null &&
-                        (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
-                }
-
-                // Apply price filter
-                if (!string.IsNullOrWhiteSpace(priceRange))
-                {
-                    switch (priceRange)
-                    {
-                        case "under-1m":
-                            allPartnerQuery = allPartnerQuery.Where(p => p.Price.HasValue && p.Price < 1000000);
-                            break;
-                        case "1m-3m":
-                            allPartnerQuery = allPartnerQuery.Where(p => p.Price.HasValue && p.Price >= 1000000 && p.Price < 3000000);
-                            break;
-                        case "3m-5m":
-                            allPartnerQuery = allPartnerQuery.Where(p => p.Price.HasValue && p.Price >= 3000000 && p.Price < 5000000);
-                            break;
-                        case "over-5m":
-                            allPartnerQuery = allPartnerQuery.Where(p => p.Price.HasValue && p.Price >= 5000000);
-                            break;
-                    }
-                }
-
-                partnerPosts = await allPartnerQuery
-                    .OrderByDescending(p => p.ReputationImpact)
-                    .ThenByDescending(p => p.ViewCount)
-                    .Take(10)
-                    .ToListAsync();
-            }
-
             vm.PartnerPosts = await MapToReviewItems(partnerPosts);
+            
+            // Debug: Log số lượng partner posts
+            // Console.WriteLine($"Partner posts count: {partnerPosts.Count}");
 
             // Apply category filter for category sections
             if (!string.IsNullOrWhiteSpace(category))
@@ -1410,8 +1441,7 @@ namespace TripCompass.WebUI.Controllers
                 // Apply province filter
                 if (!string.IsNullOrWhiteSpace(province))
                 {
-                    categoryPostsQuery = categoryPostsQuery.Where(p => p.Location != null &&
-                        (p.Location == province || p.Location.StartsWith(province + ",") || p.Location.StartsWith(province + " ")));
+                    categoryPostsQuery = categoryPostsQuery.Where(p => p.Location != null && p.Location.Contains(province));
                 }
 
                 // Apply price filter

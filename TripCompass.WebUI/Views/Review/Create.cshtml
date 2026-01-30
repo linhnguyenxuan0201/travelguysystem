@@ -372,7 +372,8 @@
 
         // Validate ONLY when CREATE
         if (!isEdit) {
-            if (ratingInput.value < 1 || locationSelected.value !== "true") {
+            const locationValue = input.value.trim();
+            if (ratingInput.value < 1 || !locationValue) {
                 e.preventDefault();
                 alert("⚠️ Vui lòng nhập đủ thông tin");
                 return;

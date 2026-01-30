@@ -260,27 +260,57 @@
 .pagination {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
     margin-top: 32px;
+    flex-wrap: wrap;
 }
 
 .page {
+    min-width: 40px;
+    height: 40px;
     padding: 8px 14px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
     text-decoration: none;
     color: #374151;
     background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
 }
 
-.page:hover {
+.page:hover:not(.active) {
     background: #f9fafb;
+    border-color: #9ca3af;
 }
 
 .page.active {
     background: #4F46E5;
     color: #fff;
     border-color: #4F46E5;
+    cursor: default;
+}
+
+.page[style*="opacity"] {
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        gap: 4px;
+    }
+    
+    .page {
+        min-width: 36px;
+        height: 36px;
+        padding: 6px 10px;
+        font-size: 13px;
+    }
 }
 
 /* STATUS BADGE */

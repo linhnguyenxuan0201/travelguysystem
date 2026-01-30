@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TripCompass.Application.Auth;
 using TripCompass.Application.Common;
 using TripCompass.Application.Interfaces;
+using TripCompass.Application.Interfaces.Repositories;
 using TripCompass.Domain.Entities;
 using TripCompass.Domain.Enums;
 
@@ -13,11 +14,19 @@ namespace TripCompass.Application.Features.Admin.Posts.ChangePostStatus
     {
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUser;
+        private readonly TripCompass.Application.Services.NotificationService _notificationService;
+        private readonly IUnitOfWork _uow;
 
-        public ChangePostStatusHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+        public ChangePostStatusHandler(
+            IApplicationDbContext context, 
+            ICurrentUserService currentUser,
+            TripCompass.Application.Services.NotificationService notificationService,
+            IUnitOfWork uow)
         {
             _context = context;
             _currentUser = currentUser;
+            _notificationService = notificationService;
+            _uow = uow;
         }
 
         public async Task<bool> Handle(ChangePostStatusCommand request, CancellationToken cancellationToken)
@@ -132,6 +141,92 @@ namespace TripCompass.Application.Features.Admin.Posts.ChangePostStatus
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            // Tạo thông báo cho author khi bài viết được duyệt hoặc từ chối
+            if (request.NewStatus.HasValue && post.UserId > 0)
+            {
+                if (request.NewStatus.Value == PostStatus.Published)
+                {
+                    // Chỉ cộng reputation và coin khi bài viết được publish
+                    // Kiểm tra xem bài viết đã từng được publish chưa (tránh cộng lại khi republish)
+                    bool isFirstTimePublished = oldStatus != PostStatus.Published;
+                    
+                    if (isFirstTimePublished)
+                    {
+                        // Load user
+                        var user = await _uow.Users.GetByIdAsync(post.UserId);
+                        if (user != null)
+                        {
+                            // Cộng reputation
+                            int earnedScore = new Random().Next(50, 201);
+                            user.ReputationScore += earnedScore;
+                            user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
+                            
+                            // Cộng coin (nếu có wallet)
+                            var wallet = await _uow.Wallets.GetByUserIdAsync(post.UserId);
+                            int coinEarned = 0;
+                            if (wallet != null)
+                            {
+                                coinEarned = new Random().Next(50, 201); // 50-200 coin
+                                wallet.Balance = Math.Max(0, wallet.Balance + coinEarned);
+                            }
+                            
+                            await _uow.SaveChangesAsync(cancellationToken);
+                            
+                            // Thông báo cộng reputation
+                            await _notificationService.CreateNotificationAsync(
+                                post.UserId,
+                                "REPUTATION_EARNED",
+                                "Bạn đã nhận được điểm uy tín!",
+                                $"Bạn nhận được +{earnedScore} điểm uy tín từ bài viết \"{post.Title}\"",
+                                $"/Review/Detail/{post.PostId}",
+                                post.PostId, // ReferenceId = PostId
+                                cancellationToken
+                            );
+                            
+                            // Thông báo cộng coin (nếu có)
+                            if (coinEarned > 0)
+                            {
+                                await _notificationService.CreateNotificationAsync(
+                                    post.UserId,
+                                    "COIN_EARNED",
+                                    "Bạn đã nhận được coin!",
+                                    $"Bạn nhận được +{coinEarned} coin từ bài viết \"{post.Title}\"",
+                                    $"/Review/Detail/{post.PostId}",
+                                    post.PostId, // ReferenceId = PostId
+                                    cancellationToken
+                                );
+                            }
+                        }
+                    }
+                    
+                    await _notificationService.CreateNotificationAsync(
+                        post.UserId,
+                        "POST_APPROVED",
+                        "Bài viết của bạn đã được duyệt",
+                        $"Bài viết \"{post.Title}\" của bạn đã được duyệt và xuất bản",
+                        $"/Review/Detail/{post.PostId}",
+                        post.PostId, // ReferenceId = PostId
+                        cancellationToken
+                    );
+                }
+                else if (request.NewStatus.Value == PostStatus.Rejected)
+                {
+                    var rejectionNote = !string.IsNullOrEmpty(request.ModerationNote) 
+                        ? request.ModerationNote 
+                        : "Bài viết không đáp ứng tiêu chuẩn của chúng tôi";
+                    
+                    await _notificationService.CreateNotificationAsync(
+                        post.UserId,
+                        "POST_REJECTED",
+                        "Bài viết của bạn đã bị từ chối",
+                        $"Bài viết \"{post.Title}\" của bạn đã bị từ chối. Lý do: {rejectionNote}",
+                        $"/Review/MyReviews",
+                        post.PostId, // ReferenceId = PostId
+                        cancellationToken
+                    );
+                }
+            }
+
             // Log action if status changed or delete/restore (chỉ log nếu có adminId hợp lệ)
             if ((request.NewStatus.HasValue || request.IsDeleted.HasValue) && adminId > 0)
             {
@@ -149,6 +244,15 @@ namespace TripCompass.Application.Features.Admin.Posts.ChangePostStatus
             }
 
             return true;
+        }
+        
+        private int CalculateReputationLevel(int score)
+        {
+            if (score >= 6000) return 5;
+            if (score >= 3000) return 4;
+            if (score >= 1500) return 3;
+            if (score >= 500) return 2;
+            return 1;
         }
     }
 }

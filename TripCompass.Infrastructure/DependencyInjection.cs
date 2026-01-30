@@ -54,6 +54,7 @@ namespace TripCompass.Infrastructure
 
             // ================= SERVICES =================
             services.AddScoped<SentimentAnalysisService>();
+            services.AddScoped<TripCompass.Application.Services.NotificationService>();
 
             return services;
         }

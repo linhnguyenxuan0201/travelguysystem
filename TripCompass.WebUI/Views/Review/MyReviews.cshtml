@@ -176,6 +176,70 @@
 
                 </div>
             }
+
+            @* PAGINATION *@
+            @if (Model.TotalPages > 1)
+            {
+                <div class="pagination">
+                    @* Previous button *@
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="?page=@(Model.CurrentPage - 1)&keyword=@Model.Keyword&categoryId=@Model.CategoryId&rating=@Model.Rating" 
+                           class="page">‹ Trước</a>
+                    }
+                    else
+                    {
+                        <span class="page" style="opacity: 0.5; cursor: not-allowed;">‹ Trước</span>
+                    }
+
+                    @* Page numbers *@
+                    @{
+                        int startPage = Math.Max(1, Model.CurrentPage - 2);
+                        int endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                    }
+
+                    @if (startPage > 1)
+                    {
+                        <a href="?page=1&keyword=@Model.Keyword&categoryId=@Model.CategoryId&rating=@Model.Rating" class="page">1</a>
+                        @if (startPage > 2)
+                        {
+                            <span class="page" style="border: none; cursor: default;">...</span>
+                        }
+                    }
+
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        if (i == Model.CurrentPage)
+                        {
+                            <span class="page active">@i</span>
+                        }
+                        else
+                        {
+                            <a href="?page=@i&keyword=@Model.Keyword&categoryId=@Model.CategoryId&rating=@Model.Rating" class="page">@i</a>
+                        }
+                    }
+
+                    @if (endPage < Model.TotalPages)
+                    {
+                        @if (endPage < Model.TotalPages - 1)
+                        {
+                            <span class="page" style="border: none; cursor: default;">...</span>
+                        }
+                        <a href="?page=@Model.TotalPages&keyword=@Model.Keyword&categoryId=@Model.CategoryId&rating=@Model.Rating" class="page">@Model.TotalPages</a>
+                    }
+
+                    @* Next button *@
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <a href="?page=@(Model.CurrentPage + 1)&keyword=@Model.Keyword&categoryId=@Model.CategoryId&rating=@Model.Rating" 
+                           class="page">Sau ›</a>
+                    }
+                    else
+                    {
+                        <span class="page" style="opacity: 0.5; cursor: not-allowed;">Sau ›</span>
+                    }
+                </div>
+            }
         }
 
     </div>

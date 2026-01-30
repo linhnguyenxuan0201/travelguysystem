@@ -10,6 +10,7 @@
     UserDropdownViewModel? userDropdown = null;
     bool isBanned = false;
     bool isPartner = false;
+    bool isPremiumUser = false;
 
     if (User.Identity?.IsAuthenticated == true)
     {
@@ -38,11 +39,20 @@
             }
         }
 
-        // Check banned status from DB (real-time)
+        // Check banned & premium status from DB (real-time)
         var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (long.TryParse(userIdStr, out var uid))
         {
-            isBanned = await Db.Users.AsNoTracking().AnyAsync(u => u.UserId == uid && u.IsBanned);
+            isBanned = await Db.Users.AsNoTracking()
+                .AnyAsync(u => u.UserId == uid && u.IsBanned);
+
+            var currentPlan = await Db.UserPlans.AsNoTracking()
+                .Where(x => x.UserId == uid && (x.ExpiredAt == null || x.ExpiredAt > DateTime.UtcNow))
+                .OrderByDescending(x => x.StartedAt)
+                .FirstOrDefaultAsync();
+
+            var planCode = currentPlan?.PlanCode ?? "Free";
+            isPremiumUser = planCode == "Pro" || planCode == "Enterprise";
         }
     }
 }
@@ -350,7 +360,7 @@
         </div>
     </footer>
 
-    <!-- Partnership & Upgrade Prompts (sidebar) -->
+    <!-- Partnership & Upgrade / Mascot Prompts (sidebar) -->
     <div class="tc-promo-stack" id="tcPromoStack">
         @if (!isPartner)
         {
@@ -366,16 +376,162 @@
             </div>
         }
 
-        <div class="tc-promo-card" id="upgradePrompt" style="display:none;">
-            <button class="tc-promo-close" data-target="upgradePrompt">&times;</button>
-            <div class="tc-promo-badge">Nâng cấp</div>
-            <h3>Nâng cấp lên phiên bản tiếp theo</h3>
-            <p>Mở khóa nhiều tính năng nâng cao hơn, ưu đãi riêng và hỗ trợ nhanh chóng.</p>
-            <div class="tc-promo-actions">
-                <a class="tc-promo-primary" href="/Account/Profile">Nâng cấp ngay</a>
-                <button class="tc-promo-secondary" data-dismiss="upgradePrompt">Không hiển thị lại</button>
+        @if (!isPremiumUser)
+        {
+            <div class="tc-promo-card" id="upgradePrompt" style="display:none;">
+                <button class="tc-promo-close" data-target="upgradePrompt">&times;</button>
+                <div class="tc-promo-badge">Nâng cấp</div>
+                <h3>Nâng cấp lên phiên bản tiếp theo</h3>
+                <p>Mở khóa nhiều tính năng nâng cao hơn, ưu đãi riêng và hỗ trợ nhanh chóng.</p>
+                <div class="tc-promo-actions">
+                    <a class="tc-promo-primary" href="/Home/Premium">Nâng cấp ngay</a>
+                    <button class="tc-promo-secondary" data-dismiss="upgradePrompt">Không hiển thị lại</button>
+                </div>
             </div>
-        </div>
+        }
+        else
+        {
+            <!-- Premium: show ONLY mascot (clickable) -->
+            <div class="tc-ai-mascot-shell" id="aiMascotShell">
+                <!-- AI Chatbox panel -->
+                <div class="tc-ai-chatbox" id="tcAiChatbox" style="display:none;">
+                    <div class="tc-ai-chatbox-header">
+                        <div class="tc-ai-chatbox-title">
+                            <span class="tc-ai-dot"></span>
+                            TripCompass AI
+                        </div>
+                        <button class="tc-ai-chatbox-close" type="button" onclick="toggleAiChatbox(false)" aria-label="Đóng">×</button>
+                    </div>
+
+                    <div class="tc-ai-chatbox-body" id="tcAiChatBody">
+                        <div class="tc-ai-msg tc-ai-msg-bot">
+                            <div class="tc-ai-bubble-msg">
+                                Xin chào 👋 Mình có thể giúp bạn gợi ý lịch trình, tìm khách sạn/quán ăn trong TripCompass.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tc-ai-quick" id="tcAiQuick">
+                        <button type="button" class="tc-ai-chip" onclick="sendAiQuick('3 ngày 2 đêm ở Đà Nẵng 3 triệu')">3N2Đ Đà Nẵng 3tr</button>
+                        <button type="button" class="tc-ai-chip" onclick="sendAiQuick('Tìm khách sạn ở Đà Nẵng')">Tìm khách sạn</button>
+                        <button type="button" class="tc-ai-chip" onclick="sendAiQuick('Tìm quán ăn ở Đà Nẵng')">Tìm quán ăn</button>
+                    </div>
+
+                    <form class="tc-ai-chatbox-input" onsubmit="sendAiMessage(event)">
+                        <input id="tcAiInput" type="text" placeholder="Bạn muốn hỏi gì?" autocomplete="off" />
+                        <button type="submit" class="tc-ai-send" aria-label="Gửi">➤</button>
+                    </form>
+                </div>
+
+                <div class="tc-ai-bubble" id="tcAiBubble" role="status" aria-live="polite">
+                    <button class="tc-ai-bubble-close" type="button" aria-label="Ẩn lời chào" onclick="dismissAiBubble(event)">×</button>
+                    <div class="tc-ai-bubble-title">TripCompass AI</div>
+                    <div class="tc-ai-bubble-text" id="tcAiBubbleText"></div>
+                </div>
+
+                <button class="tc-ai-mascot-fab" id="aiMascotFab" type="button" onclick="toggleAiChatbox(true)" aria-label="Chat với AI">
+                <svg class="tc-ai-mascot-svg" viewBox="0 0 220 240" role="img" aria-hidden="true">
+                    <!-- Cloud base -->
+                    <g class="tc-ai-cloud">
+                        <ellipse cx="110" cy="206" rx="82" ry="22" fill="rgba(255,255,255,0.95)" />
+                        <ellipse cx="64" cy="202" rx="26" ry="18" fill="rgba(255,255,255,0.92)" />
+                        <ellipse cx="92" cy="194" rx="34" ry="22" fill="rgba(255,255,255,0.92)" />
+                        <ellipse cx="134" cy="194" rx="34" ry="22" fill="rgba(255,255,255,0.92)" />
+                        <ellipse cx="156" cy="202" rx="26" ry="18" fill="rgba(255,255,255,0.92)" />
+                    </g>
+
+                    <!-- Body -->
+                    <g class="tc-ai-bot" transform="translate(0,-2) scale(1.12)">
+                        <defs>
+                            <linearGradient id="tcAiBody" x1="0" x2="1">
+                                <stop offset="0" stop-color="#60a5fa" />
+                                <stop offset="1" stop-color="#1e40af" />
+                            </linearGradient>
+                            <linearGradient id="tcAiScreen" x1="0" x2="1">
+                                <stop offset="0" stop-color="#0b1220" />
+                                <stop offset="1" stop-color="#020617" />
+                            </linearGradient>
+                            <!-- scarf pattern (light doodle dots) -->
+                            <pattern id="tcAiScarfPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <circle cx="2" cy="2" r="1" fill="rgba(59,130,246,0.35)" />
+                                <circle cx="7" cy="4" r="1" fill="rgba(96,165,250,0.35)" />
+                                <circle cx="4" cy="8" r="1" fill="rgba(29,78,216,0.25)" />
+                            </pattern>
+                        </defs>
+
+                        <!-- Side pods (blue) -->
+                        <circle cx="54" cy="105" r="18" fill="rgba(96,165,250,0.55)" />
+                        <circle cx="166" cy="105" r="18" fill="rgba(96,165,250,0.55)" />
+
+                        <!-- Torso -->
+                        <path d="M110 60c40 0 64 26 64 62 0 43-29 70-64 70s-64-27-64-70c0-36 24-62 64-62z" fill="url(#tcAiBody)" />
+                        <path d="M110 72c31 0 50 20 50 48 0 33-22 53-50 53s-50-20-50-53c0-28 19-48 50-48z" fill="rgba(255,255,255,0.10)" />
+
+                        <!-- White scarf with pattern (at neck) -->
+                        <path d="M74 132c16 12 36 18 36 18s20-6 36-18c-6 22-20 35-36 35s-30-13-36-35z" fill="rgba(248,250,252,0.96)" />
+                        <path d="M78 134c14 10 32 16 32 16s18-6 32-16c-6 18-18 28-32 28s-26-10-32-28z" fill="url(#tcAiScarfPattern)" opacity="0.9" />
+                        <path d="M74 132c16 12 36 18 36 18s20-6 36-18" fill="none" stroke="rgba(59,130,246,0.30)" stroke-width="2" />
+
+                        <!-- Screen -->
+                        <path d="M70 86c0-12 10-22 22-22h36c12 0 22 10 22 22v22c0 12-10 22-22 22H92c-12 0-22-10-22-22V86z" fill="rgba(255,255,255,0.92)" />
+                        <path d="M78 90c0-9 7-16 16-16h32c9 0 16 7 16 16v14c0 9-7 16-16 16H94c-9 0-16-7-16-16V90z" fill="url(#tcAiScreen)" stroke="rgba(96,165,250,0.55)" stroke-width="2" />
+
+                        <!-- Eyes -->
+                        <g class="tc-ai-face">
+                        <!-- Eyes (slightly farther apart) -->
+                        <g class="tc-ai-eye tc-ai-eye-left">
+                            <ellipse cx="98" cy="98" rx="7" ry="9" fill="#7dd3fc" />
+                            <circle cx="96" cy="95" r="2.2" fill="rgba(248,250,252,0.9)" />
+                        </g>
+                            <g class="tc-ai-eye tc-ai-eye-right">
+                                <ellipse cx="126" cy="98" rx="7" ry="9" fill="#7dd3fc" />
+                                <circle cx="124" cy="95" r="2.2" fill="rgba(248,250,252,0.9)" />
+                            </g>
+                            <!-- Nose + mouth -->
+                            <circle cx="110" cy="106" r="1.6" fill="rgba(148,163,184,0.9)" />
+                            <path d="M99 112c6.5 7 15.5 7 22 0" fill="none" stroke="rgba(96,165,250,0.9)" stroke-width="3.2" stroke-linecap="round" />
+                        </g>
+
+                        <!-- Arms (longer; blue; right arm waves) -->
+                        <g class="tc-ai-arm tc-ai-arm-left">
+                            <path d="M54 120c-22 12-30 30-16 44 14 14 32 6 40-12"
+                                  fill="none" stroke="#3b82f6" stroke-width="14" stroke-linecap="round" opacity="0.90" />
+                            <circle cx="80" cy="160" r="9" fill="#60a5fa" opacity="0.95" />
+                        </g>
+                        <g class="tc-ai-arm tc-ai-arm-right">
+                            <path d="M166 120c22 12 30 30 16 44-14 14-32 6-40-12"
+                                  fill="none" stroke="#3b82f6" stroke-width="14" stroke-linecap="round" opacity="0.90" />
+                            <circle cx="140" cy="160" r="9" fill="#60a5fa" opacity="0.95" />
+                        </g>
+
+                        <!-- Feet (blue) -->
+                        <g class="tc-ai-feet" opacity="0.98">
+                            <!-- left foot -->
+                            <rect x="78" y="184" width="30" height="24" rx="10" fill="#3b82f6" stroke="rgba(255,255,255,0.55)" stroke-width="2" />
+                            <ellipse cx="93" cy="208" rx="15" ry="5" fill="rgba(15,23,42,0.12)" />
+                            <!-- right foot -->
+                            <rect x="112" y="184" width="30" height="24" rx="10" fill="#3b82f6" stroke="rgba(255,255,255,0.55)" stroke-width="2" />
+                            <ellipse cx="127" cy="208" rx="15" ry="5" fill="rgba(15,23,42,0.12)" />
+                        </g>
+
+                        <!-- White cap + blue plane/propeller on head (closer to reference) -->
+                        <g class="tc-ai-plane">
+                            <!-- Cap (white) -->
+                            <path d="M110 44c22 0 34 10 34 18 0 6-7 10-34 10s-34-4-34-10c0-8 12-18 34-18z"
+                                  fill="rgba(248,250,252,0.99)" />
+                            <!-- Cap top blue band -->
+                            <path d="M84 56c8 6 18 9 26 9s18-3 26-9" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" opacity="0.85" />
+                            <circle cx="110" cy="42" r="6" fill="rgba(248,250,252,0.99)" />
+                            <!-- Small blue propeller -->
+                            <circle cx="110" cy="34" r="7" fill="#3b82f6" />
+                            <path d="M110 24c10 0 18 4 18 7s-8 4-18 4-18-1-18-4 8-7 18-7z" fill="rgba(96,165,250,0.95)" />
+                            <path d="M92 31h36" stroke="#1d4ed8" stroke-width="4" stroke-linecap="round" />
+                        </g>
+                    </g>
+                </svg>
+                </button>
+            </div>
+        }
     </div>
 
     <style>
@@ -389,6 +545,305 @@
             flex-direction: column;
             gap: 14px;
             pointer-events: none;
+        }
+
+        /* Mascot-only floating button (Premium) */
+        .tc-ai-mascot-fab {
+            pointer-events: auto;
+            width: 210px;
+            height: 210px;
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            cursor: pointer;
+            filter: drop-shadow(0 18px 35px rgba(0,0,0,0.35));
+            animation: tcAiFloat 3.2s ease-in-out infinite;
+        }
+
+        .tc-ai-mascot-fab:focus-visible {
+            outline: 3px solid rgba(59,130,246,0.6);
+            outline-offset: 6px;
+            border-radius: 16px;
+        }
+
+        .tc-ai-mascot-shell {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .tc-ai-chatbox {
+            pointer-events: auto;
+            position: absolute;
+            right: 190px;
+            bottom: 20px;
+            width: 340px;
+            max-width: calc(100vw - 220px);
+            height: 520px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tc-ai-chatbox-header {
+            height: 54px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eef2f7;
+            background: #ffffff;
+        }
+
+        .tc-ai-chatbox-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 900;
+            color: #111827;
+        }
+
+        .tc-ai-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 0 0 4px rgba(34,197,94,0.16);
+        }
+
+        .tc-ai-chatbox-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: none;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-size: 18px;
+            color: #111827;
+        }
+        .tc-ai-chatbox-close:hover { background: #e5e7eb; }
+
+        .tc-ai-chatbox-body {
+            flex: 1;
+            padding: 14px;
+            overflow: auto;
+            background: #ffffff;
+        }
+
+        .tc-ai-msg {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .tc-ai-msg-user { justify-content: flex-end; }
+        .tc-ai-msg-bot { justify-content: flex-start; }
+
+        .tc-ai-bubble-msg {
+            max-width: 78%;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .tc-ai-msg-user .tc-ai-bubble-msg {
+            background: #2563eb;
+            color: #fff;
+            border-bottom-right-radius: 6px;
+        }
+
+        .tc-ai-msg-bot .tc-ai-bubble-msg {
+            background: #f3f4f6;
+            color: #111827;
+            border-bottom-left-radius: 6px;
+        }
+
+        .tc-ai-quick {
+            padding: 10px 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-top: 1px solid #eef2f7;
+            background: #ffffff;
+        }
+
+        .tc-ai-chip {
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            color: #111827;
+            border-radius: 999px;
+            padding: 8px 10px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .tc-ai-chip:hover { background: #f9fafb; }
+
+        .tc-ai-chatbox-input {
+            display: flex;
+            gap: 10px;
+            padding: 12px 14px;
+            border-top: 1px solid #eef2f7;
+            background: #ffffff;
+        }
+
+        .tc-ai-chatbox-input input {
+            flex: 1;
+            height: 42px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0 12px;
+            outline: none;
+        }
+
+        .tc-ai-send {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: none;
+            background: #2563eb;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 900;
+        }
+        .tc-ai-send:hover { background: #1d4ed8; }
+
+        .tc-ai-bubble {
+            pointer-events: auto;
+            position: absolute;
+            right: 190px;
+            bottom: 120px;
+            width: 260px;
+            max-width: calc(100vw - 260px);
+            background: rgba(15, 23, 42, 0.92);
+            color: #fff;
+            border: 1px solid rgba(59,130,246,0.45);
+            border-radius: 14px;
+            padding: 12px 12px 12px 12px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+            backdrop-filter: blur(8px);
+        }
+
+        .tc-ai-bubble::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            bottom: 26px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 10px solid rgba(15, 23, 42, 0.92);
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+        }
+
+        .tc-ai-bubble-title {
+            font-weight: 800;
+            font-size: 13px;
+            opacity: 0.95;
+            margin-bottom: 6px;
+            color: #93c5fd;
+        }
+
+        .tc-ai-bubble-text {
+            font-size: 13px;
+            line-height: 1.45;
+            min-height: 38px;
+            white-space: pre-wrap;
+        }
+
+        .tc-ai-bubble-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .tc-ai-bubble-close:hover {
+            background: rgba(255,255,255,0.18);
+        }
+
+        .tc-ai-typing::after {
+            content: "▋";
+            display: inline-block;
+            margin-left: 2px;
+            opacity: 0.9;
+            animation: tcAiCaret 0.9s steps(2, end) infinite;
+        }
+
+        @@keyframes tcAiCaret {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .tc-ai-mascot-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .tc-ai-eye {
+            transform-origin: center center;
+            animation: tcAiBlink 3.6s infinite;
+        }
+
+        .tc-ai-arm-right {
+            transform-origin: 166px 120px;
+            animation: tcAiWave 2.2s ease-in-out infinite;
+        }
+
+        @@keyframes tcAiFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @@keyframes tcAiBlink {
+            0%, 6%, 100% { transform: scaleY(1); }
+            2%, 4% { transform: scaleY(0.12); }
+        }
+
+        @@keyframes tcAiWave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-18deg); }
+            50% { transform: rotate(12deg); }
+            75% { transform: rotate(-14deg); }
+        }
+
+        @@media (max-width: 768px) {
+            .tc-ai-chatbox {
+                right: 0;
+                bottom: 230px;
+                width: 320px;
+                max-width: calc(100vw - 24px);
+                height: 480px;
+            }
+
+            .tc-ai-bubble {
+                right: 0;
+                bottom: 220px;
+                width: 240px;
+            }
+
+            .tc-ai-bubble::after {
+                right: 28px;
+                bottom: -10px;
+                border-left: 10px solid transparent;
+                border-right: 10px solid transparent;
+                border-top: 10px solid rgba(15, 23, 42, 0.92);
+                border-bottom: none;
+            }
         }
 
         .tc-promo-card {
@@ -416,6 +871,18 @@
         @@keyframes tcBannerFloat {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-6px); }
+        }
+
+        @@keyframes tcEyeBlink {
+            0%, 8%, 100% { transform: scaleY(1); }
+            3%, 5% { transform: scaleY(0.1); }
+        }
+
+        @@keyframes tcWaveArm {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-20deg); }
+            50% { transform: rotate(12deg); }
+            75% { transform: rotate(-18deg); }
         }
 
         .tc-promo-card::before {
@@ -462,6 +929,193 @@
             border-radius: 999px;
             font-size: 12px;
             font-weight: 800;
+        }
+
+        .tc-mascot-card {
+            height: 260px;
+            background:
+                radial-gradient(140px 140px at 20% 15%, rgba(59,130,246,0.4), transparent 60%),
+                linear-gradient(145deg, #1d4ed8 0%, #1e40af 45%, #0f172a 100%);
+        }
+
+        .tc-mascot-wrapper {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .tc-mascot-cloud {
+            width: 130px;
+            height: 60px;
+            background: rgba(255,255,255,0.22);
+            border-radius: 999px;
+            box-shadow: 0 12px 30px rgba(15,23,42,0.4);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tc-mascot-body {
+            width: 90px;
+            height: 110px;
+            position: relative;
+        }
+
+        .tc-mascot-head {
+            width: 72px;
+            height: 60px;
+            background: linear-gradient(145deg, #38bdf8 0%, #1e40af 100%);
+            border-radius: 999px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 6px 16px rgba(15,23,42,0.45);
+        }
+
+        .tc-mascot-face {
+            position: absolute;
+            inset: 9px 10px 8px 10px;
+            background: radial-gradient(circle at 50% 0%, #1f2937, #020617);
+            border-radius: 999px;
+            border: 2px solid rgba(125,211,252,0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tc-mascot-eye {
+            width: 8px;
+            height: 11px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 50% 0%, #e0f2fe, #38bdf8 65%, #0f172a 100%);
+            margin: 0 5px;
+            box-shadow: 0 0 6px rgba(125,211,252,0.9);
+            position: relative;
+            transform-origin: center center;
+            animation: tcEyeBlink 3.4s infinite;
+        }
+
+        .tc-mascot-eye::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(248,250,252,0.85);
+        }
+
+        .tc-mascot-smile {
+            position: absolute;
+            bottom: 11px;
+            left: 50%;
+            width: 26px;
+            height: 14px;
+            border: 2px solid rgba(96,165,250,0.95);
+            border-color: transparent transparent rgba(96,165,250,0.95) transparent;
+            border-radius: 0 0 18px 18px;
+            transform: translateX(-50%);
+        }
+
+        .tc-mascot-plane {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            width: 46px;
+            height: 20px;
+            transform: translateX(-50%);
+        }
+
+        .tc-mascot-plane::before,
+        .tc-mascot-plane::after {
+            content: "";
+            position: absolute;
+        }
+
+        .tc-mascot-plane::before {
+            inset: 6px 6px 0 6px;
+            background: linear-gradient(135deg, #f9fafb 0%, #bfdbfe 100%);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(15,23,42,0.35);
+        }
+
+        .tc-mascot-plane::after {
+            top: 0;
+            left: 8px;
+            right: 8px;
+            height: 8px;
+            background: linear-gradient(90deg, #60a5fa, #1d4ed8);
+            border-radius: 99px;
+        }
+
+        .tc-mascot-body-core {
+            width: 70px;
+            height: 46px;
+            background: linear-gradient(160deg, #38bdf8 0%, #0ea5e9 35%, #1e3a8a 100%);
+            border-radius: 26px;
+            margin: 3px auto 0;
+            position: relative;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.5);
+        }
+
+        .tc-mascot-bandana {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            top: 18px;
+            height: 22px;
+            background: linear-gradient(135deg, #f9fafb 0%, #fee2e2 100%);
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(15,23,42,0.45);
+        }
+
+        .tc-mascot-arm {
+            position: absolute;
+            top: 36px;
+            width: 18px;
+            height: 26px;
+            background: linear-gradient(145deg, #38bdf8 0%, #1e40af 100%);
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(15,23,42,0.4);
+        }
+
+        .tc-mascot-arm-left {
+            left: -8px;
+            transform-origin: top center;
+            animation: tcWaveArm 2.4s ease-in-out infinite;
+        }
+
+        .tc-mascot-arm-right {
+            right: -8px;
+        }
+
+        .tc-mascot-text {
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: 16px;
+            font-size: 13px;
+        }
+
+        .tc-mascot-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .tc-mascot-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .tc-mascot-actions {
+            display: flex;
+            justify-content: flex-start;
         }
 
         .tc-promo-card h3 {
@@ -1096,11 +1750,23 @@
                         const notifications = await response.json();
                         renderNotificationDropdown(notifications);
                     } else {
-                        content.innerHTML = '<div class="notification-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải thông báo</p></div>';
+                        // API chưa sẵn sàng hoặc chưa có dữ liệu, hiển thị "Chưa có thông báo"
+                        content.innerHTML = `
+                            <div class="notification-dropdown-empty">
+                                <i class="fa-solid fa-bell-slash"></i>
+                                <p>Bạn chưa có thông báo nào</p>
+                            </div>
+                        `;
                     }
                 } catch (error) {
                     console.error('Error loading notifications:', error);
-                    content.innerHTML = '<div class="notification-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải thông báo</p></div>';
+                    // Lỗi kết nối, hiển thị "Chưa có thông báo" thay vì lỗi
+                    content.innerHTML = `
+                        <div class="notification-dropdown-empty">
+                            <i class="fa-solid fa-bell-slash"></i>
+                            <p>Bạn chưa có thông báo nào</p>
+                        </div>
+                    `;
                 }
             }
 
@@ -1119,10 +1785,14 @@
                 }
 
                 const iconMap = {
+                    'NEW_COMMENT': 'fa-comment',
+                    'POST_APPROVED': 'fa-check-circle',
+                    'POST_REJECTED': 'fa-times-circle',
+                    'COIN_EARNED': 'fa-coins',
+                    'REPUTATION_EARNED': 'fa-star',
                     'NEW_ORDER': 'fa-shopping-cart',
                     'ORDER_APPROVED': 'fa-check-circle',
                     'ORDER_REJECTED': 'fa-times-circle',
-                    'NEW_COMMENT': 'fa-comment',
                     'NEW_FOLLOW': 'fa-user-plus',
                     'COMMISSION_PAID': 'fa-money-bill',
                     'WITHDRAW_COMPLETED': 'fa-wallet',
@@ -1157,10 +1827,7 @@
                 try {
                     const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                     const response = await fetch(`/api/notifications/${notificationId}/mark-read`, {
-                        method: 'POST',
-                        headers: {
-                            'RequestVerificationToken': token || ''
-                        }
+                        method: 'POST'
                     });
 
                     if (response.ok) {
@@ -1200,6 +1867,179 @@
             // ==================== CHAT DROPDOWN ====================
             let chatDropdownOpen = false;
             let currentChatThreadId = null;
+
+            function openAiChatbox() {
+                // Demo: mở trang AI itinerary. Sau này thay bằng AI chat modal / thread riêng.
+                window.location.href = "/Ai/Demo";
+            }
+
+            function dismissAiBubble(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                try {
+                    localStorage.setItem("tc_ai_bubble_dismissed", "1");
+                } catch { }
+                const el = document.getElementById("tcAiBubble");
+                if (el) el.style.display = "none";
+            }
+
+            (function initAiBubble() {
+                const bubble = document.getElementById("tcAiBubble");
+                const textEl = document.getElementById("tcAiBubbleText");
+                if (!bubble || !textEl) return;
+
+                let dismissed = false;
+                try {
+                    dismissed = localStorage.getItem("tc_ai_bubble_dismissed") === "1";
+                } catch { }
+
+                if (dismissed) {
+                    bubble.style.display = "none";
+                    return;
+                }
+
+                const messages = [
+                    "Chào bạn, mình là TripCompass AI 👋",
+                    "Bạn muốn mình gợi ý lịch trình 1 ngày hay 3 ngày?",
+                    "Cần tìm quán ăn/khách sạn gần bạn không?",
+                    "Bạn cứ bấm vào mình để bắt đầu chat nhé!"
+                ];
+
+                let msgIdx = 0;
+                let charIdx = 0;
+                let typingTimer = null;
+                let rotateTimer = null;
+
+                function typeNextChar() {
+                    const msg = messages[msgIdx];
+                    textEl.classList.add("tc-ai-typing");
+                    textEl.textContent = msg.slice(0, charIdx);
+                    charIdx++;
+                    if (charIdx <= msg.length) {
+                        typingTimer = window.setTimeout(typeNextChar, 28);
+                    } else {
+                        textEl.classList.remove("tc-ai-typing");
+                        rotateTimer = window.setTimeout(() => {
+                            msgIdx = (msgIdx + 1) % messages.length;
+                            charIdx = 0;
+                            typeNextChar();
+                        }, 2800);
+                    }
+                }
+
+                // start
+                typeNextChar();
+
+                // pause on hover
+                bubble.addEventListener("mouseenter", () => {
+                    if (typingTimer) window.clearTimeout(typingTimer);
+                    if (rotateTimer) window.clearTimeout(rotateTimer);
+                    textEl.classList.remove("tc-ai-typing");
+                });
+                bubble.addEventListener("mouseleave", () => {
+                    // resume quickly
+                    if (charIdx === 0) typeNextChar();
+                    else {
+                        // continue typing from current state
+                        typingTimer = window.setTimeout(typeNextChar, 120);
+                    }
+                });
+            })();
+
+            function toggleAiChatbox(open) {
+                const chat = document.getElementById("tcAiChatbox");
+                if (!chat) return;
+                chat.style.display = open ? "flex" : "none";
+                if (open) {
+                    // Hide promo bubble while chatbox is open
+                    const bubble = document.getElementById("tcAiBubble");
+                    if (bubble) bubble.style.display = "none";
+                    const input = document.getElementById("tcAiInput");
+                    if (input) input.focus();
+                }
+            }
+
+            function sendAiQuick(text) {
+                const input = document.getElementById("tcAiInput");
+                if (input) input.value = text;
+                sendAiMessage(new Event("submit"));
+            }
+
+            function appendAiMsg(role, content) {
+                const body = document.getElementById("tcAiChatBody");
+                if (!body) return;
+                const wrap = document.createElement("div");
+                wrap.className = "tc-ai-msg " + (role === "user" ? "tc-ai-msg-user" : "tc-ai-msg-bot");
+                const bubble = document.createElement("div");
+                bubble.className = "tc-ai-bubble-msg";
+                bubble.textContent = content;
+                wrap.appendChild(bubble);
+                body.appendChild(wrap);
+                body.scrollTop = body.scrollHeight;
+            }
+
+            function renderItineraryInChat(it) {
+                if (!it || !it.days) return;
+                // Keep it short in chat: show day titles + 1-liner, plus suggestions count
+                const lines = [];
+                lines.push(it.summary || "Lịch trình gợi ý:");
+                for (const d of it.days.slice(0, 5)) {
+                    lines.push(`- ${d.title}: Sáng ${d.morning} | Chiều ${d.afternoon} | Tối ${d.evening}`);
+                }
+                if (it.suggestions && it.suggestions.length) {
+                    lines.push(`\nMình tìm được ${it.suggestions.length} gợi ý trong TripCompass. Bạn muốn mình lọc theo “khách sạn” hay “quán ăn”?`);
+                }
+                appendAiMsg("bot", lines.join("\n"));
+            }
+
+            async function sendAiMessage(e) {
+                if (e && e.preventDefault) e.preventDefault();
+                const input = document.getElementById("tcAiInput");
+                if (!input) return;
+                const msg = (input.value || "").trim();
+                if (!msg) return;
+                input.value = "";
+
+                appendAiMsg("user", msg);
+
+                // typing placeholder
+                appendAiMsg("bot", "Đang suy nghĩ...");
+                const body = document.getElementById("tcAiChatBody");
+                const lastBot = body ? body.querySelector(".tc-ai-msg:last-child .tc-ai-bubble-msg") : null;
+
+                const res = await fetch("/api/ai/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: msg })
+                });
+
+                if (!res.ok) {
+                    if (lastBot) lastBot.textContent = "Có lỗi khi gọi AI. Vui lòng thử lại.";
+                    return;
+                }
+
+                const data = await res.json();
+                if (lastBot) lastBot.textContent = data.reply || "OK";
+
+                // quick replies
+                const quick = document.getElementById("tcAiQuick");
+                if (quick && data.quickReplies && Array.isArray(data.quickReplies)) {
+                    quick.innerHTML = "";
+                    for (const q of data.quickReplies.slice(0, 4)) {
+                        const b = document.createElement("button");
+                        b.type = "button";
+                        b.className = "tc-ai-chip";
+                        b.textContent = q;
+                        b.onclick = () => sendAiQuick(q);
+                        quick.appendChild(b);
+                    }
+                }
+
+                // itinerary
+                if (data.itinerary) {
+                    renderItineraryInChat(data.itinerary);
+                }
+            }
 
             function toggleChatDropdown(event) {
                 event.preventDefault();
@@ -1245,11 +2085,23 @@
                         const threads = await response.json();
                         renderChatDropdown(threads);
                     } else {
-                        content.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                        // API chưa sẵn sàng hoặc chưa có dữ liệu, hiển thị "Chưa có tin nhắn"
+                        content.innerHTML = `
+                            <div class="chat-dropdown-empty">
+                                <i class="fa-solid fa-comments"></i>
+                                <p>Bạn chưa có tin nhắn nào</p>
+                            </div>
+                        `;
                     }
                 } catch (error) {
                     console.error('Error loading chat threads:', error);
-                    content.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                    // Lỗi kết nối, hiển thị "Chưa có tin nhắn" thay vì lỗi
+                    content.innerHTML = `
+                        <div class="chat-dropdown-empty">
+                            <i class="fa-solid fa-comments"></i>
+                            <p>Bạn chưa có tin nhắn nào</p>
+                        </div>
+                    `;
                 }
             }
 
@@ -1373,7 +2225,12 @@
                     })
                     .catch(error => {
                         console.error('Error loading messages:', error);
-                        modalMessages.innerHTML = '<div class="chat-dropdown-empty"><i class="fa-solid fa-exclamation-circle"></i><p>Có lỗi xảy ra khi tải tin nhắn</p></div>';
+                        modalMessages.innerHTML = `
+                            <div class="chat-dropdown-empty">
+                                <i class="fa-solid fa-comments"></i>
+                                <p>Chưa có tin nhắn nào</p>
+                            </div>
+                        `;
                     });
 
                 // Reload chat dropdown to update unread count
