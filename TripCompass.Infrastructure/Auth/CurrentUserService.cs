@@ -27,5 +27,14 @@ namespace TripCompass.Infrastructure.Auth
         public string? Email =>
             _httpContextAccessor.HttpContext?
                 .User.FindFirst(ClaimTypes.Email)?.Value;
+
+        /// <summary>
+        /// Kiểm tra xem user hiện tại có phải là admin từ config không (UserId = 0 và có role Admin)
+        /// </summary>
+        public bool IsConfigAdmin()
+        {
+            return UserId == 0 && 
+                   (_httpContextAccessor.HttpContext?.User.IsInRole("Admin") ?? false);
+        }
     }
 }

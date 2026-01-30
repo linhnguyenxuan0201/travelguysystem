@@ -74,6 +74,10 @@ builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<TripCompass.Application.Interfaces.INotificationRealtimeService, SignalRNotificationRealtimeService>();
 builder.Services.AddScoped<TripCompass.Application.Interfaces.IChatRealtimeService, SignalRChatRealtimeService>();
 
+// 👉 Admin Config từ appsettings.json
+builder.Services.Configure<TripCompass.Application.Common.Security.AdminConfig>(
+    builder.Configuration.GetSection("Authentication:Admin"));
+
 // ✅ MEDIATR
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(TripCompass.Application.Features.Admin.Dashboard.GetDashboardStats.GetDashboardStatsHandler).Assembly);

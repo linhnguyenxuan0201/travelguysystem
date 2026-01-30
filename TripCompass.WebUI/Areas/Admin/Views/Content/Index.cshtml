@@ -8,145 +8,306 @@
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<div class="mb-4 pb-3 border-bottom">
-    <h1 class="h4 fw-semibold mb-1">Content Management</h1>
-    <p class="text-muted small mb-0">Manage all posts and moderation workflow</p>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    /* Card Styling */
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    /* Table Styling */
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+
+    .table-custom tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Post Title Styling */
+    .post-title {
+        color: #3f4254;
+        font-weight: 600;
+        font-size: 1rem;
+        display: block;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+        .post-title:hover {
+            color: #0d6efd;
+        }
+
+    /* Soft Badges */
+    .badge-soft {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .badge-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #d09c00;
+    }
+
+    .badge-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .badge-soft-primary {
+        background-color: rgba(13, 110, 253, 0.1);
+        color: #0d6efd;
+    }
+
+    .badge-soft-secondary {
+        background-color: #f1f1f4;
+        color: #7e8299;
+    }
+
+    .badge-soft-dark {
+        background-color: #3f4254;
+        color: #fff;
+    }
+
+    /* Avatar Placeholder */
+    .symbol-circle {
+        width: 35px;
+        height: 35px;
+        background-color: #f3f6f9;
+        color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-right: 10px;
+    }
+
+    /* Button Styling */
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Content Management</h1>
+        <span class="text-muted fw-semibold fs-7">Manage posts, track views, and moderate content</span>
+    </div>
 </div>
 
-<!-- FILTERS -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">Search</label>
-                <input name="SearchTerm" class="form-control"
-                       value="@ViewBag.SearchTerm"
-                       placeholder="Title or Post ID" />
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Status</label>
-                <select name="Status" class="form-select" id="statusFilter">
-                    <option value="">All Status</option>
-                    @if (ViewBag.SelectedStatus == PostStatus.Draft)
-                    {
-                        <option value="@((int)PostStatus.Draft)" selected>📝 Draft</option>
-                    }
-                    else
-                    {
-                        <option value="@((int)PostStatus.Draft)">📝 Draft</option>
-                    }
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-5 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by Title or Post ID..." />
+                    </div>
+                </div>
 
-                    @if (ViewBag.SelectedStatus == PostStatus.Pending)
-                    {
-                        <option value="@((int)PostStatus.Pending)" selected>🟡 Pending Approval</option>
-                    }
-                    else
-                    {
-                        <option value="@((int)PostStatus.Pending)">🟡 Pending Approval</option>
-                    }
+                <div class="col-md-3">
+                    <select name="Status" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" id="statusFilter" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="@((int)PostStatus.Draft)" selected="@(ViewBag.SelectedStatus == PostStatus.Draft)">📝 Draft</option>
+                        <option value="@((int)PostStatus.Pending)" selected="@(ViewBag.SelectedStatus == PostStatus.Pending)">🟡 Pending Approval</option>
+                        <option value="@((int)PostStatus.Published)" selected="@(ViewBag.SelectedStatus == PostStatus.Published)">🟢 Published</option>
+                        <option value="@((int)PostStatus.Rejected)" selected="@(ViewBag.SelectedStatus == PostStatus.Rejected)">🔴 Rejected</option>
+                        <option value="@((int)PostStatus.Archived)" selected="@(ViewBag.SelectedStatus == PostStatus.Archived)">📦 Archived</option>
+                    </select>
+                </div>
 
-                    @if (ViewBag.SelectedStatus == PostStatus.Published)
-                    {
-                        <option value="@((int)PostStatus.Published)" selected>🟢 Published</option>
-                    }
-                    else
-                    {
-                        <option value="@((int)PostStatus.Published)">🟢 Published</option>
-                    }
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Apply Filter
+                    </button>
+                </div>
 
-                    @if (ViewBag.SelectedStatus == PostStatus.Rejected)
-                    {
-                        <option value="@((int)PostStatus.Rejected)" selected>🔴 Rejected</option>
-                    }
-                    else
-                    {
-                        <option value="@((int)PostStatus.Rejected)">🔴 Rejected</option>
-                    }
-
-                    @if (ViewBag.SelectedStatus == PostStatus.Archived)
-                    {
-                        <option value="@((int)PostStatus.Archived)" selected>📦 Archived</option>
-                    }
-                    else
-                    {
-                        <option value="@((int)PostStatus.Archived)">📦 Archived</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100">
-                    <i class="fas fa-filter me-2"></i>Apply
-                </button>
+                @if ( !string.IsNullOrEmpty(ViewBag.SearchTerm) || ViewBag.SelectedStatus != null )
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "Content", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
             </div>
         </form>
     </div>
-</div>
 
-<!-- TABLE -->
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-                <tr>
-                    <th>Post</th>
-                    <th>Author</th>
-                    <th>Status</th>
-                    <th>Views</th>
-                    <th>Date</th>
-                    <th class="text-end">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ( var item in Model.Items )
-                {
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
                     <tr>
-                        <td>
-                            <div class="fw-semibold">@item.Title</div>
-                            <small class="text-muted">ID #@item.PostId • @item.CategoryName</small>
-                        </td>
-                        <td>@item.AuthorName</td>
-                        <td>
-                            <span class="badge
-                                    @( item.Status == PostStatus.Published ? "bg-success" :
-                                                                    item.Status == PostStatus.Pending ? "bg-warning text-dark" :
-                                                                    item.Status == PostStatus.Rejected ? "bg-danger" :
-                                                                    item.Status == PostStatus.Draft ? "bg-secondary" :
-                                                                    item.Status == PostStatus.Archived ? "bg-dark" : "bg-secondary" )">
-                                @item.Status
-                            </span>
-                        </td>
-                        <td>@item.ViewCount</td>
-                        <td>
-                            <small>@item.CreatedAt.ToString("dd/MM/yyyy")</small>
-                        </td>
-                        <td class="text-end">
-                            <a href="@Url.Action("Details", "Content", new { area = "Admin", id = item.PostId })"
-                               class="btn btn-sm btn-outline-primary">
-                                Review
-                            </a>
-                        </td>
+                        <th style="min-width: 250px;">Post Details</th>
+                        <th style="min-width: 150px;">Author</th>
+                        <th style="min-width: 120px;">Status</th>
+                        <th style="min-width: 100px;">Stats</th>
+                        <th style="min-width: 120px;">Created</th>
+                        <th class="text-end" style="min-width: 100px;">Action</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @if ( Model.Items.Any() )
+                    {
+                        @foreach ( var item in Model.Items )
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <a href="@Url.Action("Details", "Content", new { area = "Admin", id = item.PostId })" class="post-title mb-1 text-truncate" style="max-width: 300px;" title="@item.Title">
+                                            @item.Title
+                                        </a>
+                                        <div class="small text-muted">
+                                            <span class="fw-bold text-gray-600">ID:</span> #@item.PostId
+                                            <span class="mx-1">•</span>
+                                            <i class="fas fa-folder text-warning me-1"></i>@item.CategoryName
+                                        </div>
+                                    </div>
+                                </td>
 
-    <div class="card-footer d-flex justify-content-between">
-        <small class="text-muted">
-            Page @Model.PageNumber of @Model.TotalPages
-        </small>
-        <div>
-            @if ( Model.HasPreviousPage )
-            {
-                <a asp-route-PageNumber="@(Model.PageNumber - 1)"
-                   class="btn btn-sm btn-outline-secondary">Previous</a>
-            }
-            @if ( Model.HasNextPage )
-            {
-                <a asp-route-PageNumber="@(Model.PageNumber + 1)"
-                   class="btn btn-sm btn-outline-secondary">Next</a>
-            }
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol-circle">
+                                            @item.AuthorName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-dark fw-bold">@item.AuthorName</span>
+                                            <span class="text-muted small fs-8">User</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @if ( item.Status == PostStatus.Published )
+                                    {
+                                        <span class="badge badge-soft badge-soft-success">Published</span>
+                                    }
+                                    else if ( item.Status == PostStatus.Pending )
+                                    {
+                                        <span class="badge badge-soft badge-soft-warning">Pending</span>
+                                    }
+                                    else if ( item.Status == PostStatus.Rejected )
+                                    {
+                                        <span class="badge badge-soft badge-soft-danger">Rejected</span>
+                                    }
+                                    else if ( item.Status == PostStatus.Archived )
+                                    {
+                                        <span class="badge badge-soft badge-soft-dark">Archived</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-soft badge-soft-secondary">Draft</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="badge badge-light text-dark fw-bold px-3 py-2 border border-secondary border-opacity-10">
+                                        <i class="fas fa-eye text-primary me-1"></i> @item.ViewCount
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="text-dark fw-bold fs-7">@item.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="text-muted fs-8">@item.CreatedAt.ToString("HH:mm")</div>
+                                </td>
+
+                                <td class="text-end">
+                                    <a href="@Url.Action("Details", "Content", new { area = "Admin", id = item.PostId })"
+                                       class="btn btn-sm btn-light-primary fw-bold px-3">
+                                        Review <i class="fas fa-arrow-right ms-1 fs-8"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-search"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No posts found matching your criteria</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 pb-2">
+            <div class="text-muted small fw-semibold">
+                Showing page <span class="text-dark fw-bold">@Model.PageNumber</span> of <span class="text-dark fw-bold">@Model.TotalPages</span>
+            </div>
+            <div class="d-flex gap-1">
+                <a href="@(Model.HasPreviousPage? Url.Action("Index", new { PageNumber = Model.PageNumber - 1, SearchTerm = ViewBag.SearchTerm, Status = ViewBag.SelectedStatus }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasPreviousPage ? "disabled opacity-50" : "")">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+
+                <a href="@(Model.HasNextPage? Url.Action("Index", new { PageNumber = Model.PageNumber + 1, SearchTerm = ViewBag.SearchTerm, Status = ViewBag.SelectedStatus }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasNextPage ? "disabled opacity-50" : "")">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 </div>
- 

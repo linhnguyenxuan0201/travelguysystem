@@ -27,7 +27,31 @@ namespace TripCompass.Application.Features.Admin.Posts.ChangePostStatus
             if (post == null) return false;
 
             var adminId = _currentUser.UserId;
-            if (adminId == 0) throw new UnauthorizedAccessException("Admin ID not found");
+            
+            // Nếu là admin từ config (UserId = 0), tìm một admin user trong database để dùng cho logging
+            if (adminId == 0 && _currentUser.IsConfigAdmin())
+            {
+                var adminUser = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                    .Where(u => u.UserRoles.Any(ur => ur.Role.RoleName == "Admin"))
+                    .OrderBy(u => u.UserId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (adminUser != null)
+                {
+                    adminId = adminUser.UserId;
+                }
+                else
+                {
+                    // Nếu không tìm thấy admin user nào, skip logging nhưng vẫn cho phép thực hiện action
+                    adminId = 0;
+                }
+            }
+            else if (adminId == 0)
+            {
+                throw new UnauthorizedAccessException("Admin ID not found");
+            }
 
             var oldStatus = post.Status;
             var oldIsDeleted = post.IsDeleted;
@@ -108,8 +132,8 @@ namespace TripCompass.Application.Features.Admin.Posts.ChangePostStatus
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            // Log action if status changed or delete/restore
-            if (request.NewStatus.HasValue || request.IsDeleted.HasValue)
+            // Log action if status changed or delete/restore (chỉ log nếu có adminId hợp lệ)
+            if ((request.NewStatus.HasValue || request.IsDeleted.HasValue) && adminId > 0)
             {
                 var adminLog = new AdminLog
                 {

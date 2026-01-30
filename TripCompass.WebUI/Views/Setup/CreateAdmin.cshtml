@@ -1,0 +1,165 @@
+@{
+    ViewData["Title"] = "Tạo tài khoản Admin";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-shield me-2"></i>Tạo tài khoản Admin</h4>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Success == true)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>@Html.Raw(ViewBag.Message)
+                            <hr>
+                            @if (ViewBag.DefaultEmail != null && ViewBag.DefaultPassword != null)
+                            {
+                                <div class="bg-light p-3 rounded mb-3">
+                                    <strong>Thông tin đăng nhập:</strong><br>
+                                    <div class="mt-2">
+                                        <strong>Email:</strong> <code>@ViewBag.DefaultEmail</code><br>
+                                        <strong>Password:</strong> <code>@ViewBag.DefaultPassword</code>
+                                    </div>
+                                </div>
+                            }
+                            <a href="/Account/Login" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập ngay
+                            </a>
+                        </div>
+                    }
+                    else if (ViewBag.CanCreate == false)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@ViewBag.Message
+                            <hr>
+                            <a href="/Account/Login" class="btn btn-primary">Đăng nhập</a>
+                        </div>
+                    }
+                    else
+                    {
+                        @if (ViewBag.Info != null)
+                        {
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>@ViewBag.Info
+                            </div>
+                        }
+                        
+                        <form method="post" asp-action="CreateAdmin">
+                            @Html.AntiForgeryToken()
+
+                            <div class="mb-3">
+                                <label for="userName" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="userName" name="userName" required 
+                                       placeholder="Nhập tên đăng nhập" minlength="3">
+                                @if (ViewData.ModelState["userName"]?.Errors.Count > 0)
+                                {
+                                    <div class="text-danger small mt-1">
+                                        @ViewData.ModelState["userName"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" required 
+                                       placeholder="admin@example.com">
+                                @if (ViewData.ModelState["email"]?.Errors.Count > 0)
+                                {
+                                    <div class="text-danger small mt-1">
+                                        @ViewData.ModelState["email"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" required 
+                                       placeholder="Tối thiểu 6 ký tự" minlength="6">
+                                <small class="form-text text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
+                                @if (ViewData.ModelState["password"]?.Errors.Count > 0)
+                                {
+                                    <div class="text-danger small mt-1">
+                                        @ViewData.ModelState["password"].Errors[0].ErrorMessage
+                                    </div>
+                                }
+                            </div>
+
+                            @if (ViewData.ModelState[""]?.Errors.Count > 0)
+                            {
+                                <div class="alert alert-danger">
+                                    @foreach (var error in ViewData.ModelState[""].Errors)
+                                    {
+                                        <div>@error.ErrorMessage</div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>Tạo tài khoản Admin
+                                </button>
+                                <div class="text-center text-muted small">hoặc</div>
+                                <button type="button" id="btnCreateDefault" class="btn btn-success btn-lg">
+                                    <i class="fas fa-magic me-2"></i>Tạo Admin Mặc Định (Nhanh)
+                                </button>
+                            </div>
+                        </form>
+
+                        <hr class="my-4">
+                        <div class="alert alert-info small">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Chỉ có thể tạo admin khi hệ thống chưa có admin nào. 
+                            Sau khi tạo, bạn có thể đăng nhập và tạo thêm admin khác từ Admin Portal.
+                            <br><br>
+                            <strong>Nút "Tạo Admin Mặc Định":</strong> Tự động tạo admin với thông tin:
+                            <ul class="mb-0 mt-2">
+                                <li>Email: <code>admin@tripcompass.com</code></li>
+                                <li>Username: <code>admin</code></li>
+                                <li>Password: <code>Admin@123</code> (nên đổi sau khi đăng nhập)</li>
+                            </ul>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnCreateDefault = document.getElementById('btnCreateDefault');
+    if (btnCreateDefault) {
+        btnCreateDefault.addEventListener('click', function() {
+            if (!confirm('Bạn có chắc muốn tạo admin mặc định?\n\nEmail: admin@tripcompass.com\nUsername: admin\nPassword: Admin@123\n\n⚠️ Vui lòng đổi mật khẩu sau khi đăng nhập!')) {
+                return;
+            }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tạo...';
+
+            // Tạo form và submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("CreateDefaultAdmin", "Setup")';
+            
+            // Lấy anti-forgery token từ form hiện tại
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token;
+                form.appendChild(tokenInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
+});
+</script>
