@@ -1,0 +1,174 @@
+/* Landing (Home) CTA styles */
+.home-hero-cta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 8px 0;
+    justify-content: center;
+}
+
+.hero .container {
+    text-align: center;
+}
+
+.home-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform 0.08s ease, filter 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+}
+
+.home-btn-primary {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(37, 99, 235, 0.35);
+}
+
+.home-btn-primary:hover {
+    filter: brightness(1.03);
+}
+
+.home-btn-secondary {
+    background: #fff;
+    color: #111827;
+    border-color: #e5e7eb;
+}
+
+.home-btn-secondary:hover {
+    background: #f9fafb;
+}
+
+.home-btn:active {
+    transform: scale(0.98);
+}
+
+.home-hero-cta-sub {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.home-link, .home-link-btn {
+    color: #4F46E5;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.home-link:hover, .home-link-btn:hover {
+    color: #4338CA;
+}
+
+.home-inline-cta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.cta .home-inline-cta {
+    justify-content: center;
+}
+
+.home-inline-cta.center {
+    justify-content: center;
+}
+
+.secondary-btn {
+    background: #111827;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-weight: 800;
+    font-size: 14px;
+    transition: transform 0.08s ease, filter 0.2s ease;
+}
+
+.secondary-btn:hover {
+    filter: brightness(1.05);
+}
+
+.secondary-btn:active {
+    transform: scale(0.98);
+}
+
+.primary-btn.big, .secondary-btn.big {
+    height: 50px;
+    padding: 0 20px;
+    border-radius: 14px;
+    font-size: 14px;
+}
+
+/* Pre-footer CTA banner */
+.home-prefooter-cta {
+    background: linear-gradient(135deg, #111827 0%, #0b1220 100%);
+    color: #fff;
+    padding: 28px 0;
+    margin-top: 10px;
+}
+
+.home-prefooter-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.home-prefooter-text h2 {
+    margin: 0 0 8px 0;
+    font-size: 22px;
+    font-weight: 900;
+}
+
+.home-prefooter-text p {
+    margin: 0;
+    opacity: 0.85;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.home-prefooter-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.home-prefooter-actions .home-btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-color: rgba(255,255,255,0.22);
+}
+
+@media (max-width: 768px) {
+    .home-prefooter-inner {
+        justify-content: center;
+        text-align: center;
+    }
+    .home-prefooter-actions {
+        justify-content: center;
+        width: 100%;
+    }
+    .home-btn {
+        width: 100%;
+        max-width: 360px;
+    }
+}
+

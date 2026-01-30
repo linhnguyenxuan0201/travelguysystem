@@ -52,7 +52,13 @@ namespace TripCompass.WebUI.Controllers
                 return Unauthorized("Invalid signature");
             }
 
-            // Kiểm tra xem có phải thanh toán hoa hồng không
+            // Kiểm tra xem có phải thanh toán Premium không
+            if (payload.Description != null && payload.Description.Contains("PREMIUM-", StringComparison.OrdinalIgnoreCase))
+            {
+                return await HandlePremiumPayment(payload);
+            }
+
+            // Kiểm tra xem có phải thanh toán hoa hồng không 
             if (payload.Description != null && payload.Description.Contains("COMMISSION", StringComparison.OrdinalIgnoreCase))
             {
                 return await HandleCommissionPayment(payload);
@@ -188,7 +194,7 @@ namespace TripCompass.WebUI.Controllers
                             .Where(b => b.PartnerUserId == userId && b.CommissionDeducted == true && !b.CommissionPaid && b.CommissionAmount.HasValue)
                             .ToListAsync();
 
-                        var totalCommission = unpaidBookings.Sum(b => b.CommissionAmount.Value);
+                        var totalCommission = unpaidBookings.Sum(b => b.CommissionAmount!.Value);
                         if (Math.Abs((decimal)payload.Amount - totalCommission) < 1m) // Cho phép sai số 1đ
                         {
                             foreach (var b in unpaidBookings)
@@ -223,7 +229,7 @@ namespace TripCompass.WebUI.Controllers
                         var booking = await _context.PostBookings
                             .FirstOrDefaultAsync(b => b.BookingId == bid && !b.CommissionPaid && b.CommissionAmount.HasValue);
 
-                        if (booking != null && Math.Abs((decimal)payload.Amount - booking.CommissionAmount.Value) < 1m)
+                        if (booking != null && booking.CommissionAmount.HasValue && Math.Abs((decimal)payload.Amount - booking.CommissionAmount.Value) < 1m)
                         {
                             booking.CommissionPaid = true;
                             booking.CommissionPaidAt = now;
@@ -251,6 +257,85 @@ namespace TripCompass.WebUI.Controllers
             }
 
             return Ok(new { matched = false, reason = "Commission payment not matched" });
+        }
+
+        private async Task<IActionResult> HandlePremiumPayment(PaymentEvent payload)
+        {
+            var description = payload.Description ?? "";
+            var now = DateTime.UtcNow;
+
+            // Extract PREMIUM-{orderId}
+            var marker = "PREMIUM-";
+            var idx = description.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
+            {
+                return Ok(new { matched = false, reason = "No premium order id" });
+            }
+
+            var start = idx + marker.Length;
+            var sb = new StringBuilder();
+            for (int i = start; i < description.Length; i++)
+            {
+                var ch = description[i];
+                if (char.IsDigit(ch)) sb.Append(ch);
+                else break;
+            }
+
+            if (!long.TryParse(sb.ToString(), out var orderId))
+            {
+                return Ok(new { matched = false, reason = "Invalid order id" });
+            }
+
+            var order = await _context.PremiumOrders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return Ok(new { matched = false, reason = "Order not found" });
+            }
+
+            if (order.Status == "Paid")
+            {
+                return Ok(new
+                {
+                    matched = true,
+                    orderId = order.OrderId,
+                    status = order.Status,
+                    note = "Payment already recorded"
+                });
+            }
+
+            // Check amount (allow 1 VND difference)
+            if (Math.Abs((decimal)payload.Amount - order.Amount) > 1m)
+            {
+                return Ok(new { matched = false, reason = "Amount mismatch" });
+            }
+
+            // Update order status
+            order.Status = "Paid";
+            order.PaidAt = now;
+            order.PaymentRef = payload.Description;
+            order.TransactionId = payload.TransactionId;
+
+            // Create UserPlan
+            var userPlan = new UserPlan
+            {
+                UserId = order.UserId,
+                PlanCode = order.PlanCode,
+                StartedAt = now,
+                ExpiredAt = order.ExpiresAt
+            };
+
+            _context.UserPlans.Add(userPlan);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                matched = true,
+                orderId = order.OrderId,
+                status = order.Status,
+                planActivated = true
+            });
         }
 
         private static string ComputeHmac(string raw, string secret)

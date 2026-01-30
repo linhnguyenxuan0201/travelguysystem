@@ -2,6 +2,10 @@
     ViewData["Title"] = "Trang chủ";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+}
+
 <!-- HERO -->
 <section class="hero">
     <div class="container">
@@ -11,6 +15,12 @@
             Bạn chọn điểm đến. Chúng tôi xây dựng chuyến đi hoàn hảo:
             Nơi ở, Ẩm thực và Hoạt động
         </p>
+
+        <!-- Above-the-fold CTA -->
+        <div class="home-hero-cta">
+            <a class="home-btn home-btn-primary" href="/Review/Reviews">Tìm địa điểm để đi ngay</a>
+            <a class="home-btn home-btn-secondary" href="/Review/Create">Viết đánh giá đầu tiên của bạn</a>
+        </div>
 
         <div class="hero-image">
             <img src="~/images/hoi-an.jpg" />
@@ -28,7 +38,7 @@
             <div class="step-text">
                 <h3>Bước 1: Chọn Điểm Đến</h3>
                 <p>Bạn chỉ cần cho chúng tôi biết nơi bạn muốn đến.</p>
-                <a class="primary-btn" href="/Map/Nearby" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Xem nơi bạn sẽ đến</a>
+                <a class="primary-btn" href="/Map/Nearby" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Khám phá địa điểm gần bạn</a>
             </div>
             <img src="~/images/map.jpg" />
         </div>
@@ -51,6 +61,10 @@
                     Ngừng lãng phí thời gian vào những tìm kiếm rời rạc.
                     Tận hưởng chuyến đi suôn sẻ với la bàn thông minh của bạn, TripCompass.
                 </p>
+                <div class="home-inline-cta">
+                    <a class="primary-btn" href="/Review/Reviews" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Khám phá địa điểm</a>
+                    <a class="secondary-btn" href="/Review/Create" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Bắt đầu viết đánh giá</a>
+                </div>
             </div>
             <img src="~/images/bike.jpg" />
         </div>
@@ -62,14 +76,17 @@
     <div class="container center">
         <h2>La Bàn Của Bạn Có Gì?</h2>
         <p>La bàn dành cho du khách thông minh</p>
-        <button class="primary-btn">Khám phá thêm</button>
+        <div class="home-inline-cta center">
+            <a class="primary-btn" href="/Review/Reviews" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Khám phá địa điểm</a>
+            <a class="secondary-btn" href="/Review/PartnerRegistration" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Đăng ký trở thành đối tác</a>
+        </div>
     </div>
 </section>
 
 <!-- INSPIRATION -->
 <section class="inspiration">
     <div class="container">
-        <h2>Cảm Hứng Du Lịch</h2>
+        <h2 id="homeFeatured">Cảm Hứng Du Lịch</h2>
         <p class="section-desc">
             Không biết đi đâu? Hãy để TripCompass gợi ý những hành trình hot nhất ngay bây giờ!
         </p>
@@ -96,11 +113,28 @@
         <div class="cta">
             <h2>Ngừng Lên Kế Hoạch Mệt Mỏi. Bắt Đầu Khám Phá</h2>
             <p>Bạn chỉ cần xếp hành lý và đi. Hãy để TripCompass lo việc lên kế hoạch.</p>
-            <button class="primary-btn big">Lên Kế Hoạch Chuyến Đi Đầu Tiên Ngay!</button>
+            <div class="home-inline-cta">
+                <a class="primary-btn big" href="/Review/Reviews" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Khám phá địa điểm</a>
+                <a class="secondary-btn big" href="/Review/Create" style="display:inline-flex; align-items:center; justify-content:center; text-decoration:none;">Viết đánh giá</a>
+            </div>
         </div>
 
         <div class="cta-image">
             <img src="~/images/terract.jpg" />
+        </div>
+    </div>
+</section>
+
+<!-- PRE-FOOTER CTA BANNER -->
+<section class="home-prefooter-cta">
+    <div class="container home-prefooter-inner">
+        <div class="home-prefooter-text">
+            <h2>Sẵn sàng lên kế hoạch chuyến đi tiếp theo?</h2>
+            <p>Khám phá địa điểm, đọc đánh giá thật và bắt đầu hành trình của bạn ngay hôm nay.</p>
+        </div>
+        <div class="home-prefooter-actions">
+            <a class="home-btn home-btn-primary" href="/Review/Reviews">Khám phá địa điểm</a>
+            <a class="home-btn home-btn-secondary" href="/Review/Create">Viết đánh giá</a>
         </div>
     </div>
 </section>

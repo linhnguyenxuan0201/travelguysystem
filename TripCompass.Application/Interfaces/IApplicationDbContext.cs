@@ -1,3 +1,4 @@
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using TripCompass.Domain.Entities;
 
@@ -25,7 +26,8 @@ namespace TripCompass.Application.Interfaces
         DbSet<Partner> Partners { get; }
         DbSet<PartnerDiscountCode> PartnerDiscountCodes { get; }
         DbSet<PostBooking> PostBookings { get; }
+        DbSet<Notification> Notifications { get; }
 
-        Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace TripCompass.Application.Interfaces.Repositories
 {
@@ -13,6 +14,6 @@ namespace TripCompass.Application.Interfaces.Repositories
         IUserAvatarRepository UserAvatars { get; }
 
         // Save changes
-        Task SaveChangesAsync();
+        Task SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -45,7 +45,7 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         );
 
         await _repo.AddAsync(comment);
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // Phân tích sentiment
         var sentiment = _sentimentService.Analyze(command.Content);
@@ -75,7 +75,7 @@ namespace TripCompass.Application.Features.Comments.CreateComment
         user.ReputationScore = Math.Max(0, user.ReputationScore + coinEarned);
         user.ReputationLevel = CalculateReputationLevel(user.ReputationScore);
 
-        await _uow.SaveChangesAsync();
+        await _uow.SaveChangesAsync(cancellationToken);
 
         // Gửi thông báo cho tác giả bài viết (nếu không phải là chính họ)
         try

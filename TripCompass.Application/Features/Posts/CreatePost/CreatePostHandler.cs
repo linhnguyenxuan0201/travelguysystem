@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using TripCompass.Application.Common;
 using TripCompass.Application.Interfaces;
 using TripCompass.Domain.Entities;
@@ -16,11 +17,21 @@ namespace TripCompass.Application.Features.Posts.CreatePost
 
         public async Task<long> Handle(CreatePostCommand request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
+            // Load user with UserRoles to check if user has Partner role
+            var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken);
+            
             if (user == null) throw new Exception("User not found");
             
             // Business Rule: Banned user cannot create post
             if (user.IsBanned) throw new UnauthorizedAccessException("User is banned and cannot create posts.");
+
+            // Check if user has Partner role (case-insensitive)
+            var hasPartnerRole = user.UserRoles?
+                .Where(ur => ur.Role != null && !string.IsNullOrWhiteSpace(ur.Role.RoleName))
+                .Any(ur => string.Equals(ur.Role.RoleName, "Partner", StringComparison.OrdinalIgnoreCase)) ?? false;
 
             var post = new Post
             {
@@ -29,7 +40,8 @@ namespace TripCompass.Application.Features.Posts.CreatePost
                 Content = request.Content,
                 Location = request.Location,
                 CreatedAt = DateTime.UtcNow,
-                Status = Domain.Enums.PostStatus.Pending
+                Status = Domain.Enums.PostStatus.Pending,
+                IsPartner = hasPartnerRole // Set IsPartner based on user's role
             };
 
             _context.Posts.Add(post);

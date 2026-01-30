@@ -357,6 +357,9 @@ namespace TripCompass.Infrastructure.Persistence
                 entity.Property(e => e.Link)
                       .HasMaxLength(500);
                 
+                entity.Property(e => e.ReferenceId)
+                      .IsRequired(false);
+                
                 entity.Property(e => e.IsRead)
                       .HasDefaultValue(false);
                 
