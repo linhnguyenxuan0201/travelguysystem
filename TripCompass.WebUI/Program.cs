@@ -13,6 +13,7 @@ using TripCompass.Infrastructure.Security;
 using TripCompass.Infrastructure.Services;
 using TripCompass.WebUI.Hubs;
 using TripCompass.WebUI.Services;
+using TripCompass.WebUI.Services.Gemini;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,10 @@ var builder = WebApplication.CreateBuilder(args);
 // MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
+
+// Gemini (LLM)
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddHttpClient<IGeminiClient, GeminiClient>();
 
 /* =========================
    DATABASE

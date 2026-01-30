@@ -1015,5 +1015,139 @@ namespace TripCompass.WebUI.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        /* =========================
+           UPGRADE PLAN
+        ========================= */
+
+        [Authorize, HttpPost]
+        public async Task<IActionResult> UpgradePlan(string planCode, string planType = "monthly")
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Validate plan code
+            if (planCode != "Pro" && planCode != "Enterprise")
+            {
+                TempData["Error"] = "Gói không hợp lệ";
+                return RedirectToAction("Premium", "Home");
+            }
+
+            // Check if user already has this plan or higher
+            var currentPlan = await _db.UserPlans
+                .Where(x => x.UserId == user.UserId && (x.ExpiredAt == null || x.ExpiredAt > DateTime.UtcNow))
+                .OrderByDescending(x => x.StartedAt)
+                .FirstOrDefaultAsync();
+
+            var currentPlanCode = currentPlan?.PlanCode ?? "Free";
+            
+            // Check upgrade path
+            if (currentPlanCode == "Enterprise" || (currentPlanCode == "Pro" && planCode == "Pro"))
+            {
+                TempData["Info"] = "Bạn đã có gói này hoặc gói cao hơn";
+                return RedirectToAction("Premium", "Home");
+            }
+
+            // Calculate amount and expiration date
+            decimal amount = 0;
+            DateTime? expiredAt = null;
+            if (planType == "monthly")
+            {
+                amount = 299000; // 299,000 VND
+                expiredAt = DateTime.UtcNow.AddMonths(1);
+            }
+            else if (planType == "yearly")
+            {
+                amount = 2390000; // 2,390,000 VND
+                expiredAt = DateTime.UtcNow.AddYears(1);
+            }
+
+            // Create premium order
+            var order = new PremiumOrder
+            {
+                UserId = user.UserId,
+                PlanCode = planCode,
+                PlanType = planType,
+                Amount = amount,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = expiredAt
+            };
+
+            _db.PremiumOrders.Add(order);
+            await _db.SaveChangesAsync();
+
+            // Redirect to payment page
+            return RedirectToAction("PremiumPayment", "Account", new { orderId = order.OrderId });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> PremiumPayment(long orderId)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var order = await _db.PremiumOrders
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == user.UserId);
+
+            if (order == null)
+            {
+                TempData["Error"] = "Đơn hàng không tồn tại";
+                return RedirectToAction("Premium", "Home");
+            }
+
+            if (order.Status == "Paid")
+            {
+                TempData["Info"] = "Đơn hàng đã được thanh toán";
+                return RedirectToAction("Premium", "Home");
+            }
+
+            return View(order);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> CheckPremiumPayment(long orderId)
+        {
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(email))
+            {
+                return Json(new { paid = false });
+            }
+
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                return Json(new { paid = false });
+            }
+
+            var order = await _db.PremiumOrders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.UserId == user.UserId);
+
+            if (order == null)
+            {
+                return Json(new { paid = false });
+            }
+
+            return Json(new { paid = order.Status == "Paid" });
+        }
+
     }
 }

@@ -42,6 +42,7 @@ namespace TripCompass.Infrastructure.Persistence
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<ChatThread> ChatThreads => Set<ChatThread>();
         public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+        public DbSet<PremiumOrder> PremiumOrders => Set<PremiumOrder>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

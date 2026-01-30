@@ -1,0 +1,177 @@
+@model TripCompass.WebUI.ViewModels.AiItineraryRequest
+@{
+    ViewData["Title"] = "AI Lịch trình - TripCompass";
+    Layout = "_Layout";
+}
+
+<div class="ai-demo-page">
+    <div class="container">
+        <div class="ai-header">
+            <h1>TripCompass AI – Gợi ý lịch trình</h1>
+            <p>Nhập nhu cầu của bạn, AI sẽ gợi ý lịch trình và đề xuất địa điểm/khách sạn/quán ăn từ chính dữ liệu TripCompass.</p>
+        </div>
+
+        <div class="ai-grid">
+            <div class="ai-card">
+                <h2>Yêu cầu</h2>
+                <div class="ai-form">
+                    <div class="row">
+                        <label>Điểm đến</label>
+                        <input id="dest" value="@Model.Destination" />
+                    </div>
+                    <div class="row cols">
+                        <div>
+                            <label>Số ngày</label>
+                            <input id="days" type="number" min="1" max="10" value="@Model.Days" />
+                        </div>
+                        <div>
+                            <label>Số đêm</label>
+                            <input id="nights" type="number" min="0" max="9" value="@Model.Nights" />
+                        </div>
+                        <div>
+                            <label>Số người</label>
+                            <input id="people" type="number" min="1" max="10" value="@Model.People" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <label>Ngân sách (VND)</label>
+                        <input id="budget" type="number" min="100000" step="50000" value="@Model.BudgetVnd" />
+                    </div>
+                    <div class="row">
+                        <label>Sở thích (tuỳ chọn)</label>
+                        <input id="prefs" value="@Model.Preferences" placeholder="vd: biển, hải sản, chụp ảnh, chill" />
+                    </div>
+                    <button class="btn-primary" onclick="runAi()">Tạo lịch trình</button>
+                    <div class="ai-note">
+                        Demo hiện tại chạy theo “rule-based AI” (không cần API key) + tìm dữ liệu trong DB. Sau đó có thể nâng cấp sang LLM thật.
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-card">
+                <h2>Kết quả</h2>
+                <div id="aiResult" class="ai-result empty">
+                    Nhấn <strong>Tạo lịch trình</strong> để xem kết quả.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ai-demo-page { background: #f9fafb; min-height: 100vh; padding: 40px 0; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .ai-header h1 { font-size: 28px; margin: 0 0 8px; }
+    .ai-header p { color: #6b7280; margin: 0 0 20px; }
+    .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .ai-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .ai-card h2 { font-size: 16px; margin: 0 0 12px; }
+    .ai-form .row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .ai-form label { font-size: 13px; color: #374151; font-weight: 600; }
+    .ai-form input { height: 40px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; }
+    .ai-form .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .btn-primary { height: 42px; border: none; border-radius: 10px; background: #2563eb; color: #fff; font-weight: 800; cursor: pointer; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .ai-note { margin-top: 10px; font-size: 12px; color: #6b7280; }
+
+    .ai-result.empty { color: #6b7280; }
+    .ai-section { margin-bottom: 14px; }
+    .ai-summary { font-weight: 700; }
+    .ai-qa { margin: 8px 0 0; padding-left: 18px; color: #374151; }
+    .ai-days { display: grid; gap: 10px; }
+    .ai-day { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; }
+    .ai-day-title { font-weight: 800; margin-bottom: 6px; }
+    .ai-day p { margin: 6px 0; color: #374151; }
+    .ai-cost { margin-top: 8px; font-size: 12px; color: #6b7280; }
+    .ai-suggestions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ai-suggest { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; display: flex; gap: 10px; padding: 10px; }
+    .ai-suggest img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; background: #f3f4f6; }
+    .ai-suggest .meta { flex: 1; }
+    .ai-suggest .title { font-weight: 800; font-size: 13px; margin-bottom: 2px; }
+    .ai-suggest .sub { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .ai-suggest a { font-size: 12px; color: #2563eb; text-decoration: none; font-weight: 700; }
+
+    @@media (max-width: 900px) {
+        .ai-grid { grid-template-columns: 1fr; }
+        .ai-suggestions { grid-template-columns: 1fr; }
+    }
+</style>
+
+<script>
+    async function runAi() {
+        const payload = {
+            destination: document.getElementById('dest').value,
+            days: parseInt(document.getElementById('days').value || '3', 10),
+            nights: parseInt(document.getElementById('nights').value || '2', 10),
+            people: parseInt(document.getElementById('people').value || '1', 10),
+            budgetVnd: parseInt(document.getElementById('budget').value || '3000000', 10),
+            preferences: document.getElementById('prefs').value
+        };
+
+        const el = document.getElementById('aiResult');
+        el.classList.remove('empty');
+        el.innerHTML = 'Đang tạo lịch trình...';
+
+        const res = await fetch('/api/ai/itinerary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const err = await res.text();
+            el.innerHTML = 'Có lỗi: ' + err;
+            return;
+        }
+
+        const data = await res.json();
+        renderAiResult(data);
+    }
+
+    function renderAiResult(data) {
+        const el = document.getElementById('aiResult');
+        const qa = (data.followUpQuestions || []).map(q => `<li>${escapeHtml(q)}</li>`).join('');
+        const days = (data.days || []).map(d => `
+            <div class="ai-day">
+                <div class="ai-day-title">${escapeHtml(d.title)}</div>
+                <p><strong>Sáng:</strong> ${escapeHtml(d.morning)}</p>
+                <p><strong>Chiều:</strong> ${escapeHtml(d.afternoon)}</p>
+                <p><strong>Tối:</strong> ${escapeHtml(d.evening)}</p>
+                <div class="ai-cost">${escapeHtml(d.estimatedCostNote)}</div>
+            </div>
+        `).join('');
+
+        const sug = (data.suggestions || []).slice(0, 6).map(s => `
+            <div class="ai-suggest">
+                ${s.thumbnailUrl ? `<img src="${escapeAttr(s.thumbnailUrl)}" />` : `<img />`}
+                <div class="meta">
+                    <div class="title">${escapeHtml(s.title)}</div>
+                    <div class="sub">${escapeHtml(s.location || '')} ${s.isPartner ? '• Đối tác' : ''}</div>
+                    <div class="sub">${escapeHtml(s.reason || '')}</div>
+                    <a href="/Review/Detail/${s.postId}" target="_blank">Xem chi tiết</a>
+                </div>
+            </div>
+        `).join('');
+
+        el.innerHTML = `
+            <div class="ai-section ai-summary">${escapeHtml(data.summary || '')}</div>
+            ${(qa ? `<div class="ai-section"><div><strong>Câu hỏi thêm:</strong></div><ul class="ai-qa">${qa}</ul></div>` : '')}
+            <div class="ai-section">
+                <div><strong>Lịch trình gợi ý:</strong></div>
+                <div class="ai-days">${days}</div>
+            </div>
+            <div class="ai-section">
+                <div><strong>Gợi ý từ TripCompass:</strong></div>
+                <div class="ai-suggestions">${sug || '<span class="ai-note">Chưa tìm thấy bài viết phù hợp trong DB theo Location.</span>'}</div>
+            </div>
+        `;
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',\"'\":'&#39;'}[s]));
+    }
+    function escapeAttr(str) {
+        return escapeHtml(str).replace(/"/g, '&quot;');
+    }
+</script>
+
