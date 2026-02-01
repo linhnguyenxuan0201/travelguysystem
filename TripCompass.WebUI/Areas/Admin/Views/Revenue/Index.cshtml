@@ -1,0 +1,192 @@
+@using TripCompass.Application.Features.Admin.Revenue.GetRevenueStats
+@using TripCompass.Application.DTOs
+@model RevenueStatsDto
+
+@{
+    ViewData["Title"] = "Revenue Statistics";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .stat-card.success {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card.warning {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .stat-card.info {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Revenue Statistics</h1>
+        <span class="text-muted fw-semibold fs-7">Track revenue and financial statistics</span>
+    </div>
+    <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card-flush stat-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small mb-1">Total Revenue</div>
+                    <h3 class="text-white mb-0">@Model.TotalRevenue.ToString("N0")</h3>
+                </div>
+                <i class="fas fa-dollar-sign fa-2x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-flush stat-card success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small mb-1">Coin Transactions</div>
+                    <h3 class="text-white mb-0">@Model.TotalCoinTransactions.ToString("N0")</h3>
+                    <div class="text-white-50 small">@Model.TotalCoinTransactionsCount transactions</div>
+                </div>
+                <i class="fas fa-coins fa-2x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-flush stat-card warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small mb-1">Premium Orders</div>
+                    <h3 class="text-white mb-0">@Model.TotalPremiumOrders.ToString("N0")</h3>
+                    <div class="text-white-50 small">@Model.TotalPremiumOrdersCount orders</div>
+                </div>
+                <i class="fas fa-crown fa-2x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card-flush stat-card info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-white-50 small mb-1">Total Transactions</div>
+                    <h3 class="text-white mb-0">@((Model.TotalCoinTransactionsCount + Model.TotalPremiumOrdersCount).ToString("N0"))</h3>
+                </div>
+                <i class="fas fa-chart-line fa-2x text-white-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-flush shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title">Daily Revenue (Last 30 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyRevenueChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-flush shadow-sm">
+            <div class="card-header">
+                <h5 class="card-title">Monthly Revenue (Last 12 Months)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyRevenueChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Daily Revenue Chart
+        const dailyCtx = document.getElementById('dailyRevenueChart').getContext('2d');
+        const dailyLabels = @Html.Raw(Json.Serialize(Model.DailyRevenue.Select(x => x.Date)));
+        const dailyData = @Html.Raw(Json.Serialize(Model.DailyRevenue.Select(x => x.Total)));
+
+        new Chart(dailyCtx, {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: 'Daily Revenue',
+                    data: dailyData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Monthly Revenue Chart
+        const monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+        const monthlyLabels = @Html.Raw(Json.Serialize(Model.MonthlyRevenue.Select(x => x.Month)));
+        const monthlyData = @Html.Raw(Json.Serialize(Model.MonthlyRevenue.Select(x => x.Total)));
+
+        new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Monthly Revenue',
+                    data: monthlyData,
+                    backgroundColor: '#f5576c',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+</script>

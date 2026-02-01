@@ -20,6 +20,7 @@ namespace TripCompass.Application.Interfaces
         DbSet<PostImage> PostImages { get; }
         DbSet<CoinTransaction> CoinTransactions { get; }
         DbSet<PostReaction> PostReactions { get; }
+        DbSet<CommentReaction> CommentReactions { get; }
         DbSet<Report> Reports { get; }
         DbSet<AdminLog> AdminLogs { get; }
         DbSet<PartnerAgreement> PartnerAgreements { get; }

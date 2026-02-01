@@ -1,116 +1,295 @@
+@using TripCompass.Application.Common.Models
+@using TripCompass.Application.Features.Admin.Partners.GetPartners
+@using TripCompass.Application.DTOs
+@model PaginatedList<PartnerListItemDto>
+
 @{
-    ViewData["Title"] = "Partners & Monetization";
+    ViewData["Title"] = "Partner Management";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/admin-portal.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<div class="portal-container">
-    
-    <div class="portal-header">
-        <h2>🤝 Đối tác & Kinh doanh</h2>
-        <p>Quản lý đối tác, quảng cáo và doanh thu</p>
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+
+    .badge-soft {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #d09c00;
+    }
+
+    .badge-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .symbol-circle {
+        width: 40px;
+        height: 40px;
+        background-color: #f3f6f9;
+        color: #0d6efd;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-right: 12px;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Partner Management</h1>
+        <span class="text-muted fw-semibold fs-7">Manage business partners and approvals</span>
     </div>
-
-    <div class="portal-sections">
-        
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon partners">
-                    <i class="fas fa-building"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Quản lý đối tác</h3>
-                    <p>Partners Management</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-list"></i> Tất cả đối tác</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-plus"></i> Thêm đối tác mới</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-handshake"></i> Hợp đồng</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon partners">
-                    <i class="fas fa-ad"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Gói quảng cáo</h3>
-                    <p>Advertising Packages</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-box"></i> Các gói quảng cáo</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-chart-line"></i> Hiệu quả quảng cáo</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon partners">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Thống kê doanh thu</h3>
-                    <p>Revenue Statistics</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-dollar-sign"></i> Doanh thu tổng</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-file-invoice-dollar"></i> Báo cáo tài chính</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon partners">
-                    <i class="fas fa-coins"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Giao dịch Coin</h3>
-                    <p>Coin Transactions</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-exchange-alt"></i> Lịch sử giao dịch</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-wallet"></i> Ví người dùng</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-    </div>
-
-    <a href="/Admin/Portal" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Quay lại Portal
+    <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted">
+        <i class="fas fa-arrow-left"></i>
     </a>
+</div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by store name, representative, phone..." />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <select name="IsApproved" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="false" selected="@(ViewBag.SelectedIsApproved == false)">🟡 Pending</option>
+                        <option value="true" selected="@(ViewBag.SelectedIsApproved == true)">🟢 Approved</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <input name="BusinessType" type="text"
+                           class="form-control form-control-solid bg-light border-0 fw-bold text-muted"
+                           value="@ViewBag.SelectedBusinessType"
+                           placeholder="Business Type" />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Apply Filter
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || ViewBag.SelectedIsApproved != null || !string.IsNullOrEmpty(ViewBag.SelectedBusinessType))
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "Partner", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Partner Info</th>
+                        <th style="min-width: 150px;">Business</th>
+                        <th style="min-width: 150px;">Contact</th>
+                        <th style="min-width: 100px;">Status</th>
+                        <th style="min-width: 120px;">Created</th>
+                        <th class="text-end" style="min-width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Any())
+                    {
+                        @foreach (var partner in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="symbol-circle">
+                                            @(string.IsNullOrEmpty(partner.StoreName) ? "?" : partner.StoreName.Substring(0, 1))
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span class="text-dark fw-bold">@partner.StoreName</span>
+                                            <span class="text-muted fs-8">@partner.UserName</span>
+                                            <span class="text-muted fs-9 text-uppercase mt-1">ID: @partner.PartnerId</span>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-semibold text-dark">@partner.BusinessType</span>
+                                        <span class="text-muted small">@partner.RepresentativeName</span>
+                                        @if (!string.IsNullOrEmpty(partner.TaxId))
+                                        {
+                                            <span class="text-muted fs-8">Tax: @partner.TaxId</span>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-dark"><i class="fas fa-phone me-1"></i>@partner.PhoneNumber</span>
+                                        <span class="text-muted small mt-1" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@partner.BusinessAddress">
+                                            <i class="fas fa-map-marker-alt me-1"></i>@partner.BusinessAddress
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    @if (partner.IsApproved)
+                                    {
+                                        <span class="badge badge-soft badge-soft-success">Approved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-soft badge-soft-warning">Pending</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="text-dark fw-bold fs-7">@partner.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="text-muted fs-8">@partner.CreatedAt.ToString("HH:mm")</div>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <a asp-action="Details" asp-route-id="@partner.PartnerId" class="btn btn-sm btn-primary fw-bold px-3">
+                                            <i class="fas fa-eye me-1"></i> View Details
+                                        </a>
+                                        @if (!partner.IsApproved)
+                                        {
+                                            <form asp-action="Approve" asp-route-id="@partner.PartnerId" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3" onclick="return confirm('Are you sure you want to approve this partner?')">
+                                                    <i class="fas fa-check me-1"></i> Approve
+                                                </button>
+                                            </form>
+                                            <form asp-action="Reject" asp-route-id="@partner.PartnerId" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger fw-bold px-3" onclick="return confirm('Are you sure you want to reject this partner?')">
+                                                    <i class="fas fa-times me-1"></i> Reject
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                    {
+                                        <span class="text-muted small">
+                                            <i class="fas fa-check-circle text-success me-1"></i>Approved
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-handshake"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No partners found matching your criteria</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 pb-2">
+            <div class="text-muted small fw-semibold">
+                Showing page <span class="text-dark fw-bold">@Model.PageNumber</span> of <span class="text-dark fw-bold">@Model.TotalPages</span>
+            </div>
+            <div class="d-flex gap-1">
+                <a href="@(Model.HasPreviousPage? Url.Action("Index", new { PageNumber = Model.PageNumber - 1, SearchTerm = ViewBag.SearchTerm, IsApproved = ViewBag.SelectedIsApproved, BusinessType = ViewBag.SelectedBusinessType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasPreviousPage ? "disabled opacity-50" : "")">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+
+                <a href="@(Model.HasNextPage? Url.Action("Index", new { PageNumber = Model.PageNumber + 1, SearchTerm = ViewBag.SearchTerm, IsApproved = ViewBag.SelectedIsApproved, BusinessType = ViewBag.SelectedBusinessType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasNextPage ? "disabled opacity-50" : "")">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>

@@ -1,0 +1,216 @@
+@using TripCompass.Application.Features.Admin.AdPackages.GetAdPackages
+@using TripCompass.Application.DTOs
+@model List<AdPackageListItemDto>
+
+@{
+    ViewData["Title"] = "Ad Packages";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Ad Packages</h1>
+        <span class="text-muted fw-semibold fs-7">Manage advertising packages and discount codes</span>
+    </div>
+    <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by code, partner name..." />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <select name="IsActive" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="false" selected="@(ViewBag.SelectedIsActive == false)">Pending</option>
+                        <option value="true" selected="@(ViewBag.SelectedIsActive == true)">Active</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Apply Filter
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || ViewBag.SelectedIsActive != null)
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "AdPackage", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Partner</th>
+                        <th style="min-width: 150px;">Code</th>
+                        <th style="min-width: 100px;">Discount</th>
+                        <th style="min-width: 150px;">Purpose</th>
+                        <th style="min-width: 120px;">Expiry</th>
+                        <th style="min-width: 100px;">Status</th>
+                        <th class="text-end" style="min-width: 100px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var package in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="text-dark fw-bold">@package.PartnerName</span>
+                                </td>
+
+                                <td>
+                                    <code class="text-primary fw-bold">@package.Code</code>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-warning">@package.PercentOff% OFF</span>
+                                </td>
+
+                                <td>
+                                    <span class="text-dark">@package.Purpose</span>
+                                </td>
+
+                                <td>
+                                    @if (package.ExpiryDate.HasValue)
+                                    {
+                                        <div class="text-dark fw-bold fs-7">@package.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No expiry</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (package.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Pending</span>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    @if (!package.IsActive)
+                                    {
+                                        <form asp-action="Approve" asp-route-id="@package.PartnerDiscountCodeId" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success fw-bold px-3" onclick="return confirm('Are you sure you want to approve this ad package?')">
+                                                <i class="fas fa-check me-1"></i> Approve
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Active</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-ad"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No ad packages found</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,198 @@
+@using TripCompass.Application.Common.Models
+@using TripCompass.Application.Features.Admin.CoinTransactions.GetCoinTransactions
+@using TripCompass.Application.DTOs
+@model PaginatedList<CoinTransactionListItemDto>
+
+@{
+    ViewData["Title"] = "Coin Transactions";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Coin Transactions</h1>
+        <span class="text-muted fw-semibold fs-7">Manage coin transactions</span>
+    </div>
+    <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+</div>
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by user, transaction ID..." />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <select name="Type" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="EARNED" selected="@(ViewBag.SelectedType == "EARNED")">Earned</option>
+                        <option value="SPENT" selected="@(ViewBag.SelectedType == "SPENT")">Spent</option>
+                        <option value="PURCHASED" selected="@(ViewBag.SelectedType == "PURCHASED")">Purchased</option>
+                        <option value="REFUND" selected="@(ViewBag.SelectedType == "REFUND")">Refund</option>
+                        <option value="BONUS" selected="@(ViewBag.SelectedType == "BONUS")">Bonus</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Apply Filter
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || !string.IsNullOrEmpty(ViewBag.SelectedType))
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "CoinTransaction", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 150px;">User</th>
+                        <th style="min-width: 100px;">Amount</th>
+                        <th style="min-width: 150px;">Type</th>
+                        <th style="min-width: 100px;">Reference</th>
+                        <th style="min-width: 150px;">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Any())
+                    {
+                        @foreach (var transaction in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-dark fw-bold">@transaction.UserName</span>
+                                        <span class="text-muted fs-8">@transaction.UserEmail</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="badge @(transaction.Amount > 0 ? "bg-success" : "bg-danger")">
+                                        @(transaction.Amount > 0 ? "+" : "")@transaction.Amount
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-info">@transaction.TypeDisplay</span>
+                                </td>
+
+                                <td>
+                                    @if (transaction.ReferenceId.HasValue)
+                                    {
+                                        <span class="text-muted">#@transaction.ReferenceId</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="text-dark fw-bold fs-7">@transaction.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="text-muted fs-8">@transaction.CreatedAt.ToString("HH:mm")</div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-coins"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No transactions found</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 pb-2">
+            <div class="text-muted small fw-semibold">
+                Showing page <span class="text-dark fw-bold">@Model.PageNumber</span> of <span class="text-dark fw-bold">@Model.TotalPages</span>
+            </div>
+            <div class="d-flex gap-1">
+                <a href="@(Model.HasPreviousPage? Url.Action("Index", new { PageNumber = Model.PageNumber - 1, SearchTerm = ViewBag.SearchTerm, Type = ViewBag.SelectedType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasPreviousPage ? "disabled opacity-50" : "")">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+
+                <a href="@(Model.HasNextPage? Url.Action("Index", new { PageNumber = Model.PageNumber + 1, SearchTerm = ViewBag.SearchTerm, Type = ViewBag.SelectedType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasNextPage ? "disabled opacity-50" : "")">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -161,6 +161,31 @@ namespace TripCompass.Application.Services
             await PushRealtimeAsync(receiverUserId, notification);
         }
 
+        public async Task CreateNotificationAsync(
+            long userId,
+            string type,
+            string title,
+            string message,
+            string? link = null,
+            long? referenceId = null,
+            CancellationToken cancellationToken = default)
+        {
+            var notification = new Notification
+            {
+                UserId = userId,
+                Type = type,
+                Title = title,
+                Message = message,
+                Link = link,
+                ReferenceId = referenceId,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _notificationRepository.AddAsync(notification);
+            await PushRealtimeAsync(userId, notification);
+        }
+
         private async Task PushRealtimeAsync(long userId, Notification notification)
         {
             if (_realtime == null) return;
