@@ -1,0 +1,279 @@
+@using TripCompass.Application.Features.Admin.Categories.GetCategories
+@using TripCompass.Application.DTOs
+@model List<CategoryListItemDto>
+
+@{
+    ViewData["Title"] = "Category Management";
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Category Management</h1>
+        <span class="text-muted fw-semibold fs-7">Manage categories and tags</span>
+    </div>
+    <div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
+            <i class="fas fa-plus me-2"></i>Create Category
+        </button>
+        <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted ms-2">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by name or slug..." />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Search
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm))
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "Category", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Category</th>
+                        <th style="min-width: 150px;">Slug</th>
+                        <th style="min-width: 100px;">Icon</th>
+                        <th style="min-width: 100px;">Posts</th>
+                        <th class="text-end" style="min-width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var category in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(category.Icon))
+                                        {
+                                            <i class="@category.Icon me-2 text-primary"></i>
+                                        }
+                                        <span class="text-dark fw-bold">@category.Name</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <code class="text-muted">@category.Slug</code>
+                                </td>
+
+                                <td>
+                                    @if (!string.IsNullOrEmpty(category.Icon))
+                                    {
+                                        <i class="@category.Icon text-primary"></i>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-primary">@category.PostCount posts</span>
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-primary" 
+                                                onclick="editCategory(@category.CategoryId, '@category.Name', '@category.Slug', '@(category.Icon ?? "")')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <form asp-action="Delete" asp-route-id="@category.CategoryId" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this category?')">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-tags"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No categories found</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Category Modal -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="Name" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Slug</label>
+                        <input type="text" name="Slug" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Icon (Font Awesome class, e.g., fa-tag)</label>
+                        <input type="text" name="Icon" class="form-control" placeholder="fa-tag" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editCategoryForm" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editCategoryId" name="CategoryId" />
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" id="editCategoryName" name="Name" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Slug</label>
+                        <input type="text" id="editCategorySlug" name="Slug" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Icon (Font Awesome class, e.g., fa-tag)</label>
+                        <input type="text" id="editCategoryIcon" name="Icon" class="form-control" placeholder="fa-tag" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editCategory(id, name, slug, icon) {
+        document.getElementById('editCategoryId').value = id;
+        document.getElementById('editCategoryName').value = name;
+        document.getElementById('editCategorySlug').value = slug;
+        document.getElementById('editCategoryIcon').value = icon;
+        document.getElementById('editCategoryForm').action = '/Admin/Category/Update/' + id;
+        new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+    }
+</script>

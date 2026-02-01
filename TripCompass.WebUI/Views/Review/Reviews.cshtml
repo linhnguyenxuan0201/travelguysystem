@@ -5,49 +5,54 @@
 }
 
 <div class="reviews-page">
-    <!-- Hero Header -->
-    <div class="hero-header">
-        <div class="hero-content">
-            <h1 class="hero-title">Khám phá Việt Nam</h1>
-            <p class="hero-subtitle">Trải nghiệm du lịch, ẩm thực và nghỉ dưỡng tuyệt vời</p>
-            <div class="hero-badges">
-                <div class="badge">
-                    <span class="badge-icon">⭐</span>
-                    <span class="badge-text">@Model.TotalProducts.ToString("N0")+ Sản phẩm</span>
-                </div>
-                <div class="badge">
-                    <span class="badge-icon">⭐</span>
-                    <span class="badge-text">Đánh giá @Model.AverageRating.ToString("F1")/5</span>
+
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content container">
+            <div class="hero-text">
+                <h1>Khám phá Việt Nam cùng TripCompass</h1>
+                <p>So sánh, đánh giá và lựa chọn những trải nghiệm du lịch tốt nhất cho bạn</p>
+
+                <div class="hero-stats">
+                    <div class="stat-chip">
+                        <span class="stat-icon">📍</span>
+                        <span>@Model.TotalProducts.ToString("N0") địa điểm</span>
+                    </div>
+                    <div class="stat-chip">
+                        <span class="stat-icon">⭐</span>
+                        <span>@Model.AverageRating.ToString("F1") / 5 trung bình</span>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="hero-decoration">
-            <div class="cloud cloud-1"></div>
-            <div class="cloud cloud-2"></div>
-            <div class="cloud cloud-3"></div>
-        </div>
-    </div>
+    </section>
 
-    <!-- Search and Filter Section -->
-    <div class="search-filter-section">
+    <!-- ================= SEARCH & FILTER ================= -->
+    <section class="filter-bar">
         <div class="container">
-            <form method="get" action="/Review/Reviews" class="search-filter-form">
-                <div class="search-bar">
-                    <label>Tìm kiếm</label>
-                    <div class="search-input-wrapper">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" name="search" placeholder="Tìm kiếm tour, khách sạn, nhà hàng..." value="@Model.SearchQuery" class="search-input" />
-                    </div>
+            <form method="get" action="/Review/Reviews" class="filter-card search-filter-form">
+
+                <!-- Search -->
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           name="search"
+                           value="@Model.SearchQuery"
+                           placeholder="Tìm tour, khách sạn, nhà hàng..."
+                           class="search-input" />
                 </div>
 
-                <div class="filter-row">
-                    <div class="filter-item">
+                <!-- Filters -->
+                <div class="filters-row">
+
+                    <div class="filter-group">
                         <label>Tỉnh thành</label>
-                        <select name="province" class="filter-select">
-                            <option value="">Tất cả tỉnh thành</option>
+                        <select name="province">
+                            <option value="">Tất cả</option>
                             @foreach (var prov in Model.Provinces)
                             {
-                                @if (Model.SelectedProvince == prov)
+                                if (Model.SelectedProvince == prov)
                                 {
                                     <option value="@prov" selected>@prov</option>
                                 }
@@ -59,10 +64,10 @@
                         </select>
                     </div>
 
-                    <div class="filter-item">
-                        <label>Giá</label>
-                        <select name="priceRange" class="filter-select">
-                            <option value="">Tất cả mức giá</option>
+                    <div class="filter-group">
+                        <label>Mức giá</label>
+                        <select name="priceRange">
+                            <option value="">Tất cả</option>
                             @if (Model.SelectedPriceRange == "under-1m")
                             {
                                 <option value="under-1m" selected>Dưới 1 triệu</option>
@@ -71,22 +76,25 @@
                             {
                                 <option value="under-1m">Dưới 1 triệu</option>
                             }
+
                             @if (Model.SelectedPriceRange == "1m-3m")
                             {
-                                <option value="1m-3m" selected>1 - 3 triệu</option>
+                                <option value="1m-3m" selected>1 – 3 triệu</option>
                             }
                             else
                             {
-                                <option value="1m-3m">1 - 3 triệu</option>
+                                <option value="1m-3m">1 – 3 triệu</option>
                             }
+
                             @if (Model.SelectedPriceRange == "3m-5m")
                             {
-                                <option value="3m-5m" selected>3 - 5 triệu</option>
+                                <option value="3m-5m" selected>3 – 5 triệu</option>
                             }
                             else
                             {
-                                <option value="3m-5m">3 - 5 triệu</option>
+                                <option value="3m-5m">3 – 5 triệu</option>
                             }
+
                             @if (Model.SelectedPriceRange == "over-5m")
                             {
                                 <option value="over-5m" selected>Trên 5 triệu</option>
@@ -98,9 +106,9 @@
                         </select>
                     </div>
 
-                    <div class="filter-item">
-                        <label>Sắp xếp:</label>
-                        <select name="sortBy" class="filter-select">
+                    <div class="filter-group">
+                        <label>Sắp xếp</label>
+                        <select name="sortBy">
                             @if (Model.SortBy == "popular")
                             {
                                 <option value="popular" selected>Phổ biến nhất</option>
@@ -109,6 +117,7 @@
                             {
                                 <option value="popular">Phổ biến nhất</option>
                             }
+
                             @if (Model.SortBy == "rating")
                             {
                                 <option value="rating" selected>Đánh giá cao nhất</option>
@@ -117,22 +126,25 @@
                             {
                                 <option value="rating">Đánh giá cao nhất</option>
                             }
+
                             @if (Model.SortBy == "price-low")
                             {
-                                <option value="price-low" selected>Giá thấp đến cao</option>
+                                <option value="price-low" selected>Giá thấp → cao</option>
                             }
                             else
                             {
-                                <option value="price-low">Giá thấp đến cao</option>
+                                <option value="price-low">Giá thấp → cao</option>
                             }
+
                             @if (Model.SortBy == "price-high")
                             {
-                                <option value="price-high" selected>Giá cao đến thấp</option>
+                                <option value="price-high" selected>Giá cao → thấp</option>
                             }
                             else
                             {
-                                <option value="price-high">Giá cao đến thấp</option>
+                                <option value="price-high">Giá cao → thấp</option>
                             }
+
                             @if (Model.SortBy == "newest")
                             {
                                 <option value="newest" selected>Mới nhất</option>
@@ -143,769 +155,716 @@
                             }
                         </select>
                     </div>
+
                 </div>
 
                 <!-- Category Tabs -->
                 <div class="category-tabs">
-                    <a href="/Review/Reviews" class="category-tab @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
+                    <a href="/Review/Reviews"
+                       class="category-pill @(string.IsNullOrEmpty(Model.SelectedCategory) ? "active" : "")">
                         Tất cả
                     </a>
                     @foreach (var cat in Model.Categories)
                     {
-                        <a href="/Review/Reviews?category=@cat.Slug" class="category-tab @(Model.SelectedCategory == cat.Slug ? "active" : "")">
+                        <a href="/Review/Reviews?category=@cat.Slug"
+                           class="category-pill @(Model.SelectedCategory == cat.Slug ? "active" : "")">
                             @cat.Name
                         </a>
                     }
                 </div>
+
             </form>
         </div>
-    </div>
+    </section>
 
-    <div class="container">
-        <!-- Featured Products Section -->
+    <!-- ================= CONTENT ================= -->
+    <main class="container content">
+
+        <!-- ===== Featured ===== -->
         @if (Model.FeaturedPosts.Any())
         {
-            <section class="products-section">
-                <div class="section-header">
+            <section class="section">
+                <header class="section-header">
                     <div>
-                        <h2 class="section-title">Sản phẩm nổi bật</h2>
-                        <p class="section-subtitle">Những lựa chọn được yêu thích nhất</p>
+                        <h2>Sản phẩm nổi bật</h2>
+                        <p>Những lựa chọn được cộng đồng yêu thích nhất</p>
                     </div>
-                    <div class="section-nav">
-                        <button class="nav-btn prev-btn" onclick="scrollSection('featured', -1)">‹</button>
-                        <button class="nav-btn next-btn" onclick="scrollSection('featured', 1)">›</button>
+                    <div class="carousel-controls">
+                        <button onclick="scrollSection('featured', -1)">‹</button>
+                        <button onclick="scrollSection('featured', 1)">›</button>
                     </div>
-                </div>
-                <div class="products-carousel" id="featured-carousel">
+                </header>
+
+                <div class="carousel" id="featured-carousel">
                     @foreach (var post in Model.FeaturedPosts)
                     {
-                        <div class="product-card">
-                            <a href="/Review/Detail/@post.PostId" class="product-link">
-                                <div class="product-image">
+                        <article class="card">
+                            <a href="/Review/Detail/@post.PostId" class="card-link">
+                                <div class="card-image">
                                     <img src="@post.ThumbnailUrl" alt="@post.Title" />
-                                    <span class="featured-badge">NỔI BẬT</span>
-                                    <button class="heart-btn" onclick="event.preventDefault(); toggleFavorite(@post.PostId)">
+                                    <span class="badge badge-featured">Nổi bật</span>
+                                    <button class="icon-btn"
+                                            onclick="event.preventDefault(); toggleFavorite(@post.PostId)">
                                         ❤️
                                     </button>
                                 </div>
-                                <div class="product-content">
-                                    <h3 class="product-title">@post.Title</h3>
-                                    <div class="product-rating">
+
+                                <div class="card-body">
+                                    <h3>@post.Title</h3>
+
+                                    <div class="rating-row">
                                         @{
                                             var stars = new string('★', Math.Min(5, post.Rating));
                                         }
                                         <span class="stars">@stars</span>
-                                        <span class="rating-count">(@post.CommentCount đánh giá)</span>
+                                        <span class="count">(@post.CommentCount)</span>
                                     </div>
-                                    <div class="product-price">
+
+                                    <div class="price-row">
                                         @if (post.Price.HasValue)
                                         {
-                                            <span class="current-price">@post.Price.Value.ToString("N0")₫</span>
+                                            <span class="price">@post.Price.Value.ToString("N0")₫</span>
                                         }
                                         else
                                         {
-                                            <span class="current-price">Liên hệ</span>
+                                            <span class="price muted">Liên hệ</span>
                                         }
                                     </div>
-                                    <button class="book-btn" onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
+
+                                    <button class="primary-btn"
+                                            onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
                                         Xem chi tiết
                                     </button>
                                 </div>
                             </a>
-                        </div>
+                        </article>
                     }
                 </div>
             </section>
         }
 
-        <!-- Partner Products Section -->
+        <!-- ===== Partner ===== -->
         @if (Model.PartnerPosts.Any())
         {
-            <section class="products-section">
-                <div class="section-header">
+            <section class="section">
+                <header class="section-header">
                     <div>
-                        <h2 class="section-title">Sản phẩm từ đối tác</h2>
-                        <p class="section-subtitle">Hợp tác cùng các thương hiệu uy tín</p>
+                        <h2>Sản phẩm từ đối tác</h2>
+                        <p>Được cung cấp bởi các thương hiệu uy tín</p>
                     </div>
-                    <a href="/Review/Reviews?partnerOnly=true" class="view-all-link">
-                        Xem tất cả ›
+                    <a href="/Review/Reviews?partnerOnly=true" class="link-primary">
+                        Xem tất cả →
                     </a>
-                </div>
-                <div class="products-grid partner-products-grid">
+                </header>
+
+                <div class="grid-scroll">
                     @foreach (var post in Model.PartnerPosts.Take(4))
                     {
-                        <div class="product-card">
-                            <a href="/Review/Detail/@post.PostId" class="product-link">
-                                <div class="product-image">
+                        <article class="card">
+                            <a href="/Review/Detail/@post.PostId" class="card-link">
+                                <div class="card-image">
                                     <img src="@post.ThumbnailUrl" alt="@post.Title" />
-                                    <span class="partner-badge">ĐỐI TÁC</span>
+                                    <span class="badge badge-partner">Đối tác</span>
                                 </div>
-                                <div class="product-content">
-                                    <h3 class="product-title">@post.Title</h3>
-                                    <div class="product-rating">
+
+                                <div class="card-body">
+                                    <h3>@post.Title</h3>
+
+                                    <div class="rating-row">
                                         @{
                                             var stars = new string('★', Math.Min(5, post.Rating));
                                         }
                                         <span class="stars">@stars</span>
-                                        <span class="rating-count">(@post.CommentCount đánh giá)</span>
+                                        <span class="count">(@post.CommentCount)</span>
                                     </div>
-                                    <div class="product-price">
+
+                                    <div class="price-row">
                                         @if (post.Price.HasValue)
                                         {
-                                            <span class="current-price">@post.Price.Value.ToString("N0")₫</span>
+                                            <span class="price">@post.Price.Value.ToString("N0")₫</span>
                                         }
                                         else
                                         {
-                                            <span class="current-price">Liên hệ</span>
+                                            <span class="price muted">Liên hệ</span>
                                         }
                                     </div>
-                                    <button class="book-btn" onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
+
+                                    <button class="primary-btn"
+                                            onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
                                         Xem chi tiết
                                     </button>
                                 </div>
                             </a>
-                        </div>
+                        </article>
                     }
                 </div>
             </section>
         }
 
-        <!-- Category Sections -->
+        <!-- ===== Category Sections ===== -->
         @foreach (var categorySection in Model.CategorySections)
         {
-            @if (categorySection.FeaturedPosts.Any() || categorySection.PartnerPosts.Any())
+            if (categorySection.FeaturedPosts.Any() || categorySection.PartnerPosts.Any())
             {
-                <section class="products-section">
-                    <div class="section-header">
-                        <div>
-                            <h2 class="section-title">@categorySection.CategoryName</h2>
-                        </div>
-                    </div>
+                <section class="section">
+                    <header class="section-header">
+                        <h2>@categorySection.CategoryName</h2>
+                    </header>
 
                     @if (categorySection.FeaturedPosts.Any())
                     {
-                        <div class="products-carousel" id="category-@categorySection.CategoryId-carousel">
+                        <div class="carousel" id="category-@categorySection.CategoryId-carousel">
                             @foreach (var post in categorySection.FeaturedPosts)
                             {
-                                <div class="product-card">
-                                    <a href="/Review/Detail/@post.PostId" class="product-link">
-                                        <div class="product-image">
+                                <article class="card">
+                                    <a href="/Review/Detail/@post.PostId" class="card-link">
+                                        <div class="card-image">
                                             <img src="@post.ThumbnailUrl" alt="@post.Title" />
-                                            <span class="featured-badge">NỔI BẬT</span>
-                                            <button class="heart-btn" onclick="event.preventDefault(); toggleFavorite(@post.PostId)">
+                                            <span class="badge badge-featured">Nổi bật</span>
+                                            <button class="icon-btn"
+                                                    onclick="event.preventDefault(); toggleFavorite(@post.PostId)">
                                                 ❤️
                                             </button>
                                         </div>
-                                        <div class="product-content">
-                                            <h3 class="product-title">@post.Title</h3>
-                                            <div class="product-rating">
+
+                                        <div class="card-body">
+                                            <h3>@post.Title</h3>
+
+                                            <div class="rating-row">
                                                 @{
                                                     var stars = new string('★', Math.Min(5, post.Rating));
                                                 }
                                                 <span class="stars">@stars</span>
-                                                <span class="rating-count">(@post.CommentCount đánh giá)</span>
+                                                <span class="count">(@post.CommentCount)</span>
                                             </div>
-                                            <div class="product-price">
+
+                                            <div class="price-row">
                                                 @if (post.Price.HasValue)
                                                 {
-                                                    <span class="current-price">@post.Price.Value.ToString("N0")₫</span>
+                                                    <span class="price">@post.Price.Value.ToString("N0")₫</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="current-price">Liên hệ</span>
+                                                    <span class="price muted">Liên hệ</span>
                                                 }
                                             </div>
-                                            <button class="book-btn" onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
+
+                                            <button class="primary-btn"
+                                                    onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
                                                 Xem chi tiết
                                             </button>
                                         </div>
                                     </a>
-                                </div>
+                                </article>
                             }
                         </div>
                     }
 
                     @if (categorySection.PartnerPosts.Any())
                     {
-                        <div class="products-grid partner-products-grid">
+                        <div class="grid-scroll">
                             @foreach (var post in categorySection.PartnerPosts.Take(4))
                             {
-                                <div class="product-card">
-                                    <a href="/Review/Detail/@post.PostId" class="product-link">
-                                        <div class="product-image">
+                                <article class="card">
+                                    <a href="/Review/Detail/@post.PostId" class="card-link">
+                                        <div class="card-image">
                                             <img src="@post.ThumbnailUrl" alt="@post.Title" />
-                                            <span class="partner-badge">ĐỐI TÁC</span>
+                                            <span class="badge badge-partner">Đối tác</span>
                                         </div>
-                                        <div class="product-content">
-                                            <h3 class="product-title">@post.Title</h3>
-                                            <div class="product-rating">
+
+                                        <div class="card-body">
+                                            <h3>@post.Title</h3>
+
+                                            <div class="rating-row">
                                                 @{
                                                     var stars = new string('★', Math.Min(5, post.Rating));
                                                 }
                                                 <span class="stars">@stars</span>
-                                                <span class="rating-count">(@post.CommentCount đánh giá)</span>
+                                                <span class="count">(@post.CommentCount)</span>
                                             </div>
-                                            <div class="product-price">
+
+                                            <div class="price-row">
                                                 @if (post.Price.HasValue)
                                                 {
-                                                    <span class="current-price">@post.Price.Value.ToString("N0")₫</span>
+                                                    <span class="price">@post.Price.Value.ToString("N0")₫</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="current-price">Liên hệ</span>
+                                                    <span class="price muted">Liên hệ</span>
                                                 }
                                             </div>
-                                            <button class="book-btn" onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
+
+                                            <button class="primary-btn"
+                                                    onclick="event.preventDefault(); window.location.href='/Review/Detail/@post.PostId'">
                                                 Xem chi tiết
                                             </button>
                                         </div>
                                     </a>
-                                </div>
+                                </article>
                             }
                         </div>
                     }
                 </section>
             }
         }
-    </div>
+
+    </main>
 </div>
 
 <style>
-    .reviews-page {
-        min-height: 100vh;
-        background: #f9fafb;
+/* ===================== BASE ===================== */
+.reviews-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    color: #0f172a;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ===================== HERO ===================== */
+.hero {
+    position: relative;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: white;
+    padding: 80px 0 100px;
+    overflow: hidden;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,.15), transparent 40%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,.12), transparent 45%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-text {
+    max-width: 640px;
+}
+
+.hero h1 {
+    font-size: clamp(32px, 5vw, 44px);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 16px;
+}
+
+.hero p {
+    font-size: 16px;
+    opacity: .9;
+    margin-bottom: 24px;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stat-chip {
+    background: rgba(255,255,255,.18);
+    backdrop-filter: blur(6px);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* ===================== FILTER BAR ===================== */
+.filter-bar {
+    margin-top: -60px;
+    position: relative;
+    z-index: 10;
+}
+
+.filter-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, .08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #64748b;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 16px 14px 44px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 15px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.filter-group select {
+    height: 42px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-size: 14px;
+    background: white;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+/* ===================== CATEGORY TABS ===================== */
+.category-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+
+.category-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    transition: all .15s;
+}
+
+.category-pill:hover {
+    background: #e2e8f0;
+}
+
+.category-pill.active {
+    background: #2563eb;
+    color: white;
+}
+
+/* ===================== CONTENT SECTIONS ===================== */
+.content {
+    padding: 48px 20px 80px;
+}
+
+.section {
+    margin-top: 48px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.section-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-header p {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.link-primary {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.link-primary:hover {
+    text-decoration: underline;
+}
+
+/* ===================== CAROUSEL / GRID ===================== */
+.carousel,
+.grid-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
+}
+
+.carousel::-webkit-scrollbar,
+.grid-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.carousel::-webkit-scrollbar-thumb,
+.grid-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5f5;
+    border-radius: 999px;
+}
+
+/* ===================== CARD ===================== */
+.card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    width: 280px;
+    flex-shrink: 0;
+    box-shadow:
+        0 4px 8px rgba(15, 23, 42, .05),
+        0 12px 24px rgba(15, 23, 42, .04);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 10px 20px rgba(15, 23, 42, .08),
+        0 24px 48px rgba(15, 23, 42, .06);
+}
+
+.card-link {
+    display: block;
+    height: 100%;
+}
+
+.card-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .3s ease;
+}
+
+.card:hover img {
+    transform: scale(1.05);
+}
+
+.badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    color: white;
+}
+
+.badge-featured {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.badge-partner {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.icon-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background .15s, transform .15s;
+}
+
+.icon-btn:hover {
+    background: white;
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.card-body h3 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: #0f172a;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 44px;
+}
+
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.stars {
+    color: #f59e0b;
+    letter-spacing: 1px;
+}
+
+.count {
+    color: #64748b;
+}
+
+.price-row {
+    margin-bottom: 12px;
+    min-height: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.price {
+    font-size: 17px;
+    font-weight: 800;
+    color: #2563eb;
+}
+
+.price.muted {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.primary-btn {
+    margin-top: auto;
+    height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, background .15s;
+    box-shadow: 0 4px 10px rgba(37,99,235,.25);
+}
+
+.primary-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(37,99,235,.35);
+}
+
+/* ===================== CAROUSEL CONTROLS ===================== */
+.carousel-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.carousel-controls button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e5e7eb;
+    background: white;
+    font-size: 20px;
+    cursor: pointer;
+    color: #475569;
+    transition: all .15s ease;
+}
+
+.carousel-controls button:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@@media (max-width: 768px) {
+    .hero {
+        padding: 64px 0 80px;
     }
 
-    /* Hero Header */
-    .hero-header {
-        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-        color: white;
-        padding: 60px 20px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .hero-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        text-align: center;
-        position: relative;
-        z-index: 2;
-    }
-
-    .hero-title {
-        font-size: 48px;
-        font-weight: 700;
-        margin-bottom: 16px;
-    }
-
-    .hero-subtitle {
-        font-size: 18px;
-        opacity: 0.9;
-        margin-bottom: 24px;
-    }
-
-    .hero-badges {
-        display: flex;
-        gap: 16px;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .badge {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 8px 16px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    .badge-icon {
-        font-size: 16px;
-    }
-
-    .hero-decoration {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-    }
-
-    .cloud {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50px;
-    }
-
-    .cloud-1 {
-        width: 100px;
-        height: 60px;
-        top: 20%;
-        right: 10%;
-        animation: float 6s ease-in-out infinite;
-    }
-
-    .cloud-2 {
-        width: 80px;
-        height: 50px;
-        top: 50%;
-        right: 20%;
-        animation: float 8s ease-in-out infinite;
-    }
-
-    .cloud-3 {
-        width: 120px;
-        height: 70px;
-        top: 70%;
-        right: 5%;
-        animation: float 7s ease-in-out infinite;
-    }
-
-    @@keyframes float {
-        0%, 100% {
-            transform: translateY(0px);
-        }
-
-        50% {
-            transform: translateY(-20px);
-        }
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 40px 20px;
-    }
-
-    /* Search and Filter Section */
-    .search-filter-section {
-        background: white;
-        padding: 0;
-        margin-top: -40px;
-        position: relative;
-        z-index: 10;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        width: 100%;
-    }
-
-        .search-filter-section .container {
-            padding: 24px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-    .search-bar {
-        margin-bottom: 20px;
-    }
-
-        .search-bar label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-    .search-input-wrapper {
-        position: relative;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 18px;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 12px 12px 12px 40px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
-    .filter-row {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .filter-item {
-        flex: 1;
-        min-width: 150px;
-    }
-
-        .filter-item label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-    .filter-select {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 14px;
-        background: white;
-    }
-
-    .category-tabs {
-        display: flex;
-        gap: 8px;
-        border-bottom: 2px solid #e5e7eb;
-    }
-
-    .category-tab {
-        padding: 12px 24px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #6b7280;
-        text-decoration: none;
-        border-bottom: 3px solid transparent;
-        margin-bottom: -2px;
-        transition: all 0.2s;
-    }
-
-        .category-tab:hover {
-            color: #4F46E5;
-        }
-
-        .category-tab.active {
-            color: #4F46E5;
-            border-bottom-color: #4F46E5;
-        }
-
-    /* Products Section */
-    .products-section {
-        margin-top: 48px;
+    .filter-card {
+        padding: 16px;
     }
 
     .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .section-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 4px;
-    }
-
-    .section-subtitle {
-        font-size: 14px;
-        color: #6b7280;
-    }
-
-    .section-nav {
-        display: flex;
-        gap: 8px;
-    }
-
-    .nav-btn {
-        width: 36px;
-        height: 36px;
-        border: 1px solid #d1d5db;
-        border-radius: 50%;
-        background: white;
-        cursor: pointer;
-        font-size: 20px;
-        color: #6b7280;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .nav-btn:hover {
-            background: #f9fafb;
-            border-color: #4F46E5;
-            color: #4F46E5;
-        }
-
-    .view-all-link {
-        color: #4F46E5;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-        .view-all-link:hover {
-            text-decoration: underline;
-        }
-
-    /* Products Carousel */
-    .products-carousel {
-        display: flex;
-        gap: 20px;
-        overflow-x: auto;
-        scroll-behavior: smooth;
-        padding-bottom: 10px;
-        scrollbar-width: thin;
-    }
-
-        .products-carousel::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .products-carousel::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-
-    /* Products Grid */
-    .products-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-    }
-
-    /* Partner Products Grid - Single Row with Horizontal Scroll */
-    .partner-products-grid {
-        display: flex !important;
-        flex-direction: row;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-behavior: smooth;
-        padding-bottom: 10px;
-        scrollbar-width: thin;
-        gap: 20px;
-    }
-
-        .partner-products-grid::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .partner-products-grid::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 3px;
-        }
-
-            .partner-products-grid::-webkit-scrollbar-thumb:hover {
-                background: #9ca3af;
-            }
-
-    /* Product Card */
-    .product-card {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s, box-shadow 0.2s;
-        flex-shrink: 0;
-        width: 280px;
-        display: flex;
         flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
     }
 
-    .products-grid .product-card {
-        width: 100%;
+    .card {
+        width: 260px;
     }
-
-    /* Partner products grid - ensure cards don't shrink */
-    .partner-products-grid .product-card {
-        width: 280px !important;
-        flex-shrink: 0;
-    }
-
-    .product-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-    }
-
-    .product-link {
-        text-decoration: none;
-        color: inherit;
-        display: block;
-    }
-
-    .product-image {
-        position: relative;
-        width: 100%;
-        height: 200px;
-        overflow: hidden;
-    }
-
-        .product-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-    .featured-badge {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        background: #F97316;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .partner-badge {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        background: #4F46E5;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-
-    .heart-btn {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        cursor: pointer;
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .heart-btn:hover {
-            background: white;
-        }
-
-    .product-content {
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        min-height: 0;
-    }
-
-    .product-category {
-        font-size: 12px;
-        color: #6b7280;
-        margin-bottom: 8px;
-        text-transform: uppercase;
-        height: 18px; /* Fixed height to prevent layout shift */
-        display: flex;
-        align-items: center;
-    }
-
-    .product-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 8px;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        height: 44.8px; /* 16px * 1.4 * 2 = 44.8px for 2 lines - fixed height */
-        flex-shrink: 0;
-    }
-
-    .product-rating {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin-bottom: 12px;
-        flex-shrink: 0;
-        height: 20px; /* Fixed height for rating */
-    }
-
-    .stars {
-        color: #fbbf24;
-        font-size: 14px;
-    }
-
-    .rating-count {
-        font-size: 12px;
-        color: #6b7280;
-    }
-
-    .product-price {
-        margin-bottom: 12px;
-        flex-shrink: 0;
-        height: 27px; /* Fixed height for price (18px font + margin) */
-        display: flex;
-        align-items: center;
-    }
-
-    .current-price {
-        font-size: 18px;
-        font-weight: 700;
-        color: #4F46E5;
-    }
-
-    .book-btn {
-        width: 100%;
-        height: 44px;
-        padding: 0;
-        background: #4F46E5;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1;
-        box-sizing: border-box;
-        margin-top: auto;
-    }
-
-        .book-btn:hover {
-            background: #4338CA;
-        }
-
-    @@media (max-width: 768px) {
-        .hero-title {
-            font-size: 32px;
-        }
-
-        .filter-row {
-            flex-direction: column;
-        }
-
-        .products-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .product-card {
-            width: 100% !important;
-        }
-    }
+}
 </style>
 
 <script>
     function scrollSection(sectionId, direction) {
         const carousel = document.getElementById(sectionId + '-carousel');
         if (carousel) {
-            const scrollAmount = 300;
             carousel.scrollBy({
-                left: direction * scrollAmount,
+                left: direction * 320,
                 behavior: 'smooth'
             });
         }
@@ -916,22 +875,15 @@
         console.log('Toggle favorite:', postId);
     }
 
-    // Auto submit form when filter changes
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const filterForm = document.querySelector('.search-filter-form');
-        const filterSelects = filterForm.querySelectorAll('select[name="province"], select[name="priceRange"], select[name="sortBy"]');
+        const filterSelects = filterForm.querySelectorAll(
+            'select[name="province"], select[name="priceRange"], select[name="sortBy"]'
+        );
 
         filterSelects.forEach(select => {
-            select.addEventListener('change', function() {
+            select.addEventListener('change', function () {
                 filterForm.submit();
-            });
-        });
-
-        // Category tabs - submit form when clicked
-        const categoryTabs = document.querySelectorAll('.category-tab');
-        categoryTabs.forEach(tab => {
-            tab.addEventListener('click', function(e) {
-                // Let the link navigate naturally
             });
         });
     });

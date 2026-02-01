@@ -1,0 +1,609 @@
+@using TripCompass.Application.DTOs
+@model PartnerDetailDto
+
+@{
+    ViewData["Title"] = "Partner Details - " + Model.StoreName;
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        border-left: 4px solid #0d6efd;
+    }
+
+    .stat-card.success {
+        border-left-color: #198754;
+    }
+
+    .stat-card.warning {
+        border-left-color: #ffc107;
+    }
+
+    .stat-card.danger {
+        border-left-color: #dc3545;
+    }
+
+    .stat-card.info {
+        border-left-color: #0dcaf0;
+    }
+
+    .nav-tabs .nav-link {
+        color: #5e6278;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 1.5rem;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 3px solid #0d6efd;
+        background: transparent;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .badge-soft {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .badge-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #d09c00;
+    }
+
+    .badge-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .badge-soft-info {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <a href="@Url.Action("Index", "Partner", new { area = "Admin" })" class="btn btn-sm btn-light text-muted mb-2">
+            <i class="fas fa-arrow-left me-1"></i> Back to Partners
+        </a>
+        <h1 class="fw-bold text-dark fs-3 mb-1">@Model.StoreName</h1>
+        <span class="text-muted fw-semibold fs-7">Partner Management & Details</span>
+    </div>
+    <div>
+        @if (!Model.IsApproved)
+        {
+            <form asp-action="Approve" asp-route-id="@Model.PartnerId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success fw-bold" onclick="return confirm('Are you sure you want to approve this partner?')">
+                    <i class="fas fa-check me-1"></i> Approve Partner
+                </button>
+            </form>
+            <form asp-action="Reject" asp-route-id="@Model.PartnerId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger fw-bold" onclick="return confirm('Are you sure you want to reject this partner?')">
+                    <i class="fas fa-times me-1"></i> Reject Partner
+                </button>
+            </form>
+        }
+        else
+        {
+            <span class="badge badge-soft-success fs-6 px-3 py-2">
+                <i class="fas fa-check-circle me-1"></i> Approved
+            </span>
+        }
+    </div>
+</div>
+
+<!-- Partner Info Card -->
+<div class="info-card">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h2 class="text-white mb-2">@Model.StoreName</h2>
+            <p class="text-white-50 mb-3">@Model.BusinessType</p>
+            <div class="d-flex flex-wrap gap-4 text-white-50">
+                <div><i class="fas fa-user me-2"></i>@Model.RepresentativeName</div>
+                <div><i class="fas fa-phone me-2"></i>@Model.PhoneNumber</div>
+                <div><i class="fas fa-envelope me-2"></i>@Model.UserEmail</div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="text-white-50 small mb-1">User Account</div>
+            <div class="text-white fw-bold fs-4">@Model.UserName</div>
+            <div class="text-white-50 small mt-2">
+                Reputation: Level @Model.UserReputationLevel (@Model.UserReputationScore points)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-muted small mb-1">Total Posts</div>
+                    <div class="fw-bold fs-3">@Model.Statistics.TotalPosts</div>
+                    <div class="text-muted small mt-1">
+                        @Model.Statistics.PublishedPosts Published, @Model.Statistics.PendingPosts Pending
+                    </div>
+                </div>
+                <i class="fas fa-file-alt fa-2x text-primary opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-muted small mb-1">Total Revenue</div>
+                    <div class="fw-bold fs-3">@Model.Statistics.TotalRevenue.ToString("N0") đ</div>
+                    <div class="text-muted small mt-1">
+                        Commission: @Model.Statistics.TotalCommission.ToString("N0") đ
+                    </div>
+                </div>
+                <i class="fas fa-dollar-sign fa-2x text-success opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card warning">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-muted small mb-1">Total Bookings</div>
+                    <div class="fw-bold fs-3">@Model.Statistics.TotalBookings</div>
+                    <div class="text-muted small mt-1">
+                        @Model.Statistics.CompletedBookings Completed, @Model.Statistics.ProcessingBookings Processing
+                    </div>
+                </div>
+                <i class="fas fa-calendar-check fa-2x text-warning opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-muted small mb-1">Ad Packages</div>
+                    <div class="fw-bold fs-3">@Model.Statistics.TotalAdPackages</div>
+                    <div class="text-muted small mt-1">
+                        @Model.Statistics.ActiveAdPackages Active
+                    </div>
+                </div>
+                <i class="fas fa-tags fa-2x text-info opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+            <i class="fas fa-info-circle me-2"></i>Business Information
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab">
+            <i class="fas fa-file-alt me-2"></i>Posts (@Model.Statistics.TotalPosts)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab">
+            <i class="fas fa-calendar-check me-2"></i>Bookings (@Model.Statistics.TotalBookings)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#adpackages" type="button" role="tab">
+            <i class="fas fa-tags me-2"></i>Ad Packages (@Model.Statistics.TotalAdPackages)
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content">
+    <!-- Business Information Tab -->
+    <div class="tab-pane fade show active" id="info" role="tabpanel">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card card-flush">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Business Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">Store Name:</td>
+                                <td class="fw-bold">@Model.StoreName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Business Type:</td>
+                                <td class="fw-bold">@Model.BusinessType</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Representative:</td>
+                                <td class="fw-bold">@Model.RepresentativeName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Phone:</td>
+                                <td>@Model.PhoneNumber</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Address:</td>
+                                <td>@Model.BusinessAddress</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.ServiceDescription))
+                            {
+                                <tr>
+                                    <td class="text-muted">Service Description:</td>
+                                    <td>@Model.ServiceDescription</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-flush">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Bank Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">Bank Name:</td>
+                                <td class="fw-bold">@Model.BankName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Account Number:</td>
+                                <td>@Model.AccountNumber</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Account Holder:</td>
+                                <td>@Model.AccountHolderName</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-flush">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Legal Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">ID Number:</td>
+                                <td>@Model.IdNumber</td>
+                            </tr>
+                            @if (!string.IsNullOrEmpty(Model.TaxId))
+                            {
+                                <tr>
+                                    <td class="text-muted">Tax ID:</td>
+                                    <td>@Model.TaxId</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-flush">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Account Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">User ID:</td>
+                                <td>#@Model.UserId</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Username:</td>
+                                <td class="fw-bold">@Model.UserName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Email:</td>
+                                <td>@Model.UserEmail</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Created:</td>
+                                <td>@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</td>
+                            </tr>
+                            @if (Model.UpdatedAt.HasValue)
+                            {
+                                <tr>
+                                    <td class="text-muted">Last Updated:</td>
+                                    <td>@Model.UpdatedAt.Value.ToString("dd MMM yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Tab -->
+    <div class="tab-pane fade" id="posts" role="tabpanel">
+        <div class="card card-flush">
+            <div class="card-body pt-0">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Views</th>
+                                <th>Likes</th>
+                                <th>Created</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Posts.Any())
+                            {
+                                @foreach (var post in Model.Posts)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-dark fw-bold">@post.Title</div>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(post.Location))
+                                            {
+                                                <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>@post.Location</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (post.IsDeleted)
+                                            {
+                                                <span class="badge badge-soft-danger">Deleted</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-soft-@(post.Status == "Published" ? "success" : post.Status == "Pending" ? "warning" : "danger")">@post.StatusDisplay</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-eye text-primary me-1"></i>@post.ViewCount.ToString("N0")
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-heart text-danger me-1"></i>@post.LikeCount.ToString("N0")
+                                        </td>
+                                        <td>
+                                            <div class="text-dark fw-bold fs-7">@post.CreatedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted fs-8">@post.CreatedAt.ToString("HH:mm")</div>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="@Url.Action("Details", "Content", new { area = "Admin", id = post.PostId })" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="text-muted">No posts found</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Tab -->
+    <div class="tab-pane fade" id="bookings" role="tabpanel">
+        <div class="card card-flush">
+            <div class="card-body pt-0">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Post</th>
+                                <th>Customer</th>
+                                <th>Visit Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Bookings.Any())
+                            {
+                                @foreach (var booking in Model.Bookings)
+                                {
+                                    <tr>
+                                        <td>#@booking.BookingId</td>
+                                        <td>
+                                            <div class="text-dark fw-bold">@(booking.PostTitle.Length > 30 ? booking.PostTitle.Substring(0, 30) + "..." : booking.PostTitle)</div>
+                                            <span class="text-muted fs-8">Post #@booking.PostId</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark fw-bold">@booking.CustomerName</div>
+                                            <span class="text-muted fs-8">@booking.CustomerPhone</span>
+                                        </td>
+                                        <td>
+                                            @if (booking.VisitDate.HasValue)
+                                            {
+                                                <div class="text-dark fw-bold fs-7">@booking.VisitDate.Value.ToString("dd MMM yyyy")</div>
+                                                <div class="text-muted fs-8">@booking.VisitDate.Value.ToString("HH:mm")</div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@booking.TotalAmount.ToString("N0") đ</div>
+                                            @if (booking.CommissionAmount.HasValue)
+                                            {
+                                                <div class="text-muted small">Commission: @booking.CommissionAmount.Value.ToString("N0") đ</div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-soft-@(booking.Status == "Completed" ? "success" : booking.Status == "Processing" ? "warning" : "danger")">@booking.Status</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@booking.PaymentStatus</div>
+                                            <div class="text-muted small">@booking.PaymentMethod</div>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark fw-bold fs-7">@booking.BookedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted fs-8">@booking.BookedAt.ToString("HH:mm")</div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="text-muted">No bookings found</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ad Packages Tab -->
+    <div class="tab-pane fade" id="adpackages" role="tabpanel">
+        <div class="card card-flush">
+            <div class="card-body pt-0">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Discount</th>
+                                <th>Purpose</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.AdPackages.Any())
+                            {
+                                @foreach (var adPackage in Model.AdPackages)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="text-dark fw-bold">@adPackage.Code</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger">@adPackage.PercentOff% OFF</span>
+                                        </td>
+                                        <td>@adPackage.Purpose</td>
+                                        <td>
+                                            @if (adPackage.ExpiryDate.HasValue)
+                                            {
+                                                <div class="text-dark fw-bold fs-7">@adPackage.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
+                                                <div class="text-muted fs-8">@adPackage.ExpiryDate.Value.ToString("HH:mm")</div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">No expiry</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-soft-@(adPackage.IsActive && (adPackage.ExpiryDate == null || adPackage.ExpiryDate > DateTime.UtcNow) ? "success" : "danger")">@adPackage.StatusDisplay</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark fw-bold fs-7">@adPackage.CreatedAt.ToString("dd MMM yyyy")</div>
+                                            <div class="text-muted fs-8">@adPackage.CreatedAt.ToString("HH:mm")</div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="text-muted">No ad packages found</div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

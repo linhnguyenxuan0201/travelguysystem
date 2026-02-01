@@ -1,120 +1,301 @@
+@using TripCompass.Application.Common.Models
+@using TripCompass.Application.Features.Admin.Reports.GetReports
+@using TripCompass.Application.DTOs
+@model PaginatedList<ReportListItemDto>
+
 @{
-    ViewData["Title"] = "Trust & Safety";
+    ViewData["Title"] = "Report Management";
     Layout = "~/Views/Shared/_DashboardLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/admin-portal.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-<div class="portal-container">
-    
-    <div class="portal-header">
-        <h2>🛡️ An toàn - Chất lượng</h2>
-        <p>Kiểm duyệt, báo cáo và bảo mật hệ thống</p>
+<style>
+    :root {
+        --bs-font-sans-serif: 'Inter', sans-serif;
+        --bs-body-color: #3f4254;
+        --bs-light-bg: #f9f9fc;
+    }
+
+    body {
+        background-color: var(--bs-light-bg);
+    }
+
+    .card-flush {
+        border: none;
+        box-shadow: 0 0 20px 0 rgba(76, 87, 125, 0.02);
+        background-color: #fff;
+        border-radius: 12px;
+    }
+
+    .table-custom thead th {
+        background-color: #f9f9fc;
+        color: #a1a5b7;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #eff2f5;
+    }
+
+    .table-custom tbody td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        border-bottom: 1px dashed #eff2f5;
+        font-size: 0.95rem;
+        color: #5e6278;
+    }
+
+    .table-custom tbody tr:hover {
+        background-color: #f9f9fc;
+    }
+
+    .badge-soft {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+    }
+
+    .badge-soft-warning {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #d09c00;
+    }
+
+    .badge-soft-success {
+        background-color: rgba(25, 135, 84, 0.1);
+        color: #198754;
+    }
+
+    .badge-soft-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .badge-soft-info {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+    }
+</style>
+
+<div class="d-flex flex-wrap flex-stack pb-4 align-items-center justify-content-between">
+    <div>
+        <h1 class="fw-bold text-dark fs-3 mb-1">Report Management</h1>
+        <span class="text-muted fw-semibold fs-7">Manage user reports and violations</span>
     </div>
-
-    <div class="portal-sections">
-        
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon safety">
-                    <i class="fas fa-flag"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Báo cáo vi phạm</h3>
-                    <p>Reports Management</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-exclamation-circle"></i> Báo cáo chờ xử lý</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-check"></i> Đã xử lý</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-ban"></i> Bị từ chối</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon safety">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Kiểm duyệt nội dung</h3>
-                    <p>Content Moderation</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-file-alt"></i> Bài viết cần kiểm duyệt</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-comment"></i> Bình luận cần kiểm duyệt</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-image"></i> Hình ảnh cần kiểm duyệt</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon safety">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Nhật ký kiểm tra</h3>
-                    <p>Audit Logs</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-history"></i> Lịch sử thao tác Admin</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-user-shield"></i> Hoạt động nghi ngờ</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="section-card">
-            <div class="section-header">
-                <div class="section-icon safety">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="section-title">
-                    <h3>Cài đặt bảo mật</h3>
-                    <p>Security Settings</p>
-                </div>
-            </div>
-            <div class="section-links">
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-key"></i> Chính sách mật khẩu</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-                <a href="#" class="section-link disabled">
-                    <span><i class="fas fa-shield-alt"></i> Whitelist/Blacklist</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-    </div>
-
-    <a href="/Admin/Portal" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left me-2"></i>Quay lại Portal
+    <a href="/Admin/Portal" class="btn btn-sm btn-icon btn-light text-muted">
+        <i class="fas fa-arrow-left"></i>
     </a>
+</div>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card card-flush shadow-sm">
+    <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+        <form method="get" class="w-100">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4 position-relative">
+                    <div class="input-group input-group-solid">
+                        <span class="input-group-text bg-light border-0 ps-3">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input name="SearchTerm" type="text"
+                               class="form-control form-control-solid bg-light border-0 ps-2"
+                               value="@ViewBag.SearchTerm"
+                               placeholder="Search by reason, description, reporter..." />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <select name="Status" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="0" selected="@(ViewBag.SelectedStatus == 0)">🟡 Pending</option>
+                        <option value="1" selected="@(ViewBag.SelectedStatus == 1)">🟢 Resolved</option>
+                        <option value="2" selected="@(ViewBag.SelectedStatus == 2)">🔴 Rejected</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select name="TargetType" class="form-select form-select-solid bg-light border-0 fw-bold text-muted" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="POST" selected="@(ViewBag.SelectedTargetType == "POST")">📝 Post</option>
+                        <option value="COMMENT" selected="@(ViewBag.SelectedTargetType == "COMMENT")">💬 Comment</option>
+                        <option value="USER" selected="@(ViewBag.SelectedTargetType == "USER")">👤 User</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary fw-bold w-100">
+                        Apply Filter
+                    </button>
+                </div>
+
+                @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || ViewBag.SelectedStatus != null || !string.IsNullOrEmpty(ViewBag.SelectedTargetType))
+                {
+                    <div class="col-md-2">
+                        <a href="@Url.Action("Index", "Report", new { area = "Admin" })" class="btn btn-light w-100 text-muted fw-bold">
+                            Reset
+                        </a>
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-custom align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="min-width: 200px;">Reporter</th>
+                        <th style="min-width: 150px;">Target</th>
+                        <th style="min-width: 200px;">Reason</th>
+                        <th style="min-width: 100px;">Status</th>
+                        <th style="min-width: 120px;">Created</th>
+                        <th class="text-end" style="min-width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Any())
+                    {
+                        @foreach (var report in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-dark fw-bold">@report.ReporterName</span>
+                                        <span class="text-muted small fs-8">@report.ReporterEmail</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="badge badge-soft-info mb-1">@report.TargetType</span>
+                                        @if (report.TargetType == "POST" && !string.IsNullOrEmpty(report.TargetTitle))
+                                        {
+                                            <span class="text-dark small">@(report.TargetTitle.Length > 30 ? report.TargetTitle.Substring(0, 30) + "..." : report.TargetTitle)</span>
+                                        }
+                                        else if (report.TargetType == "USER" && !string.IsNullOrEmpty(report.TargetUserName))
+                                        {
+                                            <span class="text-dark small">@report.TargetUserName</span>
+                                        }
+                                        <span class="text-muted fs-8">ID: #@report.TargetId</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="fw-semibold text-dark">@report.Reason</div>
+                                    @if (!string.IsNullOrEmpty(report.Description))
+                                    {
+                                        <div class="text-muted small mt-1" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@report.Description">
+                                            @report.Description
+                                        </div>
+                                    }
+                                </td>
+
+                                <td>
+                                    @if (report.Status == 0)
+                                    {
+                                        <span class="badge badge-soft badge-soft-warning">Pending</span>
+                                    }
+                                    else if (report.Status == 1)
+                                    {
+                                        <span class="badge badge-soft badge-soft-success">Resolved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-soft badge-soft-danger">Rejected</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <div class="text-dark fw-bold fs-7">@report.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    <div class="text-muted fs-8">@report.CreatedAt.ToString("HH:mm")</div>
+                                </td>
+
+                                <td class="text-end">
+                                    @if (report.Status == 0)
+                                    {
+                                        <div class="d-flex gap-2 justify-content-end">
+                                            <form asp-action="Resolve" asp-route-id="@report.ReportId" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-success fw-bold px-3" onclick="return confirm('Are you sure you want to resolve this report?')">
+                                                    <i class="fas fa-check me-1"></i> Resolve
+                                                </button>
+                                            </form>
+                                            <form asp-action="Reject" asp-route-id="@report.ReportId" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-danger fw-bold px-3" onclick="return confirm('Are you sure you want to reject this report?')">
+                                                    <i class="fas fa-times me-1"></i> Reject
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted small">
+                                            @if (report.ResolverName != null)
+                                            {
+                                                <div>By: @report.ResolverName</div>
+                                            }
+                                            @if (report.ResolvedAt.HasValue)
+                                            {
+                                                <div>@report.ResolvedAt.Value.ToString("dd MMM yyyy")</div>
+                                            }
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="mb-3 text-muted opacity-50 display-1">
+                                        <i class="fas fa-flag"></i>
+                                    </div>
+                                    <h5 class="text-muted fw-normal">No reports found matching your criteria</h5>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 pb-2">
+            <div class="text-muted small fw-semibold">
+                Showing page <span class="text-dark fw-bold">@Model.PageNumber</span> of <span class="text-dark fw-bold">@Model.TotalPages</span>
+            </div>
+            <div class="d-flex gap-1">
+                <a href="@(Model.HasPreviousPage? Url.Action("Index", new { PageNumber = Model.PageNumber - 1, SearchTerm = ViewBag.SearchTerm, Status = ViewBag.SelectedStatus, TargetType = ViewBag.SelectedTargetType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasPreviousPage ? "disabled opacity-50" : "")">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+
+                <a href="@(Model.HasNextPage? Url.Action("Index", new { PageNumber = Model.PageNumber + 1, SearchTerm = ViewBag.SearchTerm, Status = ViewBag.SelectedStatus, TargetType = ViewBag.SelectedTargetType }) : "#")"
+                   class="btn btn-sm btn-light @(!Model.HasNextPage ? "disabled opacity-50" : "")">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
